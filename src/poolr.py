@@ -40,7 +40,12 @@ class PoolrApp(ctk.CTk):
         self._build_main_area()
         self._build_menu()
 
+        # Defer initial page selection until all widgets are realized.
+        self.after_idle(self._load_dashboard)
+
+    def _load_dashboard(self):
         self._select_page("dashboard")
+
 
     def _get_empty_project(self):
         return {
@@ -431,7 +436,7 @@ class ProtocolPage(ctk.CTkFrame):
             row = i + 2
             ctk.CTkLabel(self.scroll, text=label, font=ctk.CTkFont(size=14, weight="bold")).grid(row=row, column=0, sticky="w", pady=(16, 4))
             entry = ctk.CTkTextbox(self.scroll, height=80)
-            entry.grid(row=row+0.5, column=0, sticky="ew", pady=(0, 4))
+            entry.grid(row=row+1, column=0, sticky="ew", pady=(0, 4))
             self.entries[key] = entry
             
             # Placeholder
