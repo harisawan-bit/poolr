@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 poolr — standalone GUI for systematic reviews and meta-analyses.
 Platform: Windows / macOS / Linux
@@ -6,10 +7,12 @@ GUI: CustomTkinter
 
 import customtkinter as ctk
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
 import json
 import os
+import pandas as pd
 from pathlib import Path
+import webbrowser
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
@@ -27,10 +30,10 @@ class PoolrApp(ctk.CTk):
         self.project_data = {
             "pico": {},
             "search_strategies": {},
-            "screening": {},
-            "extraction": {},
-            "rob": {},
-            "meta": {},
+            "screening": {"title_abstract": [], "full_text": []},
+            "extraction": {"studies": []},
+            "rob": {"assessments": []},
+            "meta": {"results": {}},
         }
 
         self.grid_columnconfigure(1, weight=1)
@@ -66,15 +69,18 @@ class PoolrApp(ctk.CTk):
             ("PRISMA", "prisma"),
         ]
         for idx, (label, key) in enumerate(pages, start=2):
-            btn = ctk.CTkButton(self.sidebar, text=label, anchor="w", height=36)
+            btn = ctk.CTkButton(self.sidebar, text=label, anchor="w", height=36, command=lambda k=key: self._select_page(k))
             btn.grid(row=idx, column=0, padx=16, pady=4, sticky="ew")
             self.nav_buttons[key] = btn
 
         self.project_btn = ctk.CTkButton(self.sidebar, text="Open Project", command=self._open_project)
         self.project_btn.grid(row=8, column=0, padx=16, pady=(0, 12), sticky="ew")
 
+        self.new_project_btn = ctk.CTkButton(self.sidebar, text="New Project", command=self._new_project)
+        self.new_project_btn.grid(row=9, column=0, padx=16, pady=(0, 12), sticky="ew")
+
         self.status_label = ctk.CTkLabel(self.sidebar, text="No project loaded")
-        self.status_label.grid(row=9, column=0, padx=20, pady=(0, 20))
+        self.status_label.grid(row=10, column=0, padx=20, pady=(0, 20))
 
     def _build_main_area(self):
         self.main_area = ctk.CTkFrame(self, corner_radius=10)
@@ -120,6 +126,21 @@ class PoolrApp(ctk.CTk):
         for k, btn in self.nav_buttons.items():
             btn.configure(fg_color=("gray75", "gray25") if k == key else "transparent")
 
+    def _new_project(self):
+        path = filedialog.askdirectory(title="Create new poolr project folder")
+        if path:
+            self.project_path = Path(path)
+            self.project_data = {
+                "pico": {},
+                "search_strategies": {},
+                "screening": {"title_abstract": [], "full_text": []},
+                "extraction": {"studies": []},
+                "rob": {"assessments": []},
+                "meta": {"results": {}},
+            }
+            self.status_label.configure(text=f"Project: {self.project_path.name}")
+            self.save_project()
+
     def _open_project(self):
         path = filedialog.askdirectory(title="Open poolr project folder")
         if path:
@@ -128,16 +149,9 @@ class PoolrApp(ctk.CTk):
             if pool_json.exists():
                 with open(pool_json, "r", encoding="utf-8") as fh:
                     self.project_data = json.load(fh)
+                self.status_label.configure(text=f"Project: {self.project_path.name}")
             else:
-                self.project_data = {
-                    "pico": {},
-                    "search_strategies": {},
-                    "screening": {},
-                    "extraction": {},
-                    "rob": {},
-                    "meta": {},
-                }
-            self.status_label.configure(text=f"Project: {self.project_path.name}")
+                messagebox.showerror("Error", "No poolr.json found in this folder")
 
     def save_project(self):
         if not self.project_path:
