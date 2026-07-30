@@ -10,6 +10,9 @@ on:
 env:
   PYTHON_VERSION: "3.11"
 
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     name: Build Windows Installers
@@ -128,7 +131,7 @@ jobs:
           path: artifacts
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: nightly
           name: Nightly Build
