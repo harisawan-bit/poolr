@@ -8,6 +8,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] - develop branch
 
 ### Added
+- N/A
+
+### Changed
+- N/A
+
+### Fixed
+- N/A
+
+## [0.3.1] - 2026-07-31
+
+### Added
+- Window title now displays the running version (e.g. `poolr v0.3.1`)
+- Tagged releases (`v*`) now publish real (non-draft) GitHub Releases with per-platform zip assets; pushes to `develop` keep publishing the draft Nightly Build
+
+### Changed
+- CI release job packages one zip archive per platform before upload
+
+### Fixed
+- 8 runtime bugs from the full debug pass (v0.3.0 post-release hardening)
+- CLI entrypoint (`poolr-cli`) and headless GUI smoke test
+- Release job permissions (`contents: write`) so CI can publish releases
+- Stopped tracking `dist/poolr.exe` build artifact in git
+
+## [0.3.0] - 2026-07-30
+
+### Added
 - Initial project structure with modular architecture
 - GUI with 8-phase SRMA workflow (Dashboard, Protocol, Search, Screening, Extraction, RoB, Meta, PRISMA)
 - Advanced meta-analysis engine supporting OR, RR, RD, MD, SMD, HR
@@ -22,18 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PubMed direct import via NCBI Entrez API
 - Dual independent screening with conflict resolution
 - Cross-platform installers (Windows, macOS, Linux)
-
-### Changed
-- N/A
-
-### Fixed
-- N/A
-
-### Removed
-- N/A
-
-### Security
-- N/A
 
 ## [0.1.0] - 2026-07-30
 

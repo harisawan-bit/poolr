@@ -74,11 +74,11 @@ No programming required. No cloud dependency. Your data stays on your machine.
 - Date range filters, query history
 
 ### 🖥️ **Cross-Platform Desktop App**
-| Platform | Architectures | Installer |
-|----------|---------------|-----------|
-| **Windows** | x64, x86, ARM64 | `.exe` (NSIS), portable `.zip` |
-| **macOS** | Intel (x64), Apple Silicon (ARM64) | `.dmg` (notarized), `.app` bundle |
-| **Linux** | x64, ARM64 | `.AppImage`, `.deb`, `.rpm`, Flatpak |
+| Platform | Architectures | Package |
+|----------|---------------|---------|
+| **Windows** | x64, x86, ARM64 | portable `.exe` in `poolr-windows-<arch>.zip` |
+| **macOS** | Intel (x64), Apple Silicon (ARM64) | `.app` bundle + `.dmg` in `poolr-macos-<arch>.zip` |
+| **Linux** | x64 | single-file executable in `poolr-linux.zip` |
 
 ---
 
@@ -86,11 +86,11 @@ No programming required. No cloud dependency. Your data stays on your machine.
 
 ### Download (Recommended)
 1. Go to [Releases](https://github.com/harisawan-bit/poolr/releases/latest)
-2. Download the installer for your platform:
-   - **Windows**: `poolr-x64-setup.exe` (or `poolr-x86-setup.exe`, `poolr-arm64-setup.exe`)
-   - **macOS**: `poolr-universal.dmg` (runs on both Intel and Apple Silicon)
-   - **Linux**: `poolr-x86_64.AppImage` (or ARM64)
-3. Install and launch — no Python, no dependencies needed
+2. Download the zip for your platform:
+   - **Windows**: `poolr-windows-x64.zip` (or `x86` / `arm64`) — unzip, run `poolr-<arch>.exe`
+   - **macOS**: `poolr-macos-arm64.zip` (Apple Silicon) or `poolr-macos-x64.zip` (Intel) — drag `poolr.app` to Applications
+   - **Linux**: `poolr-linux.zip` — unzip, `chmod +x poolr`, run `./poolr`
+3. No Python, no dependencies needed
 
 ### Releases
 See [RELEASES.md](./RELEASES.md) for version history, migration notes, and download links.
