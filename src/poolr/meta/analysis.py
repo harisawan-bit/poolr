@@ -63,7 +63,13 @@ class MetaAnalysis:
         variances = []
         weights = []
         
+        valid_studies = []
         for s in studies:
+            # Validate required fields
+            required = ["int_events", "int_n", "ctrl_events", "ctrl_n"]
+            if not all(key in s for key in required):
+                continue  # Skip invalid studies
+            
             a = s["int_events"]
             b = s["int_n"] - s["int_events"]
             c = s["ctrl_events"]
@@ -88,6 +94,8 @@ class MetaAnalysis:
                 # Risk difference
                 effect = (a / s["int_n"]) - (c / s["ctrl_n"])
                 var = (a * b) / (s["int_n"] ** 3) + (c * d) / (s["ctrl_n"] ** 3)
+            else:
+                raise ValueError(f"Invalid measure: {self.measure}")
             
             effects.append(effect)
             variances.append(var)
@@ -96,8 +104,9 @@ class MetaAnalysis:
             s["effect"] = effect
             s["var"] = var
             s["weight"] = 1/var
+            valid_studies.append(s)
         
-        return self._pool_effects(studies, effects, variances, weights, k)
+        return self._pool_effects(valid_studies, effects, variances, weights, len(valid_studies))
     
     def _run_continuous_meta(self, studies: List[Dict]) -> Dict:
         """Continuous outcomes: MD, SMD"""
@@ -416,17 +425,31 @@ class MetaAnalysis:
         if self.pub_bias in ["egger", "all"]:
             se = [math.sqrt(v) for v in variances]
             precision = [1/s for s in se]
-            slope, intercept, r, p, se_slope = stats.linregress(precision, effects)
-            results["egger"] = {
-                "intercept": intercept,
-                "p_value": p,
-                "significant": p < 0.05
-            }
+            
+            # Check if we have enough variation for regression
+            if len(set(precision)) > 1 and len(set(effects)) > 1:
+                slope, intercept, r, p, se_slope = stats.linregress(precision, effects)
+                results["egger"] = {
+                    "intercept": intercept,
+                    "p_value": p,
+                    "significant": p < 0.05
+                }
+            else:
+                # Not enough variation for Egger's test
+                results["egger"] = {
+                    "intercept": 0.0,
+                    "p_value": 1.0,
+                    "significant": False,
+                    "note": "Insufficient variation for Egger's test"
+                }
         
         # Begg's test (rank correlation)
         if self.pub_bias in ["begg", "all"]:
             # Kendall's tau between effect size and variance
-            tau, p = stats.kendalltau(effects, variances)
+            if len(set(effects)) > 1 and len(set(variances)) > 1:
+                tau, p = stats.kendalltau(effects, variances)
+            else:
+                tau, p = 0.0, 1.0
             results["begg"] = {
                 "tau": tau,
                 "p_value": p,

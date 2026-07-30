@@ -64,8 +64,11 @@ class DashboardPage(BasePage):
         self.info_frame = ctk.CTkFrame(self)
         self.info_frame.pack(fill="both", expand=True)
         ctk.CTkLabel(self.info_frame, text="Project Information", font=ctk.CTkFont(size=16, weight="bold")).pack(anchor="w", padx=16, pady=(12, 8))
-        self.info_text = ctk.CTkTextbox(self.info_frame, height=150)
-        self.info_text.pack(fill="both", expand=True, padx=16, pady=(0, 16))
+        
+        # Use a label instead of textbox to avoid scrollbar issues in headless mode
+        self.info_label = ctk.CTkLabel(self.info_frame, text="poolr v0.3\n\nA modern, no-code desktop application for systematic reviews and meta-analyses.\n\nFeatures:\n- PRISMA 2020 compliant workflow\n- Advanced meta-analysis engine (OR, RR, RD, MD, SMD, HR)\n- Publication-ready figures (forest plots, funnel plots, PRISMA flow)\n- GRADE evidence profiling\n- PubMed direct import\n- RIS/EndNote/Zotero compatibility\n- Word/LaTeX manuscript export\n\nYour data stays on your machine. No cloud required.", 
+                                   font=ctk.CTkFont(size=12), justify="left", anchor="nw")
+        self.info_label.pack(fill="both", expand=True, padx=16, pady=(0, 16))
 
     def refresh(self):
         self._update_stats()
@@ -85,12 +88,13 @@ class DashboardPage(BasePage):
         self.stat_cards["meta_done"].configure(text="Yes" if meta_done else "No")
 
     def _update_info(self):
-        self.info_text.delete("0.0", "end")
+        # Update label text
         if not self.app.project_path:
-            self.info_text.insert("0.0", "No project loaded. Create a new project or open an existing one.")
-            return
-
-        info = f"Project: {self.app.project_path.name}\n"
+            text = "poolr v0.3\n\nA modern, no-code desktop application for systematic reviews and meta-analyses.\n\nFeatures:\n- PRISMA 2020 compliant workflow\n- Advanced meta-analysis engine (OR, RR, RD, MD, SMD, HR)\n- Publication-ready figures (forest plots, funnel plots, PRISMA flow)\n- GRADE evidence profiling\n- PubMed direct import\n- RIS/EndNote/Zotero compatibility\n- Word/LaTeX manuscript export\n\nYour data stays on your machine. No cloud required."
+        else:
+            text = f"Project: {self.app.project_name}\n\nCreated: {self.app.project_data.get('metadata', {}).get('created', 'Unknown')}\n\nLast saved: {self.app.project_data.get('metadata', {}).get('last_saved', 'Unknown')}"
+        
+        self.info_label.configure(text=text)
         info += f"Location: {self.app.project_path}\n\n"
         meta = self.app.project_data.get("metadata", {})
         info += f"Created: {meta.get('created', 'Unknown')}\n"

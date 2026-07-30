@@ -45,6 +45,9 @@ class ProtocolPage(BasePage):
             if not self.app.project_data.get("pico", {}).get(key):
                 entry.insert("0.0", placeholder)
                 entry.configure(text_color=("gray50", "gray50"))
+            else:
+                entry.insert("0.0", self.app.project_data.get("pico", {}).get(key, ""))
+                entry.configure(text_color=("gray10", "gray90"))
 
         # Additional protocol fields
         ctk.CTkLabel(self.scroll, text="Additional Protocol Details", font=ctk.CTkFont(size=18, weight="bold")).grid(row=10, column=0, sticky="w", pady=(20, 12))
