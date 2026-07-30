@@ -32,7 +32,7 @@ dev = [
 
 [project.scripts]
 poolr = "poolr:main"
-poolr-cli = "poolr:cli_main"
+poolr-cli = "poolr.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
