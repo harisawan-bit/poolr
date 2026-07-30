@@ -2,9 +2,10 @@
 Search page - Search strategy builder
 """
 
+from tkinter import messagebox
+
 import customtkinter as ctk
-import tkinter as tk
-from tkinter import messagebox, filedialog
+
 from poolr.pages.base import BasePage
 
 
@@ -18,11 +19,23 @@ class SearchPage(BasePage):
         self.scroll.pack(fill="both", expand=True)
         self.scroll.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(self.scroll, text="Search Strategy Builder", font=ctk.CTkFont(size=20, weight="bold")).grid(row=0, column=0, sticky="w", pady=(0, 8))
-        ctk.CTkLabel(self.scroll, text="Generate search strings for each database from your PICO. Edit as needed.", wraplength=800).grid(row=1, column=0, sticky="w", pady=(0, 16))
+        ctk.CTkLabel(self.scroll, text="Search Strategy Builder", font=ctk.CTkFont(size=20, weight="bold")).grid(
+            row=0, column=0, sticky="w", pady=(0, 8)
+        )
+        ctk.CTkLabel(
+            self.scroll,
+            text="Generate search strings for each database from your PICO. Edit as needed.",
+            wraplength=800,
+        ).grid(row=1, column=0, sticky="w", pady=(0, 16))
 
         # Generate button
-        ctk.CTkButton(self.scroll, text="🔄 Generate from PICO", command=self._generate_from_pico, height=40, font=ctk.CTkFont(size=13)).grid(row=2, column=0, sticky="w", pady=(0, 16))
+        ctk.CTkButton(
+            self.scroll,
+            text="🔄 Generate from PICO",
+            command=self._generate_from_pico,
+            height=40,
+            font=ctk.CTkFont(size=13),
+        ).grid(row=2, column=0, sticky="w", pady=(0, 16))
 
         # Database tabs
         self.db_textboxes = {}
@@ -36,16 +49,26 @@ class SearchPage(BasePage):
 
         for i, (label, key) in enumerate(databases):
             row = 3 + i * 2
-            ctk.CTkLabel(self.scroll, text=label, font=ctk.CTkFont(size=14, weight="bold")).grid(row=row, column=0, sticky="w", pady=(12, 4))
+            ctk.CTkLabel(self.scroll, text=label, font=ctk.CTkFont(size=14, weight="bold")).grid(
+                row=row, column=0, sticky="w", pady=(12, 4)
+            )
             tb = ctk.CTkTextbox(self.scroll, height=120, font=ctk.CTkFont(family="Consolas", size=11))
-            tb.grid(row=row+1, column=0, sticky="ew", pady=(0, 4))
+            tb.grid(row=row + 1, column=0, sticky="ew", pady=(0, 4))
             self.db_textboxes[key] = tb
 
         # Save button
-        ctk.CTkButton(self.scroll, text="💾 Save All Strategies", command=self._save, height=40, font=ctk.CTkFont(size=14, weight="bold")).grid(row=14, column=0, sticky="ew", pady=20)
+        ctk.CTkButton(
+            self.scroll,
+            text="💾 Save All Strategies",
+            command=self._save,
+            height=40,
+            font=ctk.CTkFont(size=14, weight="bold"),
+        ).grid(row=14, column=0, sticky="ew", pady=20)
 
         # Export
-        ctk.CTkButton(self.scroll, text="📤 Export All (.txt)", command=self._export, height=36).grid(row=15, column=0, sticky="ew", pady=(0, 20))
+        ctk.CTkButton(self.scroll, text="📤 Export All (.txt)", command=self._export, height=36).grid(
+            row=15, column=0, sticky="ew", pady=(0, 20)
+        )
 
     def on_enter(self):
         self.refresh()
@@ -97,44 +120,68 @@ class SearchPage(BasePage):
 
     def _build_pubmed(self, pop, interv, comp, outc):
         parts = []
-        if pop: parts.append(f"({pop}[MeSH Terms] OR {pop}[Title/Abstract])")
-        if interv: parts.append(f"({interv}[MeSH Terms] OR {interv}[Title/Abstract])")
-        if comp: parts.append(f"({comp}[MeSH Terms] OR {comp}[Title/Abstract])")
-        if outc: parts.append(f"({outc}[MeSH Terms] OR {outc}[Title/Abstract])")
+        if pop:
+            parts.append(f"({pop}[MeSH Terms] OR {pop}[Title/Abstract])")
+        if interv:
+            parts.append(f"({interv}[MeSH Terms] OR {interv}[Title/Abstract])")
+        if comp:
+            parts.append(f"({comp}[MeSH Terms] OR {comp}[Title/Abstract])")
+        if outc:
+            parts.append(f"({outc}[MeSH Terms] OR {outc}[Title/Abstract])")
         return " AND\n".join(parts)
 
     def _build_embase(self, pop, interv, comp, outc):
         parts = []
-        if pop: parts.append(f"('{pop}'/exp OR '{pop}':ti,ab)")
-        if interv: parts.append(f"('{interv}'/exp OR '{interv}':ti,ab)")
-        if comp: parts.append(f"('{comp}'/exp OR '{comp}':ti,ab)")
-        if outc: parts.append(f"('{outc}'/exp OR '{outc}':ti,ab)")
+        if pop:
+            parts.append(f"('{pop}'/exp OR '{pop}':ti,ab)")
+        if interv:
+            parts.append(f"('{interv}'/exp OR '{interv}':ti,ab)")
+        if comp:
+            parts.append(f"('{comp}'/exp OR '{comp}':ti,ab)")
+        if outc:
+            parts.append(f"('{outc}'/exp OR '{outc}':ti,ab)")
         return " AND\n".join(parts)
 
     def _build_cochrane(self, pop, interv, comp, outc):
         lines = []
         idx = 1
-        if pop: lines.append(f"#{idx} {pop}:ti,ab,kw"); idx += 1
-        if interv: lines.append(f"#{idx} {interv}:ti,ab,kw"); idx += 1
-        if comp: lines.append(f"#{idx} {comp}:ti,ab,kw"); idx += 1
-        if outc: lines.append(f"#{idx} {outc}:ti,ab,kw"); idx += 1
+        if pop:
+            lines.append(f"#{idx} {pop}:ti,ab,kw")
+            idx += 1
+        if interv:
+            lines.append(f"#{idx} {interv}:ti,ab,kw")
+            idx += 1
+        if comp:
+            lines.append(f"#{idx} {comp}:ti,ab,kw")
+            idx += 1
+        if outc:
+            lines.append(f"#{idx} {outc}:ti,ab,kw")
+            idx += 1
         lines.append(f"#{idx} " + " AND ".join([f"#{i}" for i in range(1, idx)]))
         return "\n".join(lines)
 
     def _build_scopus(self, pop, interv, comp, outc):
         parts = []
-        if pop: parts.append(f'TITLE-ABS-KEY("{pop}")')
-        if interv: parts.append(f'TITLE-ABS-KEY("{interv}")')
-        if comp: parts.append(f'TITLE-ABS-KEY("{comp}")')
-        if outc: parts.append(f'TITLE-ABS-KEY("{outc}")')
+        if pop:
+            parts.append(f'TITLE-ABS-KEY("{pop}")')
+        if interv:
+            parts.append(f'TITLE-ABS-KEY("{interv}")')
+        if comp:
+            parts.append(f'TITLE-ABS-KEY("{comp}")')
+        if outc:
+            parts.append(f'TITLE-ABS-KEY("{outc}")')
         return " AND\n".join(parts)
 
     def _build_wos(self, pop, interv, comp, outc):
         parts = []
-        if pop: parts.append(f'TS=("{pop}")')
-        if interv: parts.append(f'TS=("{interv}")')
-        if comp: parts.append(f'TS=("{comp}")')
-        if outc: parts.append(f'TS=("{outc}")')
+        if pop:
+            parts.append(f'TS=("{pop}")')
+        if interv:
+            parts.append(f'TS=("{interv}")')
+        if comp:
+            parts.append(f'TS=("{comp}")')
+        if outc:
+            parts.append(f'TS=("{outc}")')
         return " AND\n".join(parts)
 
     def _save(self):

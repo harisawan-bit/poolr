@@ -2,10 +2,11 @@
 Extraction page - Data extraction with structured forms
 """
 
+from tkinter import filedialog, messagebox
+
 import customtkinter as ctk
-import tkinter as tk
-from tkinter import messagebox, filedialog
 import pandas as pd
+
 from poolr.pages.base import BasePage
 
 
@@ -20,7 +21,9 @@ class ExtractionPage(BasePage):
         top = ctk.CTkFrame(self)
         top.pack(fill="x", pady=(0, 12))
 
-        ctk.CTkLabel(top, text="Data Extraction", font=ctk.CTkFont(size=20, weight="bold")).pack(side="left", padx=16, pady=12)
+        ctk.CTkLabel(top, text="Data Extraction", font=ctk.CTkFont(size=20, weight="bold")).pack(
+            side="left", padx=16, pady=12
+        )
 
         btn_frame = ctk.CTkFrame(top, fg_color="transparent")
         btn_frame.pack(side="right", padx=12)
@@ -42,7 +45,9 @@ class ExtractionPage(BasePage):
         left.grid_rowconfigure(1, weight=1)
         left.grid_propagate(False)
 
-        ctk.CTkLabel(left, text="Studies", font=ctk.CTkFont(size=14, weight="bold")).grid(row=0, column=0, sticky="w", padx=12, pady=12)
+        ctk.CTkLabel(left, text="Studies", font=ctk.CTkFont(size=14, weight="bold")).grid(
+            row=0, column=0, sticky="w", padx=12, pady=12
+        )
 
         self.study_list = ctk.CTkScrollableFrame(left)
         self.study_list.grid(row=1, column=0, sticky="nsew", padx=8, pady=(0, 12))
@@ -56,73 +61,102 @@ class ExtractionPage(BasePage):
 
     def _build_form(self):
         self.form_fields = {}
-        
+
         sections = [
-            ("Study Identification", [
-                ("study_id", "Study ID", "entry"),
-                ("title", "Title", "text"),
-                ("authors", "Authors", "entry"),
-                ("year", "Year", "entry"),
-                ("journal", "Journal", "entry"),
-                ("doi", "DOI", "entry"),
-                ("country", "Country", "entry"),
-                ("pmid", "PMID", "entry"),
-            ]),
-            ("Study Design", [
-                ("design", "Design", "combo", ["RCT", "Cohort", "Case-Control", "Cross-Sectional", "Case Series", "Other"]),
-                ("setting", "Setting", "entry"),
-                ("follow_up", "Follow-up Duration", "entry"),
-                ("funding", "Funding Source", "entry"),
-                ("coi", "Conflicts of Interest", "text"),
-            ]),
-            ("Population", [
-                ("population_description", "Description", "text"),
-                ("age_mean", "Mean Age", "entry"),
-                ("age_sd", "SD Age", "entry"),
-                ("age_range", "Age Range", "entry"),
-                ("sex_male_pct", "Male (%)", "entry"),
-                ("sample_size", "Total Sample Size", "entry"),
-                ("inclusion_criteria", "Inclusion Criteria", "text"),
-                ("exclusion_criteria", "Exclusion Criteria", "text"),
-            ]),
-            ("Intervention Group", [
-                ("int_description", "Description", "text"),
-                ("int_n", "N", "entry"),
-                ("int_events", "Events (binary)", "entry"),
-                ("int_mean", "Mean (continuous)", "entry"),
-                ("int_sd", "SD (continuous)", "entry"),
-                ("int_median", "Median", "entry"),
-                ("int_iqr", "IQR", "entry"),
-                ("int_hr", "Hazard Ratio", "entry"),
-                ("int_hr_ci", "HR 95% CI", "entry"),
-            ]),
-            ("Control Group", [
-                ("ctrl_description", "Description", "text"),
-                ("ctrl_n", "N", "entry"),
-                ("ctrl_events", "Events (binary)", "entry"),
-                ("ctrl_mean", "Mean (continuous)", "entry"),
-                ("ctrl_sd", "SD (continuous)", "entry"),
-                ("ctrl_median", "Median", "entry"),
-                ("ctrl_iqr", "IQR", "entry"),
-                ("ctrl_hr", "Hazard Ratio", "entry"),
-                ("ctrl_hr_ci", "HR 95% CI", "entry"),
-            ]),
-            ("Outcomes", [
-                ("primary_outcome", "Primary Outcome", "entry"),
-                ("secondary_outcomes", "Secondary Outcomes", "text"),
-                ("timepoints", "Timepoints", "entry"),
-                ("outcome_measure", "Outcome Measure", "entry"),
-            ]),
-            ("Neurosurgery Specific", [
-                ("gcs_mean", "Mean GCS", "entry"),
-                ("gcs_range", "GCS Range", "entry"),
-                ("icp_monitoring", "ICP Monitoring (%)", "entry"),
-                ("craniectomy_type", "Craniectomy Type", "combo", ["Hemicraniectomy", "Bifrontal", "Other"]),
-                ("treatment_timing", "Treatment Timing (hrs)", "entry"),
-            ]),
-            ("Notes", [
-                ("notes", "Notes", "text"),
-            ]),
+            (
+                "Study Identification",
+                [
+                    ("study_id", "Study ID", "entry"),
+                    ("title", "Title", "text"),
+                    ("authors", "Authors", "entry"),
+                    ("year", "Year", "entry"),
+                    ("journal", "Journal", "entry"),
+                    ("doi", "DOI", "entry"),
+                    ("country", "Country", "entry"),
+                    ("pmid", "PMID", "entry"),
+                ],
+            ),
+            (
+                "Study Design",
+                [
+                    (
+                        "design",
+                        "Design",
+                        "combo",
+                        ["RCT", "Cohort", "Case-Control", "Cross-Sectional", "Case Series", "Other"],
+                    ),
+                    ("setting", "Setting", "entry"),
+                    ("follow_up", "Follow-up Duration", "entry"),
+                    ("funding", "Funding Source", "entry"),
+                    ("coi", "Conflicts of Interest", "text"),
+                ],
+            ),
+            (
+                "Population",
+                [
+                    ("population_description", "Description", "text"),
+                    ("age_mean", "Mean Age", "entry"),
+                    ("age_sd", "SD Age", "entry"),
+                    ("age_range", "Age Range", "entry"),
+                    ("sex_male_pct", "Male (%)", "entry"),
+                    ("sample_size", "Total Sample Size", "entry"),
+                    ("inclusion_criteria", "Inclusion Criteria", "text"),
+                    ("exclusion_criteria", "Exclusion Criteria", "text"),
+                ],
+            ),
+            (
+                "Intervention Group",
+                [
+                    ("int_description", "Description", "text"),
+                    ("int_n", "N", "entry"),
+                    ("int_events", "Events (binary)", "entry"),
+                    ("int_mean", "Mean (continuous)", "entry"),
+                    ("int_sd", "SD (continuous)", "entry"),
+                    ("int_median", "Median", "entry"),
+                    ("int_iqr", "IQR", "entry"),
+                    ("int_hr", "Hazard Ratio", "entry"),
+                    ("int_hr_ci", "HR 95% CI", "entry"),
+                ],
+            ),
+            (
+                "Control Group",
+                [
+                    ("ctrl_description", "Description", "text"),
+                    ("ctrl_n", "N", "entry"),
+                    ("ctrl_events", "Events (binary)", "entry"),
+                    ("ctrl_mean", "Mean (continuous)", "entry"),
+                    ("ctrl_sd", "SD (continuous)", "entry"),
+                    ("ctrl_median", "Median", "entry"),
+                    ("ctrl_iqr", "IQR", "entry"),
+                    ("ctrl_hr", "Hazard Ratio", "entry"),
+                    ("ctrl_hr_ci", "HR 95% CI", "entry"),
+                ],
+            ),
+            (
+                "Outcomes",
+                [
+                    ("primary_outcome", "Primary Outcome", "entry"),
+                    ("secondary_outcomes", "Secondary Outcomes", "text"),
+                    ("timepoints", "Timepoints", "entry"),
+                    ("outcome_measure", "Outcome Measure", "entry"),
+                ],
+            ),
+            (
+                "Neurosurgery Specific",
+                [
+                    ("gcs_mean", "Mean GCS", "entry"),
+                    ("gcs_range", "GCS Range", "entry"),
+                    ("icp_monitoring", "ICP Monitoring (%)", "entry"),
+                    ("craniectomy_type", "Craniectomy Type", "combo", ["Hemicraniectomy", "Bifrontal", "Other"]),
+                    ("treatment_timing", "Treatment Timing (hrs)", "entry"),
+                ],
+            ),
+            (
+                "Notes",
+                [
+                    ("notes", "Notes", "text"),
+                ],
+            ),
         ]
 
         for section_idx, (section_title, fields) in enumerate(sections):
@@ -130,7 +164,9 @@ class ExtractionPage(BasePage):
             frame.pack(fill="x", padx=12, pady=12)
             frame.grid_columnconfigure(1, weight=1)
 
-            ctk.CTkLabel(frame, text=section_title, font=ctk.CTkFont(size=15, weight="bold")).grid(row=0, column=0, columnspan=2, sticky="w", padx=12, pady=(12, 8))
+            ctk.CTkLabel(frame, text=section_title, font=ctk.CTkFont(size=15, weight="bold")).grid(
+                row=0, column=0, columnspan=2, sticky="w", padx=12, pady=(12, 8)
+            )
 
             for field_idx, field_info in enumerate(fields):
                 if len(field_info) == 3:
@@ -151,12 +187,18 @@ class ExtractionPage(BasePage):
                 elif ftype == "combo":
                     widget = ctk.CTkComboBox(frame, values=options)
                     widget.grid(row=row, column=1, sticky="ew", padx=12, pady=6)
-                
+
                 self.form_fields[key] = widget
                 frame.grid_columnconfigure(1, weight=1)
 
         # Save button at bottom
-        ctk.CTkButton(self.form_scroll, text="💾 Save Study", command=self._save_study, height=40, font=ctk.CTkFont(size=14, weight="bold")).pack(fill="x", padx=20, pady=20)
+        ctk.CTkButton(
+            self.form_scroll,
+            text="💾 Save Study",
+            command=self._save_study,
+            height=40,
+            font=ctk.CTkFont(size=14, weight="bold"),
+        ).pack(fill="x", padx=20, pady=20)
 
     def on_enter(self):
         self._update_list()
@@ -167,8 +209,13 @@ class ExtractionPage(BasePage):
 
         studies = self.app.project_data.get("extraction", {}).get("studies", [])
         for i, study in enumerate(studies):
-            btn = ctk.CTkButton(self.study_list, text=f"{study.get('study_id', f'Study {i+1}')}: {study.get('title', 'Untitled')[:40]}",
-                               anchor="w", height=32, command=lambda idx=i: self._load_study(idx))
+            btn = ctk.CTkButton(
+                self.study_list,
+                text=f"{study.get('study_id', f'Study {i+1}')}: {study.get('title', 'Untitled')[:40]}",
+                anchor="w",
+                height=32,
+                command=lambda idx=i: self._load_study(idx),
+            )
             btn.pack(fill="x", padx=4, pady=2)
 
         if not studies:
@@ -180,7 +227,7 @@ class ExtractionPage(BasePage):
         if index >= len(studies):
             return
         self._current_study = studies[index]
-        
+
         for key, widget in self.form_fields.items():
             value = self._current_study.get(key, "")
             if isinstance(widget, ctk.CTkEntry) or isinstance(widget, ctk.CTkComboBox):
@@ -202,14 +249,16 @@ class ExtractionPage(BasePage):
     def _save_study(self):
         if self._current_study is None:
             return
-        
+
         for key, widget in self.form_fields.items():
             if isinstance(widget, ctk.CTkEntry) or isinstance(widget, ctk.CTkComboBox):
                 self._current_study[key] = widget.get()
             elif isinstance(widget, ctk.CTkTextbox):
                 self._current_study[key] = widget.get("0.0", "end").strip()
-        
-        self.app.project_data.setdefault("extraction", {}).setdefault("studies", [])[self._study_index] = self._current_study
+
+        self.app.project_data.setdefault("extraction", {}).setdefault("studies", [])[
+            self._study_index
+        ] = self._current_study
         self.app.save_project()
         self._update_list()
         messagebox.showinfo("Saved", "Study data saved")
@@ -234,6 +283,7 @@ class ExtractionPage(BasePage):
             return
         try:
             from poolr.import_.ris import parse_ris
+
             studies = parse_ris(path)
             self.app.project_data.setdefault("extraction", {})["studies"] = studies
             self._update_list()
@@ -247,7 +297,9 @@ class ExtractionPage(BasePage):
         if not studies:
             messagebox.showwarning("Warning", "No studies to export")
             return
-        path = filedialog.asksaveasfilename(title="Export extraction CSV", defaultextension=".csv", filetypes=[("CSV", "*.csv")])
+        path = filedialog.asksaveasfilename(
+            title="Export extraction CSV", defaultextension=".csv", filetypes=[("CSV", "*.csv")]
+        )
         if not path:
             return
         try:

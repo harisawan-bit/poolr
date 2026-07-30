@@ -2,28 +2,25 @@
 poolr — Main application module
 """
 
-import customtkinter as ctk
-import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
 import json
-import os
-import pandas as pd
-from pathlib import Path
+import tkinter as tk
 import webbrowser
-import threading
-import traceback
 from datetime import datetime
-from typing import Optional, Dict, Any, List
+from pathlib import Path
+from tkinter import filedialog, messagebox
+from typing import Any, Dict, Optional
+
+import customtkinter as ctk
 
 # Local imports
 from poolr.pages.dashboard import DashboardPage
-from poolr.pages.protocol import ProtocolPage
-from poolr.pages.search import SearchPage
-from poolr.pages.screening import ScreeningPage
 from poolr.pages.extraction import ExtractionPage
-from poolr.pages.rob import RoBPage
 from poolr.pages.meta import MetaPage
 from poolr.pages.prisma import PrismaPage
+from poolr.pages.protocol import ProtocolPage
+from poolr.pages.rob import RoBPage
+from poolr.pages.screening import ScreeningPage
+from poolr.pages.search import SearchPage
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
@@ -59,18 +56,11 @@ class PoolrApp(ctk.CTk):
         return {
             "pico": {},
             "search_strategies": {},
-            "screening": {
-                "title_abstract": [],
-                "full_text": []
-            },
+            "screening": {"title_abstract": [], "full_text": []},
             "extraction": {"studies": []},
             "rob": {"assessments": []},
             "meta": {"results": {}},
-            "metadata": {
-                "created": "",
-                "modified": "",
-                "version": "0.3.0"
-            }
+            "metadata": {"created": "", "modified": "", "version": "0.3.0"},
         }
 
     def _build_menu(self):
@@ -94,14 +84,27 @@ class PoolrApp(ctk.CTk):
         view_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="View", menu=view_menu)
         self._theme_var = tk.StringVar(value="dark")
-        view_menu.add_radiobutton(label="Dark Mode", variable=self._theme_var, value="dark", command=lambda: ctk.set_appearance_mode("dark"))
-        view_menu.add_radiobutton(label="Light Mode", variable=self._theme_var, value="light", command=lambda: ctk.set_appearance_mode("light"))
-        view_menu.add_radiobutton(label="System", variable=self._theme_var, value="system", command=lambda: ctk.set_appearance_mode("system"))
+        view_menu.add_radiobutton(
+            label="Dark Mode", variable=self._theme_var, value="dark", command=lambda: ctk.set_appearance_mode("dark")
+        )
+        view_menu.add_radiobutton(
+            label="Light Mode",
+            variable=self._theme_var,
+            value="light",
+            command=lambda: ctk.set_appearance_mode("light"),
+        )
+        view_menu.add_radiobutton(
+            label="System", variable=self._theme_var, value="system", command=lambda: ctk.set_appearance_mode("system")
+        )
 
         help_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Help", menu=help_menu)
-        help_menu.add_command(label="Documentation", command=lambda: webbrowser.open("https://github.com/harisawan-bit/poolr"))
-        help_menu.add_command(label="Report Issue", command=lambda: webbrowser.open("https://github.com/harisawan-bit/poolr/issues"))
+        help_menu.add_command(
+            label="Documentation", command=lambda: webbrowser.open("https://github.com/harisawan-bit/poolr")
+        )
+        help_menu.add_command(
+            label="Report Issue", command=lambda: webbrowser.open("https://github.com/harisawan-bit/poolr/issues")
+        )
         help_menu.add_separator()
         help_menu.add_command(label="About", command=self._show_about)
 
@@ -134,8 +137,14 @@ class PoolrApp(ctk.CTk):
             ("📄 PRISMA", "prisma"),
         ]
         for idx, (label, key) in enumerate(pages, start=2):
-            btn = ctk.CTkButton(self.sidebar, text=label, anchor="w", height=44, 
-                               font=ctk.CTkFont(size=13), command=lambda k=key: self._select_page(k))
+            btn = ctk.CTkButton(
+                self.sidebar,
+                text=label,
+                anchor="w",
+                height=44,
+                font=ctk.CTkFont(size=13),
+                command=lambda k=key: self._select_page(k),
+            )
             btn.grid(row=idx, column=0, padx=12, pady=3, sticky="ew")
             self.nav_buttons[key] = btn
 
@@ -149,7 +158,9 @@ class PoolrApp(ctk.CTk):
         self.progress_frame = ctk.CTkFrame(self.sidebar)
         self.progress_frame.grid(row=12, column=0, padx=16, pady=8, sticky="ew")
         self.progress_frame.grid_columnconfigure(0, weight=1)
-        ctk.CTkLabel(self.progress_frame, text="Progress", font=ctk.CTkFont(size=11, weight="bold")).pack(anchor="w", padx=8, pady=(8, 2))
+        ctk.CTkLabel(self.progress_frame, text="Progress", font=ctk.CTkFont(size=11, weight="bold")).pack(
+            anchor="w", padx=8, pady=(8, 2)
+        )
         self.progress_bar = ctk.CTkProgressBar(self.progress_frame)
         self.progress_bar.pack(fill="x", padx=8, pady=(0, 8))
         self.progress_bar.set(0)
@@ -175,7 +186,7 @@ class PoolrApp(ctk.CTk):
         # Save current page data if needed
         if self._current_page_key and self._current_page_key in self._pages:
             page = self._pages[self._current_page_key]
-            if hasattr(page, 'on_leave'):
+            if hasattr(page, "on_leave"):
                 page.on_leave()
 
         for widget in self.page_container.winfo_children():
@@ -208,7 +219,7 @@ class PoolrApp(ctk.CTk):
         self._current_page_key = key
 
         # Call on_enter if exists
-        if hasattr(page, 'on_enter'):
+        if hasattr(page, "on_enter"):
             page.on_enter()
 
         for k, btn in self.nav_buttons.items():
@@ -263,7 +274,7 @@ class PoolrApp(ctk.CTk):
 
     def _refresh_all_pages(self):
         for page in self._pages.values():
-            if hasattr(page, 'refresh'):
+            if hasattr(page, "refresh"):
                 page.refresh()
 
     def _update_progress(self):
@@ -271,8 +282,11 @@ class PoolrApp(ctk.CTk):
         steps = [
             ("pico", bool(self.project_data.get("pico", {}))),
             ("search_strategies", bool(self.project_data.get("search_strategies", {}))),
-            ("screening", len(self.project_data.get("screening", {}).get("title_abstract", [])) > 0 or 
-                       len(self.project_data.get("screening", {}).get("full_text", [])) > 0),
+            (
+                "screening",
+                len(self.project_data.get("screening", {}).get("title_abstract", [])) > 0
+                or len(self.project_data.get("screening", {}).get("full_text", [])) > 0,
+            ),
             ("extraction", len(self.project_data.get("extraction", {}).get("studies", [])) > 0),
             ("rob", len(self.project_data.get("rob", {}).get("assessments", [])) > 0),
             ("meta", bool(self.project_data.get("meta", {}).get("results", {}))),
@@ -298,11 +312,13 @@ class PoolrApp(ctk.CTk):
         messagebox.showinfo("Preferences", "Preferences dialog coming soon")
 
     def _show_about(self):
-        messagebox.showinfo("About poolr", 
+        messagebox.showinfo(
+            "About poolr",
             "poolr v0.3.0\n\n"
             "Standalone GUI for systematic reviews and meta-analyses.\n\n"
             "Built with CustomTkinter, pandas, matplotlib, statsmodels, and Python.\n\n"
-            "https://github.com/harisawan-bit/poolr")
+            "https://github.com/harisawan-bit/poolr",
+        )
 
     def on_closing(self):
         if self.project_path and self.project_data:
