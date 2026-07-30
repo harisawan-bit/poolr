@@ -1,0 +1,138 @@
+name: Build Installers
+
+on:
+  push:
+    branches: [feature/build-installers, develop, main]
+    tags: ['v*']
+  pull_request:
+    branches: [develop, main]
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  build-windows:
+    name: Build Windows Installers
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64, x86, arm64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install pyinstaller pillow
+
+      - name: Build installer
+        run: |
+          pyinstaller --clean --onefile --windowed --name "poolr-${{ matrix.arch }}" --distpath "dist/${{ matrix.arch }}" src/poolr.py
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: poolr-windows-${{ matrix.arch }}
+          path: dist/${{ matrix.arch }}/
+
+  build-macos:
+    name: Build macOS App
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install pyinstaller pillow
+
+      - name: Build app bundle
+        run: |
+          pyinstaller --clean --windowed --name "poolr" \
+            --distpath "dist/${{ matrix.arch }}" \
+            --osx-bundle-identifier "com.poolr.app" \
+            src/poolr.py
+
+      - name: Create DMG
+        run: |
+          mkdir -p "dmg/Poolr"
+          cp -R "dist/${{ matrix.arch }}/poolr.app" "dmg/Poolr/"
+          ln -s /Applications "dmg/Applications"
+          hdiutil create -volname "poolr Installer" \
+            -srcfolder "dmg" \
+            -ov -format UDZO \
+            "dist/poolr-universal.dmg"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: poolr-macos-${{ matrix.arch }}
+          path: |
+            dist/${{ matrix.arch }}/poolr.app
+            dist/poolr-universal.dmg
+
+  build-linux:
+    name: Build Linux App
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install pyinstaller pillow
+
+      - name: Build executable
+        run: |
+          pyinstaller --clean --onefile --windowed --name "poolr" --distpath "dist" src/poolr.py
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: poolr-linux
+          path: dist/poolr
+
+  release:
+    name: Create Release
+    needs: [build-windows, build-macos, build-linux]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: nightly
+          name: Nightly Build
+          draft: true
+          generate_release_notes: true
+          files: |
+            artifacts/**/*
