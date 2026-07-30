@@ -15,7 +15,7 @@ No programming required. No cloud dependency. Your data stays on your machine.
 ## ✨ Features
 
 ### 📋 **Protocol & Planning**
-- **PICO Builder for Population, Intervention, Comparator, Outcomes with placeholders
+- **PICO Builder** for Population, Intervention, Comparator, Outcomes with placeholders
 - Protocol registration fields (PROSPERO ID, study designs, date range, languages)
 - Auto-saves to local `poolr.json` — fully portable projects
 
@@ -91,6 +91,9 @@ No programming required. No cloud dependency. Your data stays on your machine.
    - **macOS**: `poolr-universal.dmg` (runs on both Intel and Apple Silicon)
    - **Linux**: `poolr-x86_64.AppImage` (or ARM64)
 3. Install and launch — no Python, no dependencies needed
+
+### Releases
+See [RELEASES.md](./RELEASES.md) for version history, migration notes, and download links.
 
 ### From Source (Developers)
 ```bash
