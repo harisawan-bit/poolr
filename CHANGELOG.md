@@ -16,6 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - N/A
 
+## [0.3.2] - 2026-07-31
+
+### Fixed
+- **Critical**: page navigation crashed with `TclError: bad window path name` when revisiting any page (Dashboard/Protocol/Search/etc.) — `_select_page` destroyed cached page widgets while keeping them in the page cache. Pages are now hidden with `pack_forget()` and stale cache entries rebuilt. Verified against the packaged v0.3.1 Windows exe where the bug reproduced.
+- About dialog showed hardcoded `v0.3.0` — now reads `__version__`
+
+### Added
+- GUI smoke test now includes a page-switching regression test (2 full navigation rounds across all 8 pages); confirmed to fail on the old code and pass on the fix
+
 ## [0.3.1] - 2026-07-31
 
 ### Added

@@ -2,7 +2,7 @@
 
 ## Latest Release
 
-**poolr v0.3.1** — Stable release  
+**poolr v0.3.2** — Stable release  
 Release date: 2026-07-31
 
 ### Downloads
@@ -15,6 +15,12 @@ Release date: 2026-07-31
 | macOS Apple Silicon | `poolr-macos-arm64.zip` | Contains `poolr.app` + `poolr-universal.dmg` |
 | macOS Intel | `poolr-macos-x64.zip` | Contains `poolr.app` + `poolr-universal.dmg` |
 | Linux x86_64 | `poolr-linux.zip` | Single-file executable — `chmod +x poolr && ./poolr` |
+
+### What's New in v0.3.2
+
+- **Critical fix**: page navigation no longer crashes (`bad window path name`) when revisiting pages — found by launch-testing the packaged v0.3.1 Windows exe
+- About dialog version now stays in sync automatically
+- New page-switching regression test in CI
 
 ### What's New in v0.3.1
 
