@@ -4,23 +4,35 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "poolr"
-version = "0.2.0"
+version = "0.3.0"
 description = "Standalone GUI for systematic reviews and meta-analyses"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 dependencies = [
     "customtkinter>=5.2.0",
-    "pandas>=2.2.0",
-    "openpyxl>=3.1.0",
-    "pyinstaller>=6.9.0",
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "matplotlib>=3.7",
+    "scipy>=1.10",
+    "statsmodels>=0.14",
+    "python-docx>=1.1",
+    "biopython>=1.83",
+    "pylatex>=1.4",
+    "reportlab>=4.0",
+    "requests>=2.31",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0.0", "ruff>=0.5.0"]
+dev = [
+    "pytest>=7.4",
+    "black>=23.0",
+    "ruff>=0.1",
+    "pyinstaller>=6.0",
+]
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = "-q"
+[project.scripts]
+poolr = "poolr:main"
+poolr-cli = "poolr:cli_main"
 
-[tool.ruff]
-line-length = 100
+[tool.setuptools.packages.find]
+where = ["src"]
