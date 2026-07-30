@@ -2,10 +2,11 @@ name: Build Installers
 
 on:
   push:
-    branches: [feature/build-installers, develop, main]
+    branches: [develop, main, master]
     tags: ['v*']
   pull_request:
-    branches: [develop, main]
+    branches: [develop, main, master]
+  workflow_dispatch:
 
 env:
   PYTHON_VERSION: "3.11"
