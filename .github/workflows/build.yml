@@ -143,9 +143,9 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: nightly
-          name: Nightly Build
-          draft: true
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'nightly' }}
+          name: ${{ startsWith(github.ref, 'refs/tags/v') && format('poolr {0}', github.ref_name) || 'Nightly Build' }}
+          draft: ${{ !startsWith(github.ref, 'refs/tags/v') }}
           generate_release_notes: true
           files: |
             release-assets/*.zip

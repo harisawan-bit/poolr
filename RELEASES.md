@@ -2,19 +2,27 @@
 
 ## Latest Release
 
-**poolr v0.3.0** — Stable release  
-Release date: 2026-07-30
+**poolr v0.3.1** — Stable release  
+Release date: 2026-07-31
 
 ### Downloads
 
 | Platform | File | Notes |
 |----------|------|-------|
-| Windows x64 | `poolr-x64-setup.exe` | Recommended for most PCs |
-| Windows x86 | `poolr-x86-setup.exe` | 32-bit Windows |
-| Windows ARM64 | `poolr-arm64-setup.exe` | Windows on ARM |
-| macOS Universal | `poolr-universal.dmg` | Intel + Apple Silicon |
-| Linux x86_64 | `poolr-x86_64.AppImage` | Most Linux distros |
-| Linux ARM64 | `poolr-arm64.AppImage` | ARM Linux |
+| Windows x64 | `poolr-windows-x64.zip` | Recommended for most PCs — unzip and run `poolr-x64.exe` |
+| Windows x86 | `poolr-windows-x86.zip` | 32-bit Windows |
+| Windows ARM64 | `poolr-windows-arm64.zip` | Windows on ARM |
+| macOS Apple Silicon | `poolr-macos-arm64.zip` | Contains `poolr.app` + `poolr-universal.dmg` |
+| macOS Intel | `poolr-macos-x64.zip` | Contains `poolr.app` + `poolr-universal.dmg` |
+| Linux x86_64 | `poolr-linux.zip` | Single-file executable — `chmod +x poolr && ./poolr` |
+
+### What's New in v0.3.1
+
+- Version now shown in the app window title
+- Tagged releases publish real (non-draft) GitHub Releases with per-platform zip assets
+- 8 runtime bugs fixed in the full debug pass
+- `poolr-cli` entrypoint fixed + headless GUI smoke test in CI
+- CI hardening: release permissions, per-platform zip packaging, repo hygiene
 
 ### What's New in v0.3.0
 
