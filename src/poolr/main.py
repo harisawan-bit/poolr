@@ -12,6 +12,8 @@ from typing import Any, Dict, Optional
 
 import customtkinter as ctk
 
+from poolr import __version__
+
 # Local imports
 from poolr.pages.dashboard import DashboardPage
 from poolr.pages.extraction import ExtractionPage
@@ -30,7 +32,7 @@ class PoolrApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("poolr — Systematic Review & Meta-Analysis")
+        self.title(f"poolr v{__version__} — Systematic Review & Meta-Analysis")
         self.geometry("1400x900")
         self.minsize(1100, 750)
 
