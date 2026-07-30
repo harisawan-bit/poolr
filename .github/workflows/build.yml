@@ -10,6 +10,9 @@ on:
 env:
   PYTHON_VERSION: "3.11"
 
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     name: Build Windows Installers
@@ -127,12 +130,22 @@ jobs:
         with:
           path: artifacts
 
+      - name: Package artifacts (one archive per platform)
+        run: |
+          mkdir -p release-assets
+          cd artifacts
+          for dir in */; do
+            name="${dir%/}"
+            (cd "$dir" && zip -qry "../../release-assets/${name}.zip" .)
+          done
+          ls -la ../release-assets/
+
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: nightly
           name: Nightly Build
           draft: true
           generate_release_notes: true
           files: |
-            artifacts/**/*
+            release-assets/*.zip

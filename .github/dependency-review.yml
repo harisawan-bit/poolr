@@ -1,0 +1,4 @@
+# Configuration for actions/dependency-review-action
+# https://github.com/actions/dependency-review-action
+fail-on-severity: high
+comment-summary-in-pr: on-failure

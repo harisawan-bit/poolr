@@ -2,11 +2,12 @@
 Protocol / PICO page
 """
 
-import customtkinter as ctk
-import tkinter as tk
-from poolr.pages.base import BasePage
+import json
 from tkinter import messagebox
-from datetime import datetime
+
+import customtkinter as ctk
+
+from poolr.pages.base import BasePage
 
 
 class ProtocolPage(BasePage):
@@ -21,10 +22,14 @@ class ProtocolPage(BasePage):
         self.scroll.grid_columnconfigure(0, weight=1)
 
         # PICO Section
-        ctk.CTkLabel(self.scroll, text="PICO Definition", font=ctk.CTkFont(size=20, weight="bold")).grid(row=0, column=0, sticky="w", pady=(0, 12))
+        ctk.CTkLabel(self.scroll, text="PICO Definition", font=ctk.CTkFont(size=20, weight="bold")).grid(
+            row=0, column=0, sticky="w", pady=(0, 12)
+        )
 
         pico_help = "Define your Population, Intervention, Comparator, and Outcomes clearly. This forms the foundation of your systematic review."
-        ctk.CTkLabel(self.scroll, text=pico_help, wraplength=800, justify="left").grid(row=1, column=0, sticky="w", pady=(0, 16))
+        ctk.CTkLabel(self.scroll, text=pico_help, wraplength=800, justify="left").grid(
+            row=1, column=0, sticky="w", pady=(0, 16)
+        )
 
         self.entries = {}
         pico_fields = [
@@ -36,11 +41,13 @@ class ProtocolPage(BasePage):
 
         for i, (label, key, placeholder) in enumerate(pico_fields):
             row = i + 2
-            ctk.CTkLabel(self.scroll, text=label, font=ctk.CTkFont(size=14, weight="bold")).grid(row=row, column=0, sticky="w", pady=(16, 4))
+            ctk.CTkLabel(self.scroll, text=label, font=ctk.CTkFont(size=14, weight="bold")).grid(
+                row=row, column=0, sticky="w", pady=(16, 4)
+            )
             entry = ctk.CTkTextbox(self.scroll, height=80)
-            entry.grid(row=row+1, column=0, sticky="ew", pady=(0, 4))
+            entry.grid(row=row + 1, column=0, sticky="ew", pady=(0, 4))
             self.entries[key] = entry
-            
+
             # Placeholder
             if not self.app.project_data.get("pico", {}).get(key):
                 entry.insert("0.0", placeholder)
@@ -50,7 +57,9 @@ class ProtocolPage(BasePage):
                 entry.configure(text_color=("gray10", "gray90"))
 
         # Additional protocol fields
-        ctk.CTkLabel(self.scroll, text="Additional Protocol Details", font=ctk.CTkFont(size=18, weight="bold")).grid(row=10, column=0, sticky="w", pady=(20, 12))
+        ctk.CTkLabel(self.scroll, text="Additional Protocol Details", font=ctk.CTkFont(size=18, weight="bold")).grid(
+            row=10, column=0, sticky="w", pady=(20, 12)
+        )
 
         self.additional_fields = {}
         add_fields = [
@@ -65,7 +74,7 @@ class ProtocolPage(BasePage):
             row = 11 + i * 2
             ctk.CTkLabel(self.scroll, text=label).grid(row=row, column=0, sticky="w", pady=(8, 2))
             entry = ctk.CTkEntry(self.scroll)
-            entry.grid(row=row+1, column=0, sticky="ew", pady=(0, 4))
+            entry.grid(row=row + 1, column=0, sticky="ew", pady=(0, 4))
             entry.insert(0, placeholder)
             entry.configure(text_color=("gray50", "gray50"))
             self.additional_fields[key] = entry
@@ -73,8 +82,12 @@ class ProtocolPage(BasePage):
         # Save button
         btn_frame = ctk.CTkFrame(self.scroll, fg_color="transparent")
         btn_frame.grid(row=22, column=0, sticky="ew", pady=24)
-        ctk.CTkButton(btn_frame, text="💾 Save Protocol", command=self._save, height=40, font=ctk.CTkFont(size=14, weight="bold")).pack(side="right")
-        ctk.CTkButton(btn_frame, text="📄 Export Protocol", command=self._export_protocol, height=40).pack(side="right", padx=8)
+        ctk.CTkButton(
+            btn_frame, text="💾 Save Protocol", command=self._save, height=40, font=ctk.CTkFont(size=14, weight="bold")
+        ).pack(side="right")
+        ctk.CTkButton(btn_frame, text="📄 Export Protocol", command=self._export_protocol, height=40).pack(
+            side="right", padx=8
+        )
 
     def on_enter(self):
         self.refresh()
