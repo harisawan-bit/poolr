@@ -16,6 +16,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - N/A
 
+## [0.3.3] - 2026-08-01
+
+### Added
+- Shared UI style kit (`src/poolr/ui.py`): dark palette, typography helpers, `SectionHeader`, `Card`, `StatTile`, branded `PrimaryButton`/`SecondaryButton` (override-safe colors), and a scrollable-helper — all headless-safe (no display access, no blocking dialogs).
+
+### Changed
+- **Premium UI refresh**: redesigned app shell with a branded sidebar (hover + active-state), a header bar showing the current section, and a persistent bottom status bar with version + quick actions.
+- Dashboard restyled with KPI tiles (studies, included/excluded, RoB, meta status) and quick-action cards.
+- All 8 pages (Protocol, Search, Screening, Extraction, RoB, Meta-Analysis, PRISMA, Dashboard) restyled to a consistent `SectionHeader` + branded primary/secondary buttons, tighter spacing, and themed borders/inputs — page logic and contracts preserved.
+- Screening decision buttons are now color-coded (Include / Exclude / Unsure) for faster, clearer judgment.
+
+### Fixed
+- Dashboard no longer raises `AttributeError` on project load — the app shell now sets `project_name` (was missing).
+
 ## [0.3.2] - 2026-07-31
 
 ### Fixed

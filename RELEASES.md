@@ -2,8 +2,8 @@
 
 ## Latest Release
 
-**poolr v0.3.2** — Stable release  
-Release date: 2026-07-31
+**poolr v0.3.3** — UI refinement release  
+Release date: 2026-08-01
 
 ### Downloads
 
@@ -15,6 +15,15 @@ Release date: 2026-07-31
 | macOS Apple Silicon | `poolr-macos-arm64.zip` | Contains `poolr.app` + `poolr-arm64.dmg` |
 | macOS Intel | `poolr-macos-x64.zip` | Contains `poolr.app` + `poolr-x64.dmg` |
 | Linux x86_64 | `poolr-linux.zip` | Single-file executable — `chmod +x poolr && ./poolr` |
+
+### What's New in v0.3.3
+
+- **Premium UI refresh**: new shared style kit (`src/poolr/ui.py`) with a cohesive dark palette, consistent typography, and reusable components (section headers, cards, KPI tiles, branded buttons).
+- **Redesigned app shell**: branded sidebar with hover + active-state highlighting, a header bar showing the current section, and a persistent bottom status bar with version + quick actions.
+- **Dashboard polish**: KPI tiles (studies, included/excluded, RoB, meta status) and quick-action cards; project-name bug fixed (was raising `AttributeError` on project load).
+- **All 8 pages restyled** to a consistent `SectionHeader` + branded primary/secondary buttons, tighter spacing, and themed borders/inputs — logic untouched, page contracts preserved.
+- **Screening**: color-coded Include / Exclude / Unsure decision buttons for faster, clearer judgment.
+- Headless-safe throughout — no blocking dialogs in automated paths; verified by the CI GUI smoke test (including the page-revisit regression).
 
 ### What's New in v0.3.2
 

@@ -10,6 +10,8 @@
 
 No programming required. No cloud dependency. Your data stays on your machine.
 
+> **New in v0.3.3 — Premium UI refresh.** A redesigned dark shell (branded sidebar with active/hover states, header bar, and a persistent status bar), cohesive KPI tiles and cards on the Dashboard, color-coded screening decisions, and a consistent look across all 8 pages. See [RELEASES.md](./RELEASES.md) for details.
+
 ---
 
 ## ✨ Features
