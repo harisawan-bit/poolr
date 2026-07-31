@@ -12,6 +12,7 @@ import customtkinter as ctk
 from poolr.meta.analysis import MetaAnalysis
 from poolr.pages.base import BasePage
 from poolr.plotting.figures import create_forest_plot, create_funnel_plot
+from poolr.ui import PAD_X, PrimaryButton, SecondaryButton, SectionHeader
 
 
 class MetaPage(BasePage):
@@ -21,29 +22,28 @@ class MetaPage(BasePage):
         self._build()
 
     def _build(self):
-        top = ctk.CTkFrame(self)
-        top.pack(fill="x", pady=(0, 12))
-
-        ctk.CTkLabel(top, text="Meta-Analysis", font=ctk.CTkFont(size=20, weight="bold")).pack(
-            side="left", padx=16, pady=12
+        SectionHeader(
+            self,
+            "Meta-Analysis",
+            "Advanced statistical engine — OR, RR, RD, MD, SMD, HR with fixed / random-effects models.",
         )
 
-        btn_frame = ctk.CTkFrame(top, fg_color="transparent")
-        btn_frame.pack(side="right", padx=12)
-        ctk.CTkButton(
-            btn_frame,
-            text="▶️ Run Analysis",
+        top = ctk.CTkFrame(self, fg_color="transparent")
+        top.pack(fill="x", padx=PAD_X, pady=(4, 12))
+
+        PrimaryButton(
+            top,
+            text="▶️  Run Analysis",
             command=self._run_analysis,
-            height=36,
-            font=ctk.CTkFont(size=13, weight="bold"),
+            height=38,
         ).pack(side="left", padx=4)
-        ctk.CTkButton(btn_frame, text="📊 Forest Plot", command=self._show_forest_plot, height=36).pack(
+        SecondaryButton(top, text="📊  Forest Plot", command=self._show_forest_plot, height=38).pack(
             side="left", padx=4
         )
-        ctk.CTkButton(btn_frame, text="📈 Funnel Plot", command=self._show_funnel_plot, height=36).pack(
+        SecondaryButton(top, text="📈  Funnel Plot", command=self._show_funnel_plot, height=38).pack(
             side="left", padx=4
         )
-        ctk.CTkButton(btn_frame, text="📤 Export", command=self._export, height=36).pack(side="left", padx=4)
+        SecondaryButton(top, text="📤  Export", command=self._export, height=38).pack(side="left", padx=4)
 
         # Settings
         settings = ctk.CTkFrame(self)

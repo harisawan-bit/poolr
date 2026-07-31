@@ -8,6 +8,7 @@ from tkinter import messagebox
 import customtkinter as ctk
 
 from poolr.pages.base import BasePage
+from poolr.ui import PAD_X, PrimaryButton, SecondaryButton, SectionHeader
 
 
 class RoBPage(BasePage):
@@ -16,29 +17,32 @@ class RoBPage(BasePage):
         self._build()
 
     def _build(self):
-        top = ctk.CTkFrame(self)
-        top.pack(fill="x", pady=(0, 12))
-
-        ctk.CTkLabel(top, text="Risk of Bias Assessment", font=ctk.CTkFont(size=20, weight="bold")).pack(
-            side="left", padx=16, pady=12
+        SectionHeader(
+            self,
+            "Risk of Bias Assessment",
+            "RoB 2, Newcastle-Ottawa, and PROBAST — domain-level judgments with overall ratings.",
         )
 
-        btn_frame = ctk.CTkFrame(top, fg_color="transparent")
-        btn_frame.pack(side="right", padx=12)
-        ctk.CTkButton(btn_frame, text="➕ Add Assessment", command=self._add_assessment, height=32).pack(
-            side="left", padx=4
-        )
-        ctk.CTkButton(btn_frame, text="💾 Save", command=self._save, height=32).pack(side="left", padx=4)
+        # Top controls
+        top = ctk.CTkFrame(self, fg_color="transparent")
+        top.pack(fill="x", padx=PAD_X, pady=(4, 10))
 
         # Tool selector
         self.tool_var = tk.StringVar(value="rob2")
         ctk.CTkSegmentedButton(
             top, values=["RoB 2", "NOS", "PROBAST"], variable=self.tool_var, command=self._on_tool_change
-        ).pack(side="right", padx=12)
+        ).pack(side="left", padx=4)
+
+        btn_frame = ctk.CTkFrame(top, fg_color="transparent")
+        btn_frame.pack(side="right")
+        SecondaryButton(btn_frame, text="➕  Add Assessment", command=self._add_assessment, height=34).pack(
+            side="left", padx=4
+        )
+        SecondaryButton(btn_frame, text="💾  Save", command=self._save, height=34).pack(side="left", padx=4)
 
         # Main area
-        self.form_area = ctk.CTkScrollableFrame(self)
-        self.form_area.pack(fill="both", expand=True)
+        self.form_area = ctk.CTkScrollableFrame(self, fg_color="transparent")
+        self.form_area.pack(fill="both", expand=True, padx=PAD_X, pady=(0, 8))
         self.form_area.grid_columnconfigure(0, weight=1)
 
         self._build_rob2_form()
@@ -50,13 +54,12 @@ class RoBPage(BasePage):
         self.probast_frame.pack_forget()
 
         # Save button
-        ctk.CTkButton(
+        PrimaryButton(
             self,
-            text="💾 Save Assessment",
+            text="💾  Save Assessment",
             command=self._save_assessment,
-            height=40,
-            font=ctk.CTkFont(size=14, weight="bold"),
-        ).pack(fill="x", padx=20, pady=20)
+            height=42,
+        ).pack(fill="x", padx=20, pady=16)
 
     def _build_rob2_form(self):
         self.rob2_frame = ctk.CTkFrame(self.form_area)

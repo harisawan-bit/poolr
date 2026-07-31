@@ -9,6 +9,7 @@ import customtkinter as ctk
 import pandas as pd
 
 from poolr.pages.base import BasePage
+from poolr.ui import PAD_X, SecondaryButton
 
 
 class ScreeningPage(BasePage):
@@ -21,19 +22,23 @@ class ScreeningPage(BasePage):
         self._build()
 
     def _build(self):
-        # Top controls
-        top_frame = ctk.CTkFrame(self)
-        top_frame.pack(fill="x", pady=(0, 12))
+        from poolr.ui import PrimaryButton, SectionHeader
 
-        ctk.CTkLabel(top_frame, text="Screening", font=ctk.CTkFont(size=20, weight="bold")).pack(
-            side="left", padx=16, pady=12
+        SectionHeader(
+            self,
+            "Screening",
+            "Dual independent screening with conflict detection and resolution.",
         )
+
+        # Top controls
+        top_frame = ctk.CTkFrame(self, fg_color="transparent")
+        top_frame.pack(fill="x", padx=PAD_X, pady=(4, 10))
 
         # Mode selector
         self.mode_var = tk.StringVar(value="title_abstract")
         ctk.CTkSegmentedButton(
             top_frame, values=["Title/Abstract", "Full Text"], variable=self.mode_var, command=self._on_mode_change
-        ).pack(side="right", padx=16, pady=12)
+        ).pack(side="left", padx=4)
 
         # Reviewer selector
         self.reviewer_var = tk.StringVar(value="reviewer1")
@@ -42,16 +47,21 @@ class ScreeningPage(BasePage):
             values=["Reviewer 1", "Reviewer 2", "Consensus"],
             variable=self.reviewer_var,
             command=self._on_reviewer_change,
-        ).pack(side="right", padx=12, pady=12)
+        ).pack(side="left", padx=12)
 
         # Import/export
         btn_frame = ctk.CTkFrame(top_frame, fg_color="transparent")
-        btn_frame.pack(side="right", padx=12)
-        ctk.CTkButton(btn_frame, text="📥 Import CSV", command=self._import_csv, height=32).pack(side="left", padx=4)
-        ctk.CTkButton(btn_frame, text="📤 Export CSV", command=self._export_csv, height=32).pack(side="left", padx=4)
-        ctk.CTkButton(btn_frame, text="💾 Save", command=self._save, height=32).pack(side="left", padx=4)
-        ctk.CTkButton(
-            btn_frame, text="🔍 View Conflicts", command=self._view_conflicts, height=32, fg_color="orange"
+        btn_frame.pack(side="right", padx=4)
+        SecondaryButton(btn_frame, text="📥  Import CSV", command=self._import_csv, height=32).pack(side="left", padx=4)
+        SecondaryButton(btn_frame, text="📤  Export CSV", command=self._export_csv, height=32).pack(side="left", padx=4)
+        SecondaryButton(btn_frame, text="💾  Save", command=self._save, height=32).pack(side="left", padx=4)
+        PrimaryButton(
+            btn_frame,
+            text="🔍  View Conflicts",
+            command=self._view_conflicts,
+            height=32,
+            fg_color="#F2B84B",
+            hover_color="#F4C564",
         ).pack(side="left", padx=4)
 
         # Main area
@@ -90,28 +100,31 @@ class ScreeningPage(BasePage):
         decision_frame.grid(row=2, column=0, sticky="ew", padx=16, pady=(0, 16))
         self.include_btn = ctk.CTkButton(
             decision_frame,
-            text="✅ Include",
+            text="✅  Include",
             command=lambda: self._decide(True),
-            height=40,
-            fg_color="green",
+            height=44,
+            fg_color="#3FB950",
+            hover_color="#46C758",
             font=ctk.CTkFont(size=14, weight="bold"),
         )
         self.include_btn.pack(side="left", padx=8, expand=True, fill="x")
         self.exclude_btn = ctk.CTkButton(
             decision_frame,
-            text="❌ Exclude",
+            text="❌  Exclude",
             command=lambda: self._decide(False),
-            height=40,
-            fg_color="red",
+            height=44,
+            fg_color="#F05252",
+            hover_color="#F76B6B",
             font=ctk.CTkFont(size=14, weight="bold"),
         )
         self.exclude_btn.pack(side="left", padx=8, expand=True, fill="x")
         self.unsure_btn = ctk.CTkButton(
             decision_frame,
-            text="❓ Unsure",
+            text="❓  Unsure",
             command=lambda: self._decide(None),
-            height=40,
-            fg_color="orange",
+            height=44,
+            fg_color="#F2B84B",
+            hover_color="#F4C564",
             font=ctk.CTkFont(size=14, weight="bold"),
         )
         self.unsure_btn.pack(side="left", padx=8, expand=True, fill="x")

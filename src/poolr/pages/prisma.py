@@ -13,6 +13,7 @@ from poolr.export.reports import export_to_latex, export_to_word
 from poolr.grade import create_grade_summary
 from poolr.pages.base import BasePage
 from poolr.plotting.figures import create_prisma_flow_diagram
+from poolr.ui import PAD_X, PrimaryButton, SecondaryButton, SectionHeader
 
 
 class PrismaPage(BasePage):
@@ -21,28 +22,22 @@ class PrismaPage(BasePage):
         self._build()
 
     def _build(self):
-        top = ctk.CTkFrame(self)
-        top.pack(fill="x", pady=(0, 12))
-
-        ctk.CTkLabel(top, text="PRISMA 2020", font=ctk.CTkFont(size=20, weight="bold")).pack(
-            side="left", padx=16, pady=12
+        SectionHeader(
+            self,
+            "PRISMA 2020",
+            "Checklist, flow diagram, and GRADE evidence profile — auto-populated from your project.",
         )
 
-        btn_frame = ctk.CTkFrame(top, fg_color="transparent")
-        btn_frame.pack(side="right", padx=12)
-        ctk.CTkButton(btn_frame, text="📄 Generate Checklist", command=self._generate_checklist, height=32).pack(
-            side="left", padx=4
-        )
-        ctk.CTkButton(btn_frame, text="📊 Generate Flow", command=self._generate_flow, height=32).pack(
-            side="left", padx=4
-        )
-        ctk.CTkButton(btn_frame, text="📤 Export Report", command=self._export, height=32).pack(side="left", padx=4)
-        ctk.CTkButton(btn_frame, text="📝 Export Word", command=self._export_word, height=32).pack(side="left", padx=4)
-        ctk.CTkButton(btn_frame, text="📄 Export LaTeX", command=self._export_latex, height=32).pack(
-            side="left", padx=4
-        )
+        top = ctk.CTkFrame(self, fg_color="transparent")
+        top.pack(fill="x", padx=PAD_X, pady=(4, 12))
 
-        # Tabs
+        PrimaryButton(top, text="📄  Generate Checklist", command=self._generate_checklist, height=34).pack(
+            side="left", padx=4
+        )
+        PrimaryButton(top, text="📊  Generate Flow", command=self._generate_flow, height=34).pack(side="left", padx=4)
+        SecondaryButton(top, text="📤  Export Report", command=self._export, height=34).pack(side="left", padx=4)
+        SecondaryButton(top, text="📝  Export Word", command=self._export_word, height=34).pack(side="left", padx=4)
+        SecondaryButton(top, text="📄  Export LaTeX", command=self._export_latex, height=34).pack(side="left", padx=4)
         self.tab_view = ctk.CTkTabview(self)
         self.tab_view.pack(fill="both", expand=True, padx=16, pady=(0, 16))
 

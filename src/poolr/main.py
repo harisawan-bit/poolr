@@ -1,5 +1,11 @@
 """
 poolr — Main application module
+
+Premium desktop shell for systematic reviews & meta-analyses:
+  • branded sidebar with hover + active-states
+  • header bar (section title + global actions)
+  • persistent bottom status bar
+  • page cache preserved across navigation (responsive, no rebuild flicker)
 """
 
 import json
@@ -23,9 +29,29 @@ from poolr.pages.protocol import ProtocolPage
 from poolr.pages.rob import RoBPage
 from poolr.pages.screening import ScreeningPage
 from poolr.pages.search import SearchPage
+from poolr.ui import (
+    ACCENT,
+    ACCENT_HOVER,
+    BORDER,
+    TEXT,
+    TEXT_MUTED,
+    SecondaryButton,
+    font,
+    set_theme,
+)
 
-ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("dark-blue")
+set_theme()
+
+NAV_ITEMS = [
+    ("📊", "Dashboard", "dashboard"),
+    ("📋", "Protocol / PICO", "protocol"),
+    ("🔍", "Search", "search"),
+    ("☑️", "Screening", "screening"),
+    ("📝", "Extraction", "extraction"),
+    ("⚠️", "Risk of Bias", "rob"),
+    ("📈", "Meta-Analysis", "meta"),
+    ("📄", "PRISMA", "prisma"),
+]
 
 
 class PoolrApp(ctk.CTk):
@@ -33,22 +59,26 @@ class PoolrApp(ctk.CTk):
         super().__init__()
 
         self.title(f"poolr v{__version__} — Systematic Review & Meta-Analysis")
-        self.geometry("1400x900")
-        self.minsize(1100, 750)
+        self.geometry("1440x900")
+        self.minsize(1120, 760)
+        self.configure(fg_color="#16171A")
 
         self.project_path: Optional[Path] = None
+        self.project_name: str = ""
         self.project_data = self._get_empty_project()
         self._current_page_key: Optional[str] = None
         self._pages: Dict[str, Any] = {}
+        self._nav_buttons: Dict[str, ctk.CTkButton] = {}
 
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=0)  # status bar row
 
         self._build_sidebar()
         self._build_main_area()
+        self._build_status_bar()
         self._build_menu()
 
-        # Defer initial page selection until all widgets are realized
         self.after_idle(self._load_dashboard)
 
     def _load_dashboard(self):
@@ -62,8 +92,103 @@ class PoolrApp(ctk.CTk):
             "extraction": {"studies": []},
             "rob": {"assessments": []},
             "meta": {"results": {}},
-            "metadata": {"created": "", "modified": "", "version": "0.3.0"},
+            "metadata": {"created": "", "modified": "", "version": __version__},
         }
+
+    # ── Sidebar ───────────────────────────────────────────────────────────
+    def _build_sidebar(self):
+        self.sidebar = ctk.CTkFrame(self, width=264, corner_radius=0, fg_color="#1A1B1E")
+        self.sidebar.grid(row=0, column=0, rowspan=2, sticky="nsew")
+        self.sidebar.grid_rowconfigure(10, weight=1)
+        self.sidebar.grid_propagate(False)
+
+        # Brand
+        brand = ctk.CTkFrame(self.sidebar, fg_color="transparent")
+        brand.grid(row=0, column=0, sticky="ew", padx=18, pady=(20, 6))
+        ctk.CTkLabel(brand, text="poolr", font=font(26, "bold"), text_color=TEXT).pack(anchor="w")
+        ctk.CTkLabel(brand, text="SRMA Studio", font=font(12), text_color=ACCENT).pack(anchor="w")
+
+        ctk.CTkFrame(self.sidebar, height=1, fg_color=BORDER).grid(row=1, column=0, sticky="ew", padx=18, pady=(0, 10))
+
+        # Nav items
+        for idx, (icon, label, key) in enumerate(NAV_ITEMS, start=2):
+            btn = ctk.CTkButton(
+                self.sidebar,
+                text=f"  {icon}  {label}",
+                anchor="w",
+                height=42,
+                corner_radius=10,
+                fg_color="transparent",
+                hover_color="#26282E",
+                text_color=TEXT_MUTED,
+                font=font(13),
+                command=lambda k=key: self._select_page(k),
+            )
+            btn.grid(row=idx, column=0, sticky="ew", padx=12, pady=3)
+            self._nav_buttons[key] = btn
+
+        # Project actions
+        actions = ctk.CTkFrame(self.sidebar, fg_color="transparent")
+        actions.grid(row=11, column=0, sticky="ew", padx=12, pady=(8, 8))
+        SecondaryButton(actions, text="📁  Open Project", command=self._open_project, height=38).pack(fill="x", pady=4)
+        SecondaryButton(actions, text="➕  New Project", command=self._new_project, height=38).pack(fill="x", pady=4)
+
+        # Progress card
+        self.progress_card = ctk.CTkFrame(
+            self.sidebar, fg_color="#24262B", corner_radius=12, border_color=BORDER, border_width=1
+        )
+        self.progress_card.grid(row=12, column=0, sticky="ew", padx=12, pady=(8, 12))
+        self.progress_card.grid_columnconfigure(0, weight=1)
+        ctk.CTkLabel(self.progress_card, text="REVIEW PROGRESS", font=font(10, "bold"), text_color=TEXT_MUTED).pack(
+            anchor="w", padx=14, pady=(12, 2)
+        )
+        self.progress_bar = ctk.CTkProgressBar(self.progress_card, height=8, corner_radius=4, progress_color=ACCENT)
+        self.progress_bar.pack(fill="x", padx=14, pady=(4, 2))
+        self.progress_bar.set(0)
+        self.progress_label = ctk.CTkLabel(self.progress_card, text="0% complete", font=font(10), text_color=TEXT_MUTED)
+        self.progress_label.pack(anchor="w", padx=14, pady=(2, 12))
+
+        # Project status
+        self.sidebar_status = ctk.CTkLabel(self.sidebar, text="No project loaded", font=font(11), text_color=TEXT_MUTED)
+        self.sidebar_status.grid(row=13, column=0, sticky="ew", padx=18, pady=(0, 18))
+
+    # ── Main area ─────────────────────────────────────────────────────────
+    def _build_main_area(self):
+        self.main_area = ctk.CTkFrame(self, corner_radius=0, fg_color="#16171A")
+        self.main_area.grid(row=0, column=1, sticky="nsew")
+        self.main_area.grid_rowconfigure(1, weight=1)
+        self.main_area.grid_columnconfigure(0, weight=1)
+
+        # Header bar
+        header = ctk.CTkFrame(self.main_area, height=72, fg_color="#1A1B1E", corner_radius=0)
+        header.grid(row=0, column=0, sticky="ew", padx=0, pady=0)
+        header.grid_columnconfigure(0, weight=1)
+        header.grid_propagate(False)
+
+        self.title_label = ctk.CTkLabel(header, text="Dashboard", font=font(22, "bold"), text_color=TEXT)
+        self.title_label.grid(row=0, column=0, sticky="w", padx=24, pady=0)
+
+        hdr_actions = ctk.CTkFrame(header, fg_color="transparent")
+        hdr_actions.grid(row=0, column=1, sticky="e", padx=18)
+        SecondaryButton(hdr_actions, text="📂  Open", command=self._open_project, height=34).pack(side="left", padx=4)
+        SecondaryButton(hdr_actions, text="📄  New", command=self._new_project, height=34).pack(side="left", padx=4)
+
+        # Scrollable page content (row 1 expands; vertical separator hint via card bg)
+        self.page_container = ctk.CTkFrame(self.main_area, fg_color="transparent")
+        self.page_container.grid(row=1, column=0, sticky="nsew", padx=0, pady=0)
+        self.page_container.grid_columnconfigure(0, weight=1)
+        self.page_container.grid_rowconfigure(0, weight=1)
+
+    # ── Status bar ──────────────────────────────────────────────────────────
+    def _build_status_bar(self):
+        self.status_bar = ctk.CTkFrame(self, height=28, corner_radius=0, fg_color="#1A1B1E")
+        self.status_bar.grid(row=1, column=1, sticky="ew")
+        self.status_bar.grid_columnconfigure(0, weight=1)
+        self.status_label = ctk.CTkLabel(self.status_bar, text="Ready", font=font(11), text_color=TEXT_MUTED)
+        self.status_label.grid(row=0, column=0, sticky="w", padx=18, pady=0)
+        ctk.CTkLabel(self.status_bar, text=f"v{__version__}", font=font(11), text_color=TEXT_MUTED).grid(
+            row=0, column=1, sticky="e", padx=18, pady=0
+        )
 
     def _build_menu(self):
         menubar = tk.Menu(self)
@@ -87,16 +212,13 @@ class PoolrApp(ctk.CTk):
         menubar.add_cascade(label="View", menu=view_menu)
         self._theme_var = tk.StringVar(value="dark")
         view_menu.add_radiobutton(
-            label="Dark Mode", variable=self._theme_var, value="dark", command=lambda: ctk.set_appearance_mode("dark")
+            label="Dark Mode", variable=self._theme_var, value="dark", command=lambda: self._set_theme("dark")
         )
         view_menu.add_radiobutton(
-            label="Light Mode",
-            variable=self._theme_var,
-            value="light",
-            command=lambda: ctk.set_appearance_mode("light"),
+            label="Light Mode", variable=self._theme_var, value="light", command=lambda: self._set_theme("light")
         )
         view_menu.add_radiobutton(
-            label="System", variable=self._theme_var, value="system", command=lambda: ctk.set_appearance_mode("system")
+            label="System", variable=self._theme_var, value="system", command=lambda: self._set_theme("system")
         )
 
         help_menu = tk.Menu(menubar, tearoff=0)
@@ -110,96 +232,25 @@ class PoolrApp(ctk.CTk):
         help_menu.add_separator()
         help_menu.add_command(label="About", command=self._show_about)
 
-        # Keyboard shortcuts
         self.bind("<Control-n>", lambda e: self._new_project())
         self.bind("<Control-o>", lambda e: self._open_project())
         self.bind("<Control-s>", lambda e: self.save_project())
 
-    def _build_sidebar(self):
-        self.sidebar = ctk.CTkFrame(self, width=260, corner_radius=0)
-        self.sidebar.grid(row=0, column=0, sticky="nsew")
-        self.sidebar.grid_rowconfigure(8, weight=1)
+    def _set_theme(self, mode: str):
+        ctk.set_appearance_mode(mode)
 
-        ctk.CTkLabel(self.sidebar, text="poolr", font=ctk.CTkFont(size=26, weight="bold")).grid(
-            row=0, column=0, padx=20, pady=(20, 5)
-        )
-        ctk.CTkLabel(self.sidebar, text="SRMA Studio", font=ctk.CTkFont(size=12)).grid(
-            row=1, column=0, padx=20, pady=(0, 20)
-        )
-
-        self.nav_buttons = {}
-        pages = [
-            ("📊 Dashboard", "dashboard"),
-            ("📋 Protocol / PICO", "protocol"),
-            ("🔍 Search", "search"),
-            ("☑️ Screening", "screening"),
-            ("📝 Extraction", "extraction"),
-            ("⚠️ Risk of Bias", "rob"),
-            ("📈 Meta-Analysis", "meta"),
-            ("📄 PRISMA", "prisma"),
-        ]
-        for idx, (label, key) in enumerate(pages, start=2):
-            btn = ctk.CTkButton(
-                self.sidebar,
-                text=label,
-                anchor="w",
-                height=44,
-                font=ctk.CTkFont(size=13),
-                command=lambda k=key: self._select_page(k),
-            )
-            btn.grid(row=idx, column=0, padx=12, pady=3, sticky="ew")
-            self.nav_buttons[key] = btn
-
-        self.project_btn = ctk.CTkButton(self.sidebar, text="📁 Open Project", command=self._open_project, height=36)
-        self.project_btn.grid(row=10, column=0, padx=16, pady=(0, 8), sticky="ew")
-
-        self.new_project_btn = ctk.CTkButton(self.sidebar, text="➕ New Project", command=self._new_project, height=36)
-        self.new_project_btn.grid(row=11, column=0, padx=16, pady=(0, 8), sticky="ew")
-
-        # Progress indicator
-        self.progress_frame = ctk.CTkFrame(self.sidebar)
-        self.progress_frame.grid(row=12, column=0, padx=16, pady=8, sticky="ew")
-        self.progress_frame.grid_columnconfigure(0, weight=1)
-        ctk.CTkLabel(self.progress_frame, text="Progress", font=ctk.CTkFont(size=11, weight="bold")).pack(
-            anchor="w", padx=8, pady=(8, 2)
-        )
-        self.progress_bar = ctk.CTkProgressBar(self.progress_frame)
-        self.progress_bar.pack(fill="x", padx=8, pady=(0, 8))
-        self.progress_bar.set(0)
-        self.progress_label = ctk.CTkLabel(self.progress_frame, text="0% complete", font=ctk.CTkFont(size=10))
-        self.progress_label.pack(anchor="w", padx=8, pady=(0, 8))
-
-        self.status_label = ctk.CTkLabel(self.sidebar, text="No project loaded", font=ctk.CTkFont(size=11))
-        self.status_label.grid(row=13, column=0, padx=20, pady=(0, 20))
-
-    def _build_main_area(self):
-        self.main_area = ctk.CTkFrame(self, corner_radius=10)
-        self.main_area.grid(row=0, column=1, sticky="nsew", padx=16, pady=16)
-        self.main_area.grid_rowconfigure(1, weight=1)
-        self.main_area.grid_columnconfigure(0, weight=1)
-
-        self.title_label = ctk.CTkLabel(self.main_area, text="Dashboard", font=ctk.CTkFont(size=28, weight="bold"))
-        self.title_label.grid(row=0, column=0, padx=24, pady=(24, 12), sticky="w")
-
-        self.page_container = ctk.CTkFrame(self.main_area, fg_color="transparent")
-        self.page_container.grid(row=1, column=0, sticky="nsew", padx=24, pady=(12, 24))
-
+    # ── Navigation ──────────────────────────────────────────────────────────
     def _select_page(self, key: str):
-        # Save current page data if needed
         if self._current_page_key and self._current_page_key in self._pages:
             page = self._pages[self._current_page_key]
             if hasattr(page, "on_leave"):
                 page.on_leave()
 
-        # Hide (don't destroy) the current page so cached pages stay alive;
-        # destroying them while keeping self._pages entries caused
-        # "bad window path name" TclErrors on revisit.
         for widget in self.page_container.winfo_children():
             widget.pack_forget()
 
         page = self._pages.get(key)
         if page is not None and not page.winfo_exists():
-            # Stale cache entry (widget was destroyed externally) — rebuild it
             del self._pages[key]
             page = None
         if page is None:
@@ -223,27 +274,33 @@ class PoolrApp(ctk.CTk):
                 page = ctk.CTkLabel(self.page_container, text="Coming soon")
             self._pages[key] = page
 
-        page.pack(fill="both", expand=True)
-        self.title_label.configure(text=self.nav_buttons[key].cget("text") if key != "dashboard" else "📊 Dashboard")
+        page.pack(fill="both", expand=True, padx=4, pady=4)
+        label = next((lbl for (_, lbl, k) in NAV_ITEMS if k == key), "Dashboard")
+        self.title_label.configure(text=label)
         self._current_page_key = key
 
-        # Call on_enter if exists
         if hasattr(page, "on_enter"):
             page.on_enter()
 
-        for k, btn in self.nav_buttons.items():
-            btn.configure(fg_color=("gray75", "gray25") if k == key else "transparent")
+        for k, btn in self._nav_buttons.items():
+            if k == key:
+                btn.configure(fg_color=ACCENT, hover_color=ACCENT_HOVER, text_color="#FFFFFF")
+            else:
+                btn.configure(fg_color="transparent", hover_color="#26282E", text_color=TEXT_MUTED)
 
         self._update_progress()
 
+    # ── Project I/O ──────────────────────────────────────────────────────────
     def _new_project(self):
         path = filedialog.askdirectory(title="Create new poolr project folder")
         if path:
             self.project_path = Path(path)
+            self.project_name = self.project_path.name
             self.project_data = self._get_empty_project()
             self.project_data["metadata"]["created"] = datetime.now().isoformat()
             self.project_data["metadata"]["modified"] = datetime.now().isoformat()
-            self.status_label.configure(text=f"Project: {self.project_path.name}")
+            self.sidebar_status.configure(text=f"Project: {self.project_name}")
+            self.status_label.configure(text=f"New project created: {self.project_name}")
             self.save_project()
             self._refresh_all_pages()
             messagebox.showinfo("Success", f"New project created at:\n{self.project_path}")
@@ -252,16 +309,17 @@ class PoolrApp(ctk.CTk):
         path = filedialog.askdirectory(title="Open poolr project folder")
         if path:
             self.project_path = Path(path)
+            self.project_name = self.project_path.name
             pool_json = self.project_path / "poolr.json"
             if pool_json.exists():
                 try:
                     with open(pool_json, "r", encoding="utf-8") as fh:
                         self.project_data = json.load(fh)
-                    # Ensure all keys exist
                     for key in self._get_empty_project():
                         if key not in self.project_data:
                             self.project_data[key] = self._get_empty_project()[key]
-                    self.status_label.configure(text=f"Project: {self.project_path.name}")
+                    self.sidebar_status.configure(text=f"Project: {self.project_name}")
+                    self.status_label.configure(text=f"Project loaded: {self.project_name}")
                     self._refresh_all_pages()
                     messagebox.showinfo("Success", f"Project loaded:\n{self.project_path}")
                 except Exception as e:
@@ -287,7 +345,6 @@ class PoolrApp(ctk.CTk):
                 page.refresh()
 
     def _update_progress(self):
-        # Calculate progress based on completed sections
         steps = [
             ("pico", bool(self.project_data.get("pico", {}))),
             ("search_strategies", bool(self.project_data.get("search_strategies", {}))),
@@ -305,13 +362,12 @@ class PoolrApp(ctk.CTk):
         total = len(steps)
         progress = completed / total if total > 0 else 0
         self.progress_bar.set(progress)
-        self.progress_label.configure(text=f"{int(progress * 100)}% complete ({completed}/{total} sections)")
+        self.progress_label.configure(text=f"{int(progress * 100)}% complete ({completed}/{total})")
 
     def _export_report(self):
         if not self.project_path:
             messagebox.showwarning("Warning", "No project open")
             return
-        # Export all data to a comprehensive report
         report_path = self.project_path / "poolr_report.json"
         with open(report_path, "w", encoding="utf-8") as fh:
             json.dump(self.project_data, fh, indent=2)
