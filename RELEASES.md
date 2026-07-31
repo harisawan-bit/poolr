@@ -12,13 +12,16 @@ Release date: 2026-07-31
 | Windows x64 | `poolr-windows-x64.zip` | Recommended for most PCs — unzip and run `poolr-x64.exe` |
 | Windows x86 | `poolr-windows-x86.zip` | 32-bit Windows |
 | Windows ARM64 | `poolr-windows-arm64.zip` | Windows on ARM |
-| macOS Apple Silicon | `poolr-macos-arm64.zip` | Contains `poolr.app` + `poolr-universal.dmg` |
-| macOS Intel | `poolr-macos-x64.zip` | Contains `poolr.app` + `poolr-universal.dmg` |
+| macOS Apple Silicon | `poolr-macos-arm64.zip` | Contains `poolr.app` + `poolr-arm64.dmg` |
+| macOS Intel | `poolr-macos-x64.zip` | Contains `poolr.app` + `poolr-x64.dmg` |
 | Linux x86_64 | `poolr-linux.zip` | Single-file executable — `chmod +x poolr && ./poolr` |
 
 ### What's New in v0.3.2
 
 - **Critical fix**: page navigation no longer crashes (`bad window path name`) when revisiting pages — found by launch-testing the packaged v0.3.1 Windows exe
+- **Critical fix**: PRISMA auto-generation no longer hangs the headless GUI smoke test (blocking modal removed from the automatic path)
+- Meta-analysis significance now respects the correct null per effect measure (MD/SMD/HR were being tested against the wrong null), and the results screen shows a status hint instead of a popup
+- Build: macOS x64 and arm64 now ship separate, correctly-named DMG files (previously both overwrote a single `universal.dmg`)
 - About dialog version now stays in sync automatically
 - New page-switching regression test in CI
 
