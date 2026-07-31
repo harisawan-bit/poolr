@@ -8,6 +8,7 @@ import customtkinter as ctk
 import pandas as pd
 
 from poolr.pages.base import BasePage
+from poolr.ui import PAD_X, SecondaryButton
 
 
 class ExtractionPage(BasePage):
@@ -18,20 +19,24 @@ class ExtractionPage(BasePage):
         self._build()
 
     def _build(self):
-        top = ctk.CTkFrame(self)
-        top.pack(fill="x", pady=(0, 12))
+        from poolr.ui import SectionHeader
 
-        ctk.CTkLabel(top, text="Data Extraction", font=ctk.CTkFont(size=20, weight="bold")).pack(
-            side="left", padx=16, pady=12
+        SectionHeader(
+            self,
+            "Data Extraction",
+            "Structured forms for every study — population, interventions, outcomes, and neurosurgery-specific fields.",
         )
 
+        top = ctk.CTkFrame(self, fg_color="transparent")
+        top.pack(fill="x", padx=PAD_X, pady=(4, 12))
+
         btn_frame = ctk.CTkFrame(top, fg_color="transparent")
-        btn_frame.pack(side="right", padx=12)
-        ctk.CTkButton(btn_frame, text="➕ Add Study", command=self._add_study, height=32).pack(side="left", padx=4)
-        ctk.CTkButton(btn_frame, text="📥 Import CSV", command=self._import_csv, height=32).pack(side="left", padx=4)
-        ctk.CTkButton(btn_frame, text="📤 Export CSV", command=self._export_csv, height=32).pack(side="left", padx=4)
-        ctk.CTkButton(btn_frame, text="📥 Import RIS", command=self._import_ris, height=32).pack(side="left", padx=4)
-        ctk.CTkButton(btn_frame, text="💾 Save", command=self._save, height=32).pack(side="left", padx=4)
+        btn_frame.pack(side="right")
+        SecondaryButton(btn_frame, text="➕  Add Study", command=self._add_study, height=34).pack(side="left", padx=4)
+        SecondaryButton(btn_frame, text="📥  Import CSV", command=self._import_csv, height=34).pack(side="left", padx=4)
+        SecondaryButton(btn_frame, text="📤  Export CSV", command=self._export_csv, height=34).pack(side="left", padx=4)
+        SecondaryButton(btn_frame, text="📥  Import RIS", command=self._import_ris, height=34).pack(side="left", padx=4)
+        SecondaryButton(btn_frame, text="💾  Save", command=self._save, height=34).pack(side="left", padx=4)
 
         # Main area
         main = ctk.CTkFrame(self)
@@ -192,12 +197,13 @@ class ExtractionPage(BasePage):
                 frame.grid_columnconfigure(1, weight=1)
 
         # Save button at bottom
-        ctk.CTkButton(
+        from poolr.ui import PrimaryButton
+
+        PrimaryButton(
             self.form_scroll,
-            text="💾 Save Study",
+            text="💾  Save Study",
             command=self._save_study,
-            height=40,
-            font=ctk.CTkFont(size=14, weight="bold"),
+            height=42,
         ).pack(fill="x", padx=20, pady=20)
 
     def on_enter(self):

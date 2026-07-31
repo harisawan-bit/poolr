@@ -7,6 +7,7 @@ from tkinter import messagebox
 import customtkinter as ctk
 
 from poolr.pages.base import BasePage
+from poolr.ui import PAD_X, PrimaryButton, SecondaryButton, SectionHeader
 
 
 class SearchPage(BasePage):
@@ -15,27 +16,22 @@ class SearchPage(BasePage):
         self._build()
 
     def _build(self):
-        self.scroll = ctk.CTkScrollableFrame(self)
-        self.scroll.pack(fill="both", expand=True)
+        SectionHeader(
+            self,
+            "Search Strategy Builder",
+            "Generate search strings for each database from your PICO. Edit as needed before exporting.",
+        )
+
+        self.scroll = ctk.CTkScrollableFrame(self, fg_color="transparent")
+        self.scroll.pack(fill="both", expand=True, padx=PAD_X, pady=(8, 0))
         self.scroll.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(self.scroll, text="Search Strategy Builder", font=ctk.CTkFont(size=20, weight="bold")).grid(
-            row=0, column=0, sticky="w", pady=(0, 8)
-        )
-        ctk.CTkLabel(
+        PrimaryButton(
             self.scroll,
-            text="Generate search strings for each database from your PICO. Edit as needed.",
-            wraplength=800,
-        ).grid(row=1, column=0, sticky="w", pady=(0, 16))
-
-        # Generate button
-        ctk.CTkButton(
-            self.scroll,
-            text="🔄 Generate from PICO",
+            text="🔄  Generate from PICO",
             command=self._generate_from_pico,
             height=40,
-            font=ctk.CTkFont(size=13),
-        ).grid(row=2, column=0, sticky="w", pady=(0, 16))
+        ).grid(row=0, column=0, sticky="w", pady=(0, 16))
 
         # Database tabs
         self.db_textboxes = {}
@@ -48,26 +44,27 @@ class SearchPage(BasePage):
         ]
 
         for i, (label, key) in enumerate(databases):
-            row = 3 + i * 2
+            row = 1 + i * 2
             ctk.CTkLabel(self.scroll, text=label, font=ctk.CTkFont(size=14, weight="bold")).grid(
                 row=row, column=0, sticky="w", pady=(12, 4)
             )
-            tb = ctk.CTkTextbox(self.scroll, height=120, font=ctk.CTkFont(family="Consolas", size=11))
+            tb = ctk.CTkTextbox(
+                self.scroll, height=120, font=ctk.CTkFont(family="Consolas", size=11), border_color=("gray30", "gray30")
+            )
             tb.grid(row=row + 1, column=0, sticky="ew", pady=(0, 4))
             self.db_textboxes[key] = tb
 
         # Save button
-        ctk.CTkButton(
+        PrimaryButton(
             self.scroll,
-            text="💾 Save All Strategies",
+            text="💾  Save All Strategies",
             command=self._save,
             height=40,
-            font=ctk.CTkFont(size=14, weight="bold"),
-        ).grid(row=14, column=0, sticky="ew", pady=20)
+        ).grid(row=11, column=0, sticky="ew", pady=20)
 
         # Export
-        ctk.CTkButton(self.scroll, text="📤 Export All (.txt)", command=self._export, height=36).grid(
-            row=15, column=0, sticky="ew", pady=(0, 20)
+        SecondaryButton(self.scroll, text="📤  Export All (.txt)", command=self._export, height=36).grid(
+            row=12, column=0, sticky="ew", pady=(0, 20)
         )
 
     def on_enter(self):
