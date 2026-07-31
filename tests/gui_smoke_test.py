@@ -63,6 +63,21 @@ def test_all_pages():
 
         print(f"  ✓ {name} page OK")
 
+    # Regression: navigating between pages twice must not raise TclError.
+    # v0.3.1 packaged builds crashed with 'bad window path name' because
+    # _select_page destroyed cached page widgets but kept them in self._pages.
+    print("\nTesting page switching (revisit regression)...")
+    keys = ["dashboard", "protocol", "search", "screening", "extraction", "rob", "meta", "prisma"]
+    try:
+        for round_num in (1, 2):
+            for key in keys:
+                app._select_page(key)
+                app.update_idletasks()
+            print(f"  ✓ Round {round_num}: visited all {len(keys)} pages")
+    except _TCL_ERR as exc:
+        raise AssertionError(f"Page switching raised TclError: {exc}") from exc
+
+    _tkinter.destroy()
     app.destroy()
     print("\n✓ All pages instantiated successfully!")
 

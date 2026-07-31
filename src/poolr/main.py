@@ -191,10 +191,17 @@ class PoolrApp(ctk.CTk):
             if hasattr(page, "on_leave"):
                 page.on_leave()
 
+        # Hide (don't destroy) the current page so cached pages stay alive;
+        # destroying them while keeping self._pages entries caused
+        # "bad window path name" TclErrors on revisit.
         for widget in self.page_container.winfo_children():
-            widget.destroy()
+            widget.pack_forget()
 
         page = self._pages.get(key)
+        if page is not None and not page.winfo_exists():
+            # Stale cache entry (widget was destroyed externally) — rebuild it
+            del self._pages[key]
+            page = None
         if page is None:
             if key == "dashboard":
                 page = DashboardPage(self.page_container, app=self)
@@ -316,7 +323,7 @@ class PoolrApp(ctk.CTk):
     def _show_about(self):
         messagebox.showinfo(
             "About poolr",
-            "poolr v0.3.0\n\n"
+            f"poolr v{__version__}\n\n"
             "Standalone GUI for systematic reviews and meta-analyses.\n\n"
             "Built with CustomTkinter, pandas, matplotlib, statsmodels, and Python.\n\n"
             "https://github.com/harisawan-bit/poolr",

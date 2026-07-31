@@ -269,11 +269,13 @@ class MetaPage(BasePage):
                 out += f"  {test}: {val}\n"
             out += "\n"
 
-        # Interpretation
-        if p["ci_lower"] > 1 or p["ci_upper"] < 1:
-            out += "✓ Statistically significant (95% CI does not include 1)\n"
+        # Interpretation — null value depends on the effect measure.
+        # Ratio measures (OR, RR, HR) have null = 1; difference measures (MD, SMD, RD) have null = 0.
+        null = 1.0 if self.measure in ("OR", "RR", "HR") else 0.0
+        if (p["ci_lower"] > null and p["ci_upper"] > null) or (p["ci_lower"] < null and p["ci_upper"] < null):
+            out += "✓ Statistically significant (95% CI excludes null value)\n"
         else:
-            out += "✗ Not statistically significant (95% CI includes 1)\n"
+            out += "✗ Not statistically significant (95% CI includes null value)\n"
 
         if h["i2"] < 25:
             out += "✓ Low heterogeneity\n"
@@ -286,10 +288,9 @@ class MetaPage(BasePage):
 
         self.results_text.insert("0.0", out)
 
-        # Also show in messagebox for quick view
-        messagebox.showinfo(
-            "Analysis Complete",
-            f"Pooled {results['measure']} = {p['effect']:.3f} (95% CI: {p['ci_lower']:.3f}-{p['ci_upper']:.3f})\nI² = {h['i2']:.1f}%",
+        # Status bar hint instead of a blocking modal (keeps the UI responsive)
+        self.app.status_label.configure(
+            text=f"Analysis complete: {results['measure']} = {p['effect']:.3f} (95% CI {p['ci_lower']:.3f}-{p['ci_upper']:.3f}), I² = {h['i2']:.1f}%"
         )
 
     def _show_forest_plot(self):
