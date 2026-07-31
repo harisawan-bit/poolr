@@ -537,8 +537,26 @@ class TestNullValueInterpretation:
     def test_md_non_significant_when_ci_spans_zero(self):
         """MD of ~0 with wide CI must be non-significant (null = 0)."""
         studies = [
-            {"study": "A", "type": "continuous", "int_mean": 0.5, "int_sd": 2.0, "int_n": 60, "ctrl_mean": 0.3, "ctrl_sd": 2.0, "ctrl_n": 60},
-            {"study": "B", "type": "continuous", "int_mean": -0.4, "int_sd": 2.2, "int_n": 60, "ctrl_mean": 0.1, "ctrl_sd": 2.1, "ctrl_n": 60},
+            {
+                "study": "A",
+                "type": "continuous",
+                "int_mean": 0.5,
+                "int_sd": 2.0,
+                "int_n": 60,
+                "ctrl_mean": 0.3,
+                "ctrl_sd": 2.0,
+                "ctrl_n": 60,
+            },
+            {
+                "study": "B",
+                "type": "continuous",
+                "int_mean": -0.4,
+                "int_sd": 2.2,
+                "int_n": 60,
+                "ctrl_mean": 0.1,
+                "ctrl_sd": 2.1,
+                "ctrl_n": 60,
+            },
         ]
         meta = MetaAnalysis(model="random", measure="MD", method="DL")
         r = meta.run(studies)
