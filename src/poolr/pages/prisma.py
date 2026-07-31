@@ -192,7 +192,7 @@ class PrismaPage(BasePage):
 
         self.grade_labels = []
 
-    def _generate_checklist(self):
+    def _generate_checklist(self, interactive: bool = True):
         """Auto-fill checklist based on project data"""
         data = self.app.project_data
 
@@ -279,9 +279,10 @@ class PrismaPage(BasePage):
         if data.get("protocol", {}).get("funding"):
             self.checklist_items["Funding"].set(True)
 
-        messagebox.showinfo(
-            "Checklist", "PRISMA checklist auto-filled based on project data. Review and adjust as needed."
-        )
+        if interactive:
+            messagebox.showinfo(
+                "Checklist", "PRISMA checklist auto-filled based on project data. Review and adjust as needed."
+            )
 
     def _draw_flow(self):
         try:
@@ -407,7 +408,7 @@ class PrismaPage(BasePage):
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save:\n{e}")
 
-    def _generate_flow(self):
+    def _generate_flow(self, interactive: bool = True):
         """Auto-populate from screening data"""
         data = self.app.project_data
         ta = data.get("screening", {}).get("title_abstract", [])
@@ -439,7 +440,8 @@ class PrismaPage(BasePage):
         self.flow_inputs["not_retrieved"].insert(0, "0")
 
         self._draw_flow()
-        messagebox.showinfo("Flow", "Flow diagram auto-populated from screening data")
+        if interactive:
+            messagebox.showinfo("Flow", "Flow diagram auto-populated from screening data")
 
     def _generate_grade(self):
         """Generate GRADE evidence profile"""
@@ -604,10 +606,10 @@ class PrismaPage(BasePage):
             messagebox.showerror("Error", f"Export failed:\n{e}")
 
     def on_enter(self):
-        # Auto-generate checklist if not done
+        # Auto-generate checklist if not done (non-interactive: never block headless CI)
         if not any(v.get() for v in self.checklist_items.values()):
-            self._generate_checklist()
+            self._generate_checklist(interactive=False)
 
-        # Auto-generate flow if not done
+        # Auto-generate flow if not done (non-interactive: never block headless CI)
         if all(v.get() == "0" for v in self.flow_inputs.values()):
-            self._generate_flow()
+            self._generate_flow(interactive=False)

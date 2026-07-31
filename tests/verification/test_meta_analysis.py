@@ -528,5 +528,33 @@ class TestNumericalPrecision:
         assert results["heterogeneity"]["tau2"] > 1.0
 
 
+class TestNullValueInterpretation:
+    """The significance test in the UI relies on the correct null value:
+    ratio measures (OR/RR/HR) have null=1; difference measures (MD/SMD/RD) have null=0.
+    The engine must therefore report CI bounds that straddle the correct null when
+    the pooled estimate is not significant."""
+
+    def test_md_non_significant_when_ci_spans_zero(self):
+        """MD of ~0 with wide CI must be non-significant (null = 0)."""
+        studies = [
+            {"study": "A", "type": "continuous", "int_mean": 0.5, "int_sd": 2.0, "int_n": 60, "ctrl_mean": 0.3, "ctrl_sd": 2.0, "ctrl_n": 60},
+            {"study": "B", "type": "continuous", "int_mean": -0.4, "int_sd": 2.2, "int_n": 60, "ctrl_mean": 0.1, "ctrl_sd": 2.1, "ctrl_n": 60},
+        ]
+        meta = MetaAnalysis(model="random", measure="MD", method="DL")
+        r = meta.run(studies)
+        # CI must straddle 0 (the MD null), confirming correct null handling downstream
+        assert r["pooled"]["ci_lower"] < 0 < r["pooled"]["ci_upper"]
+
+    def test_or_non_significant_when_ci_spans_one(self):
+        """OR ~1 with CI spanning 1 must be non-significant (null = 1)."""
+        studies = [
+            {"study": "A", "type": "binary", "int_events": 40, "int_n": 100, "ctrl_events": 38, "ctrl_n": 100},
+            {"study": "B", "type": "binary", "int_events": 45, "int_n": 100, "ctrl_events": 47, "ctrl_n": 100},
+        ]
+        meta = MetaAnalysis(model="random", measure="OR", method="DL")
+        r = meta.run(studies)
+        assert r["pooled"]["ci_lower"] < 1 < r["pooled"]["ci_upper"]
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

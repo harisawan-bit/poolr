@@ -81,7 +81,7 @@ jobs:
           hdiutil create -volname "poolr Installer" \
             -srcfolder "dmg" \
             -ov -format UDZO \
-            "dist/poolr-universal.dmg"
+            "dist/poolr-${{ matrix.arch }}.dmg"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -89,7 +89,7 @@ jobs:
           name: poolr-macos-${{ matrix.arch }}
           path: |
             dist/${{ matrix.arch }}/poolr.app
-            dist/poolr-universal.dmg
+            dist/poolr-${{ matrix.arch }}.dmg
 
   build-linux:
     name: Build Linux App
