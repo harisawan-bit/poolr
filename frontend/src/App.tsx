@@ -60,7 +60,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="relative flex h-full w-full overflow-hidden text-[#e6e7ea]">
+    <div className="relative z-10 flex h-full w-full overflow-hidden text-[#e6e7ea]">
       {/* Faint abstract line field — subconscious texture behind everything */}
       <div className="linefield" aria-hidden="true" />
 
