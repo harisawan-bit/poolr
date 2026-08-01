@@ -1,11 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { Component, useEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
 import {
   engineHealth,
   openProjectDialog,
   exportProject,
-  newProject,
   saveProject,
+  getProject,
 } from "./lib/api";
+import { emptyProject, normalizeProject, type Project } from "./lib/project";
+import Dashboard from "./pages/Dashboard";
+import Protocol from "./pages/Protocol";
+import Search from "./pages/Search";
+import Screening from "./pages/Screening";
+import Extraction from "./pages/Extraction";
+import Rob from "./pages/Rob";
+import Meta from "./pages/Meta";
+import Prisma from "./pages/Prisma";
+import DisclaimerModal from "./components/DisclaimerModal";
+
+const LAST_PATH_KEY = "poolr.lastProjectPath";
 
 const NAV = [
   { key: "dashboard", label: "Dashboard", icon: "▦" },
@@ -40,7 +52,7 @@ function LogoMark({ size = 20 }: { size?: number }) {
   );
 }
 
-/* Animated random floating line field (unchanged from prior shell). */
+/* Animated random floating line field (behind content, z-0). */
 type Line = { x: number; y: number; depth: number; vx: number; vy: number; pts: { x: number; y: number }[] };
 function useLineField(ref: React.RefObject<HTMLCanvasElement | null>) {
   useEffect(() => {
@@ -102,14 +114,49 @@ function useLineField(ref: React.RefObject<HTMLCanvasElement | null>) {
   }, [ref]);
 }
 
+/** localStorage can throw (private mode / disabled storage) — never let it break boot. */
+const store = {
+  get(key: string): string | null {
+    try { return localStorage.getItem(key); } catch { return null; }
+  },
+  set(key: string, value: string) {
+    try { localStorage.setItem(key, value); } catch { /* quota or blocked — non-fatal */ }
+  },
+};
+
+const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+/** Keeps one broken page from white-screening the whole shell. */
+class PageBoundary extends Component<{ pageKey: string; children: ReactNode }, { error: Error | null }> {
+  state: { error: Error | null } = { error: null };
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  componentDidCatch(error: Error, info: ErrorInfo) { console.error("page crashed", error, info); }
+  componentDidUpdate(prev: { pageKey: string }) {
+    if (prev.pageKey !== this.props.pageKey && this.state.error) this.setState({ error: null });
+  }
+  render() {
+    if (!this.state.error) return this.props.children;
+    return (
+      <div className="card p-4">
+        <h2 className="text-[14px] font-semibold">This page hit an error</h2>
+        <p className="mt-1 text-[12.5px] text-[#8b8d96]">
+          {this.state.error.message || "Unknown error"} — your project data is untouched. Switch pages or reload.
+        </p>
+        <button className="btn-ghost mt-3" onClick={() => this.setState({ error: null })}>Try again</button>
+      </div>
+    );
+  }
+}
+
 export default function App() {
   const [page, setPage] = useState<PageKey>("dashboard");
   const [connected, setConnected] = useState<boolean | null>(null);
   const [collapsed, setCollapsed] = useState(typeof window !== "undefined" && window.innerWidth < 820);
-  const [project, setProject] = useState<Record<string, unknown> | null>(null);
+  const [project, setProject] = useState<Project | null>(null);
   const [projectPath, setProjectPath] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [busy, setBusy] = useState(false);
+  const [banner, setBanner] = useState<string | null>(null);
   const linefieldRef = useRef<HTMLCanvasElement | null>(null);
 
   useLineField(linefieldRef);
@@ -125,55 +172,135 @@ export default function App() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  // Phase E (E3): load the last project on boot so a multi-day MA resumes after restart.
+  useEffect(() => {
+    let alive = true;
+    const last = store.get(LAST_PATH_KEY);
+    if (!last) return;
+    getProject(last)
+      .then((data) => {
+        if (!alive) return;
+        setProject(normalizeProject(data));
+        setProjectPath(last);
+        setSaveState("saved");
+      })
+      .catch(() => { /* no prior project / corrupt — start fresh */ });
+    return () => { alive = false; };
+  }, []);
+
+  // Debounced autosave (Phase E behaviour wired into the shell).
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveSeq = useRef(0);
+  const mounted = useRef(true);
+  useEffect(() => () => {
+    mounted.current = false;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+  }, []);
+
+  const cancelPendingSave = () => {
+    if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
+    saveSeq.current++; // invalidate any in-flight save response
+  };
+
+  const onProjectChange = (p: Project) => {
+    setProject(p);
+    if (!projectPath) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    setSaveState("saving");
+    const seq = ++saveSeq.current;
+    saveTimer.current = setTimeout(async () => {
+      try {
+        const saved = await saveProject(projectPath, p);
+        // A newer edit (or a manual save) superseded this one — drop the result
+        // so a slow response can't flip the indicator back to "saved".
+        if (!mounted.current || seq !== saveSeq.current) return;
+        setProjectPath(saved); setSaveState("saved");
+        store.set(LAST_PATH_KEY, saved);
+      } catch (e) {
+        if (!mounted.current || seq !== saveSeq.current) return;
+        setSaveState("error"); setBanner(errText(e));
+      }
+    }, 300);
+  };
+
   const handleOpen = async () => {
-    setBusy(true);
+    setBusy(true); setBanner(null);
+    cancelPendingSave();
     try {
       const res = await openProjectDialog();
-      if (res.data) { setProject(res.data as Record<string, unknown>); setProjectPath(res.path); setSaveState("saved"); }
-    } catch (e) {
-      console.error(e); setSaveState("error");
-    } finally { setBusy(false); }
+      if (res.data) {
+        setProject(normalizeProject(res.data));
+        setProjectPath(res.path);
+        setSaveState("saved");
+        if (res.path) store.set(LAST_PATH_KEY, res.path);
+      }
+    } catch (e) { console.error(e); setSaveState("error"); setBanner(errText(e)); }
+    finally { if (mounted.current) setBusy(false); }
   };
 
   const handleNew = async () => {
-    const p = newProject();
-    setProject(p); setSaveState("idle");
-    // Auto-save into the engine store (no file picker in browser/dev).
+    cancelPendingSave();
+    const p = emptyProject();
+    setProject(p); setSaveState("idle"); setBanner(null);
+    const seq = ++saveSeq.current;
     try {
-      const saved = await saveProject(projectPath ?? "poolr.json", p);
+      const saved = await saveProject("poolr.json", p);
+      if (!mounted.current || seq !== saveSeq.current) return;
       setProjectPath(saved); setSaveState("saved");
-    } catch { setSaveState("error"); }
+      store.set(LAST_PATH_KEY, saved);
+    } catch (e) {
+      if (!mounted.current || seq !== saveSeq.current) return;
+      setSaveState("error"); setBanner(errText(e));
+    }
   };
 
   const handleSave = async () => {
     if (!project) return;
-    setSaveState("saving");
+    cancelPendingSave();
+    setSaveState("saving"); setBanner(null);
+    const seq = ++saveSeq.current;
     try {
       const saved = await saveProject(projectPath ?? "poolr.json", project);
+      if (!mounted.current || seq !== saveSeq.current) return;
       setProjectPath(saved); setSaveState("saved");
-    } catch { setSaveState("error"); }
+      store.set(LAST_PATH_KEY, saved);
+    } catch (e) {
+      if (!mounted.current || seq !== saveSeq.current) return;
+      setSaveState("error"); setBanner(errText(e));
+    }
   };
+
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   const handleExport = async () => {
     if (!project) return;
-    setBusy(true);
-    try { await exportProject(project, "docx"); } catch (e) { console.error(e); }
-    finally { setBusy(false); }
+    setBusy(true); setBanner(null);
+    try {
+      await exportProject(project, "docx");
+      if (mounted.current) setShowDisclaimer(true);
+    } catch (e) { console.error(e); if (mounted.current) setBanner(errText(e)); }
+    finally { if (mounted.current) setBusy(false); }
   };
-
-  // ---- Dashboard KPIs derived from the live project ----
-  const meta = (project?.["meta"] as any)?.results;
-  const studies = ((project?.["extraction"] as any)?.studies) ?? [];
-  const robCount = ((project?.["rob"] as any)?.assessments)?.length ?? 0;
-  const kpis = [
-    { k: "Studies", v: String(studies.length) },
-    { k: "Pooled effect", v: meta ? (meta.pooled?.effect ?? "—").toFixed(2) : "—" },
-    { k: "I²", v: meta ? `${(meta.heterogeneity?.i2 ?? 0).toFixed(0)}%` : "—" },
-    { k: "RoB done", v: String(robCount) },
-  ];
 
   const saveLabel =
     saveState === "saving" ? "saving…" : saveState === "saved" ? "saved" : saveState === "error" ? "save error" : "unsaved";
+
+  // Stable placeholder while no project is loaded: calling emptyProject() inline
+  // in the render map minted a brand-new object (and a new `created` timestamp)
+  // on every render, which needlessly re-rendered every page.
+  const blank = useMemo(() => emptyProject(), []);
+  const current = project ?? blank;
+
+  const pages: Record<PageKey, () => React.ReactElement> = {
+    dashboard: () => <Dashboard project={current} onChange={onProjectChange} />,
+    protocol: () => <Protocol project={current} onChange={onProjectChange} />,
+    search: () => <Search project={current} onChange={onProjectChange} />,
+    screening: () => <Screening project={current} onChange={onProjectChange} />,
+    extraction: () => <Extraction project={current} onChange={onProjectChange} />,
+    rob: () => <Rob project={current} onChange={onProjectChange} />,
+    meta: () => <Meta project={current} onChange={onProjectChange} />,
+    prisma: () => <Prisma project={current} onChange={onProjectChange} />,
+  };
 
   return (
     <div className="relative z-10 flex h-full w-full overflow-hidden text-[#e6e7ea]">
@@ -221,59 +348,25 @@ export default function App() {
         </header>
 
         <main className="flex-1 overflow-auto p-4">
-          {page === "dashboard" && (
-            <div className="card p-4">
-              <h2 className="mb-1.5 text-[14px] font-semibold">Dashboard</h2>
-              <p className="text-[12.5px] text-[#8b8d96] leading-relaxed">
-                {project ? (
-                  <>Loaded <span className="text-[#e6e7ea]">{projectPath ?? "untitled project"}</span>. {studies.length} study(ies) extracted.</>
-                ) : (
-                  <>No project loaded. Use <span className="text-[#e6e7ea]">Open</span> to load a <code>poolr.json</code>, or <span className="text-[#e6e7ea]">New</span> to start one.</>
-                )}
-              </p>
-              <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                {kpis.map((kpi) => (
-                  <div key={kpi.k} className="card p-2.5">
-                    <div className="text-[18px] font-semibold">{kpi.v}</div>
-                    <div className="text-[10.5px] text-[#8b8d96]">{kpi.k}</div>
-                  </div>
-                ))}
-              </div>
+          {banner && (
+            <div className="mb-3 flex items-start gap-2 rounded-[3px] border border-[#f05252]/30 bg-[#f05252]/10 px-2.5 py-1.5 text-[12px] text-[#f05252]">
+              <span className="flex-1">{banner}</span>
+              <button className="shrink-0 text-[#f05252]/70 hover:text-[#f05252]" onClick={() => setBanner(null)} aria-label="Dismiss">✕</button>
             </div>
           )}
-
-          {page !== "dashboard" && (
-            <div className="card p-4">
-              <h2 className="mb-1.5 text-[14px] font-semibold">{TITLES[page]}</h2>
-              <p className="text-[12.5px] text-[#8b8d96] leading-relaxed">
-                This panel is part of the Phase D page build. The shell (sidebar, header,
-                project open/save/export, engine bridge) is live in Phase C; page content
-                for <span className="text-[#e6e7ea]">{TITLES[page]}</span> arrives in Phase D.
-              </p>
-            </div>
-          )}
+          <PageBoundary pageKey={page}>{pages[page]()}</PageBoundary>
         </main>
 
         <footer className="glass flex items-center justify-between border-t border-white/[0.07] px-4 py-1 text-[10.5px] text-[#8b8d96]">
-          <span>poolr v0.4.0 · systematic review &amp; meta-analysis</span>
+          <span>poolr v0.4.0 · systematic review &amp; meta-analysis · © M. Haris Awan</span>
           <span className="flex items-center gap-1.5">
             <span className={`h-1.5 w-1.5 rounded-full ${saveState === "error" ? "bg-[#f05252]" : saveState === "saved" ? "bg-[#3fb950]" : "bg-[#8b8d96]"}`} />
             {saveLabel}
           </span>
         </footer>
-
-        <div className="border-t border-white/[0.06] bg-[#07080b] px-4 py-2.5 text-[10.5px] leading-relaxed text-[#8b8d96]">
-          <p className="max-w-[80ch]">
-            poolr helps researchers plan, screen, and synthesize evidence into a
-            defensible meta-analysis. Always verify outputs against your protocol and
-            preregister before analysis. For research use — not a substitute for
-            clinical judgment.
-          </p>
-          <p className="mt-1 text-[#b9bbc2]">
-            Developed by <span className="font-sans font-semibold text-[#e6e7ea]">M. Haris Awan</span> · © {new Date().getFullYear()} poolr
-          </p>
-        </div>
       </div>
+
+      {showDisclaimer && <DisclaimerModal onClose={() => setShowDisclaimer(false)} />}
     </div>
   );
 }

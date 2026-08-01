@@ -11,6 +11,21 @@ builder.WebHost.UseUrls("http://127.0.0.1:5180");
 
 var app = builder.Build();
 
+// CORS — the Tauri webview and a plain browser dev server both call this sidecar
+// from a different origin (tauri://localhost or localhost:1420). Allow it.
+app.Use(async (ctx, next) =>
+{
+    ctx.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+    ctx.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    ctx.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type");
+    if (ctx.Request.Method == "OPTIONS")
+    {
+        ctx.Response.StatusCode = 204;
+        return;
+    }
+    await next();
+});
+
 app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.4.0", engine = "csharp" }));
 app.MapGet("/version", () => Results.Ok(new { version = "0.4.0" }));
 

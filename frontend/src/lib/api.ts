@@ -3,7 +3,12 @@
 // to hidden <input type=file> for Open and a blob download for Export so the UI
 // still works during `npm run dev`.
 
-const ENGINE_URL = "http://127.0.0.1:5180";
+export const ENGINE_URL = "http://127.0.0.1:5180";
+
+/** Human-readable reason a request never reached the engine. */
+export function offlineMessage(what: string): string {
+  return `${what} failed — the poolr engine is not reachable at ${ENGINE_URL}. Start the engine and try again.`;
+}
 
 // @ts-ignore - injected by Tauri at runtime
 const hasTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -17,12 +22,21 @@ export async function engineHealth(): Promise<boolean> {
   }
 }
 
-export async function postJson<T = any>(path: string, body: unknown): Promise<T> {
-  const r = await fetch(`${ENGINE_URL}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+export async function postJson<T = any>(path: string, body: unknown, timeoutMs = 30000): Promise<T> {
+  let r: Response;
+  try {
+    r = await fetch(`${ENGINE_URL}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (e) {
+    // Network-level failure (engine down, DNS, CORS, timeout) — fetch rejects
+    // with an opaque TypeError, so translate it into something actionable.
+    const timedOut = e instanceof DOMException && e.name === "TimeoutError";
+    throw new Error(timedOut ? `engine ${path} timed out after ${Math.round(timeoutMs / 1000)}s` : offlineMessage(`Request ${path}`));
+  }
   if (!r.ok) {
     const t = await r.text().catch(() => "");
     throw new Error(`engine ${path} failed (${r.status}): ${t}`);
@@ -58,51 +72,93 @@ export async function openProjectDialog(): Promise<DialogResult> {
     const data = await getProject(f as string);
     return { path: f as string, data };
   }
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const inp = document.createElement("input");
     inp.type = "file";
     inp.accept = "application/json,.json";
+    inp.style.display = "none";
+    document.body.appendChild(inp);
+
+    let settled = false;
+    const cleanup = () => {
+      settled = true;
+      window.removeEventListener("focus", onFocus);
+      inp.remove();
+    };
+    const done = (res: DialogResult) => { if (!settled) { cleanup(); resolve(res); } };
+    const fail = (e: Error) => { if (!settled) { cleanup(); reject(e); } };
+    // If the user dismisses the OS picker, `change` never fires. Without this
+    // the promise would hang forever and leave the shell stuck in `busy`.
+    const onFocus = () => setTimeout(() => { if (!inp.files || inp.files.length === 0) done({ path: null, data: null }); }, 400);
+
     inp.onchange = async () => {
       const file = inp.files?.[0];
-      if (!file) return resolve({ path: null, data: null });
-      const text = await file.text();
+      if (!file) return done({ path: null, data: null });
       let data: unknown = null;
-      try { data = JSON.parse(text); } catch { /* ignore */ }
-      resolve({ path: file.name, data });
+      try {
+        data = JSON.parse(await file.text());
+      } catch {
+        return fail(new Error(`${file.name} is not a valid poolr project (invalid JSON).`));
+      }
+      done({ path: file.name, data });
     };
+    inp.oncancel = () => done({ path: null, data: null });
+    window.addEventListener("focus", onFocus, { once: true });
     inp.click();
   });
+}
+
+export interface PickedFile {
+  name: string;
+  text: string;
+}
+
+/**
+ * Read the contents of files chosen through a hidden <input type=file>.
+ * Used for citation import (MEDLINE / RIS / .nbib / CSV / EndNote). Works
+ * identically in Tauri and in a plain browser, so no native dialog is needed.
+ */
+export async function readTextFiles(files: FileList | File[] | null): Promise<PickedFile[]> {
+  if (!files) return [];
+  const list = Array.from(files as ArrayLike<File>);
+  const out: PickedFile[] = [];
+  for (const f of list) {
+    try {
+      out.push({ name: f.name, text: await f.text() });
+    } catch {
+      /* unreadable file — skip */
+    }
+  }
+  return out;
 }
 
 export async function exportProject(
   project: unknown,
   format: "json" | "md" | "latex" | "docx"
 ): Promise<void> {
-  const r = await fetch(`${ENGINE_URL}/api/export?format=${format}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(project),
-  });
-  if (!r.ok) throw new Error(`export failed (${r.status})`);
+  let r: Response;
+  try {
+    r = await fetch(`${ENGINE_URL}/api/export?format=${format}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(project),
+      signal: AbortSignal.timeout(60000),
+    });
+  } catch {
+    throw new Error(offlineMessage("Export"));
+  }
+  if (!r.ok) {
+    const detail = await r.text().catch(() => "");
+    throw new Error(`Export failed (${r.status})${detail ? `: ${detail.slice(0, 200)}` : ""}`);
+  }
   const blob = await r.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   const ext = format === "latex" ? "tex" : format;
   a.href = url;
   a.download = `poolr_report.${ext}`;
+  a.style.display = "none";
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
-}
-
-export function newProject(): Record<string, unknown> {
-  return {
-    metadata: { version: "0.4.0", created: new Date().toISOString() },
-    pico: { population: "", intervention: "", comparator: "", outcomes: "" },
-    protocol: { databases: "PubMed, Embase, Cochrane CENTRAL, Scopus", registration: "Not registered" },
-    screening: { title_abstract: [], full_text: [] },
-    extraction: { studies: [] },
-    rob: { assessments: [] },
-    meta: { results: null },
-    prisma: { flow: {} },
-  };
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 0);
 }

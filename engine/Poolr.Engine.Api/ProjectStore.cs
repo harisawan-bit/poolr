@@ -15,12 +15,45 @@ public static class ProjectStore
 
     public static object Load(string path)
     {
-        if (!File.Exists(path))
-            throw new FileNotFoundException("No poolr.json found at the given path.", path);
-        var txt = File.ReadAllText(path);
-        using var doc = JsonDocument.Parse(txt);
-        return JsonSerializer.Deserialize<object>(txt)
-            ?? throw new InvalidDataException("poolr.json is empty or invalid.");
+        // Primary load; fall back to the rolling .bak if the primary is missing or corrupt
+        // (Phase E acceptance: a multi-day MA must survive a force-close / bad primary).
+        if (File.Exists(path))
+        {
+            try
+            {
+                var txt = File.ReadAllText(path);
+                return JsonSerializer.Deserialize<object>(txt)
+                    ?? throw new InvalidDataException("poolr.json is empty or invalid.");
+            }
+            catch (Exception ex)
+            {
+                var bak = path + ".bak";
+                if (File.Exists(bak))
+                {
+                    try
+                    {
+                        var bakTxt = File.ReadAllText(bak);
+                        var restored = JsonSerializer.Deserialize<object>(bakTxt)
+                            ?? throw new InvalidDataException("poolr.json.bak is also invalid.", ex);
+                        // Promote the good backup to primary so the next save is clean.
+                        try { File.Copy(bak, path, overwrite: true); } catch { /* best-effort */ }
+                        return restored;
+                    }
+                    catch { /* fall through to throw below */ }
+                }
+                throw new InvalidDataException($"Could not load poolr.json or its backup: {ex.Message}", ex);
+            }
+        }
+
+        var bakOnly = path + ".bak";
+        if (File.Exists(bakOnly))
+        {
+            var bakTxt = File.ReadAllText(bakOnly);
+            return JsonSerializer.Deserialize<object>(bakTxt)
+                ?? throw new InvalidDataException("poolr.json.bak is invalid.");
+        }
+
+        throw new FileNotFoundException("No poolr.json found at the given path.", path);
     }
 
     public static string Save(string path, object project)

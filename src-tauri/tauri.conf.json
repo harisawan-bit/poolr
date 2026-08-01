@@ -44,8 +44,10 @@
         "type": "embedBootstrapper"
       }
     },
+    "publisher": "M. Haris Awan",
+    "copyright": "© 2026 M. Haris Awan. All rights reserved.",
     "category": "Education",
-    "shortDescription": "Systematic Review & Meta-Analysis",
-    "longDescription": "poolr is a no-code desktop app for systematic reviews and meta-analyses — PICO, search, screening, extraction, risk of bias, meta-analysis, and PRISMA export."
+    "shortDescription": "Systematic Review & Meta-Analysis · © 2026 M. Haris Awan. All rights reserved.",
+    "longDescription": "poolr is a no-code desktop app for systematic reviews and meta-analyses — PICO, search, screening, extraction, risk of bias, meta-analysis, and PRISMA export. © 2026 M. Haris Awan. All rights reserved."
   }
 }
