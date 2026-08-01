@@ -75,6 +75,17 @@ public class SubgroupResult
     public int k { get; set; }
 }
 
+public class ProjectSaveRequest
+{
+    public string? path { get; set; }
+    public object? project { get; set; }
+}
+
+public class ProjectLoadRequest
+{
+    public string? path { get; set; }
+}
+
 public class EggerResult
 {
     public double intercept { get; set; }
