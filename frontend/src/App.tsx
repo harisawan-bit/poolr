@@ -78,17 +78,19 @@ function useLineField(ref: React.RefObject<HTMLCanvasElement | null>) {
       canvas.style.width = w + "px";
       canvas.style.height = h + "px";
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const count = Math.round((w * h) / 26000); // density scales with area
+      const count = Math.round((w * h) / 9000); // high density
       lines = Array.from({ length: count }, () => {
         const depth = rand();
+        // bias depth toward far (more faint/thin layers) for layered density
+        const layered = Math.pow(depth, 1.6);
         return {
           x: rand() * w,
           y: rand() * h,
           angle: rand() * Math.PI * 2,
-          len: 60 + rand() * 220,
-          depth,
-          vx: (rand() - 0.5) * (0.05 + depth * 0.18),
-          vy: (rand() - 0.5) * (0.05 + depth * 0.18),
+          len: 30 + rand() * 200, // more short lines -> denser feel
+          depth: layered,
+          vx: (rand() - 0.5) * (0.03 + layered * 0.16),
+          vy: (rand() - 0.5) * (0.03 + layered * 0.16),
         };
       });
     };
@@ -105,9 +107,11 @@ function useLineField(ref: React.RefObject<HTMLCanvasElement | null>) {
         if (l.y > h + l.len) l.y = -l.len;
         const dx = Math.cos(l.angle) * l.len * 0.5;
         const dy = Math.sin(l.angle) * l.len * 0.5;
-        const alpha = 0.015 + l.depth * 0.05; // very faint
+        // layered: far layers very faint (subconscious), near slightly brighter
+        const alpha = 0.008 + l.depth * 0.05;
         ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
-        ctx.lineWidth = 0.6 + l.depth * 0.9;
+        // thinned: keep strokes hairline-thin, depth adds at most ~0.7px
+        ctx.lineWidth = 0.4 + l.depth * 0.7;
         ctx.beginPath();
         ctx.moveTo(l.x - dx, l.y - dy);
         ctx.lineTo(l.x + dx, l.y + dy);
