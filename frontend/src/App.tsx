@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const NAV = [
   { key: "dashboard", label: "Dashboard", icon: "▦" },
@@ -36,12 +36,105 @@ function LogoMark({ size = 20 }: { size?: number }) {
   );
 }
 
+/* Animated, random, floating, layered line field.
+   - random: seeded random line positions/angles/depth (not a symmetric tile)
+   - floating: each line drifts slowly; wraps at edges
+   - layered: depth controls opacity/width/speed (parallax feel)            */
+type Line = {
+  x: number;
+  y: number;
+  angle: number;
+  len: number;
+  depth: number; // 0..1 (1 = closest/brightest)
+  vx: number;
+  vy: number;
+};
+
+function useLineField(ref: React.RefObject<HTMLCanvasElement | null>) {
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let raf = 0;
+    let w = 0;
+    let h = 0;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let lines: Line[] = [];
+
+    // simple seeded RNG so the field is stable per session, but random-looking
+    let seed = 1337;
+    const rand = () => {
+      seed = (seed * 1664525 + 1013904223) % 4294967296;
+      return seed / 4294967296;
+    };
+
+    const build = () => {
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      canvas.style.width = w + "px";
+      canvas.style.height = h + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const count = Math.round((w * h) / 26000); // density scales with area
+      lines = Array.from({ length: count }, () => {
+        const depth = rand();
+        return {
+          x: rand() * w,
+          y: rand() * h,
+          angle: rand() * Math.PI * 2,
+          len: 60 + rand() * 220,
+          depth,
+          vx: (rand() - 0.5) * (0.05 + depth * 0.18),
+          vy: (rand() - 0.5) * (0.05 + depth * 0.18),
+        };
+      });
+    };
+
+    const draw = () => {
+      ctx.clearRect(0, 0, w, h);
+      for (const l of lines) {
+        l.x += l.vx;
+        l.y += l.vy;
+        // wrap
+        if (l.x < -l.len) l.x = w + l.len;
+        if (l.x > w + l.len) l.x = -l.len;
+        if (l.y < -l.len) l.y = h + l.len;
+        if (l.y > h + l.len) l.y = -l.len;
+        const dx = Math.cos(l.angle) * l.len * 0.5;
+        const dy = Math.sin(l.angle) * l.len * 0.5;
+        const alpha = 0.015 + l.depth * 0.05; // very faint
+        ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
+        ctx.lineWidth = 0.6 + l.depth * 0.9;
+        ctx.beginPath();
+        ctx.moveTo(l.x - dx, l.y - dy);
+        ctx.lineTo(l.x + dx, l.y + dy);
+        ctx.stroke();
+      }
+      raf = requestAnimationFrame(draw);
+    };
+
+    build();
+    draw();
+    window.addEventListener("resize", build);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", build);
+    };
+  }, [ref]);
+}
+
 export default function App() {
   const [page, setPage] = useState<PageKey>("dashboard");
   const [connected, setConnected] = useState<boolean | null>(null);
   const [collapsed, setCollapsed] = useState(
     typeof window !== "undefined" && window.innerWidth < 820
   );
+  const linefieldRef = useRef<HTMLCanvasElement | null>(null);
+
+  useLineField(linefieldRef);
 
   useEffect(() => {
     let alive = true;
@@ -61,10 +154,10 @@ export default function App() {
 
   return (
     <div className="relative z-10 flex h-full w-full overflow-hidden text-[#e6e7ea]">
-      {/* Faint abstract line field — subconscious texture behind everything */}
-      <div className="linefield" aria-hidden="true" />
+      {/* Animated random line field — behind everything */}
+      <canvas ref={linefieldRef} className="linefield" aria-hidden="true" />
 
-      {/* Sidebar — compact */}
+      {/* Sidebar — compact, solid darker chrome */}
       <aside
         className={`glass flex flex-col border-r border-white/[0.07] transition-[width] duration-150 ${
           collapsed ? "w-[56px]" : "w-52"
@@ -120,7 +213,7 @@ export default function App() {
 
       {/* Main */}
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Header — compact */}
+        {/* Header — solid darker chrome */}
         <header className="glass flex items-center justify-between border-b border-white/[0.07] px-4 py-2">
           <div>
             <h1 className="text-[16px] font-semibold">{TITLES[page]}</h1>
@@ -135,15 +228,15 @@ export default function App() {
           </div>
         </header>
 
-        {/* Content */}
+        {/* Content — sits over the floating field (transparent main bg) */}
         <main className="flex-1 overflow-auto p-4">
           <div className="card p-4">
             <h2 className="mb-1.5 text-[14px] font-semibold">{TITLES[page]}</h2>
             <p className="text-[12.5px] text-[#8b8d96] leading-relaxed">
               This is the <span className="text-[#e6e7ea]">{TITLES[page]}</span> page
               placeholder. Real content (forms, virtualized screening list, forest plots)
-              lands in Phase D. Review the compact shell: small buttons, accent left-bar
-              on active nav, tighter spacing.
+              lands in Phase D. The background is a random, animated, layered line field;
+              the sidebar/header/status are solid darker chrome.
             </p>
             <div className="mt-4 grid grid-cols-3 gap-2.5">
               {["Studies", "Included", "RoB done"].map((k) => (
@@ -156,7 +249,7 @@ export default function App() {
           </div>
         </main>
 
-        {/* Status bar — compact */}
+        {/* Status bar — solid darker chrome */}
         <footer className="glass flex items-center justify-between border-t border-white/[0.07] px-4 py-1 text-[10.5px] text-[#8b8d96]">
           <span>poolr v0.4.0</span>
           <span className="flex items-center gap-1.5">
