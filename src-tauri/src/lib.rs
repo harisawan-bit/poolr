@@ -15,6 +15,9 @@ pub fn run() {
       // Spawn the bundled C# engine sidecar (serves localhost:5180).
       spawn_engine_sidecar(app.handle());
 
+      // Frontend → Rust dialogs (Open/Save project).
+      app.handle().plugin(tauri_plugin_dialog::init());
+
       Ok(())
     })
     .run(tauri::generate_context!())
