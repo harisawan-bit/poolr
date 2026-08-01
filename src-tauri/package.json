@@ -1,0 +1,12 @@
+{
+  "name": "poolr-tauri",
+  "version": "0.4.0",
+  "private": true,
+  "scripts": {
+    "tauri": "tauri",
+    "build": "npm run build --prefix ../frontend"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4"
+  }
+}

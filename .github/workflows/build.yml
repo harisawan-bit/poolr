@@ -140,10 +140,15 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      # Install frontend deps so @tauri-apps/cli is available for `npm exec tauri`
-      # (the native build invokes the Tauri CLI from frontend/node_modules).
-      - name: Frontend deps (install Tauri CLI)
+      # Install frontend deps (used by src-tauri's `build` script via --prefix ../frontend).
+      - name: Frontend deps
         working-directory: frontend
+        run: npm ci
+
+      # Install the Tauri CLI in src-tauri (projectPath). tauri-action runs
+      # `tauriScript` with cwd=src-tauri, so the CLI must resolve from there.
+      - name: Tauri CLI deps (src-tauri)
+        working-directory: src-tauri
         run: npm ci
 
       - name: Linux deps (webkit2gtk)
@@ -162,7 +167,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: src-tauri
-          tauriScript: npm exec tauri
+          tauriScript: npm run tauri
           args: --target ${{ matrix.target }}
 
       - name: Upload artifacts
