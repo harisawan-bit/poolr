@@ -29,3 +29,11 @@ Thumbs.db
 # IDE
 .idea/
 .vscode/
+
+# Rust / Tauri
+src-tauri/target/
+src-tauri/resources/engine/
+
+# .NET
+engine/**/bin/
+engine/**/obj/

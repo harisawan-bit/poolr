@@ -1,145 +1,167 @@
-name: Build Installers
+name: Build & Release (web overhaul)
 
 on:
   push:
-    branches: [feature/build-installers, develop, main]
+    branches: [develop, main]
     tags: ['v*']
   pull_request:
     branches: [develop, main]
 
-env:
-  PYTHON_VERSION: "3.11"
-
 permissions:
   contents: write
 
+env:
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "24"
+  DOTNET_VERSION: "8.0.x"
+  RUST_VERSION: "stable"
+
 jobs:
-  build-windows:
-    name: Build Windows Installers
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        arch: [x64, x86, arm64]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
-          pip install pyinstaller pillow
-
-      - name: Build installer
-        run: |
-          pyinstaller --clean --onefile --windowed --name "poolr-${{ matrix.arch }}" --distpath "dist/${{ matrix.arch }}" src/poolr.py
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: poolr-windows-${{ matrix.arch }}
-          path: dist/${{ matrix.arch }}/
-
-  build-macos:
-    name: Build macOS App
-    runs-on: macos-latest
-    strategy:
-      matrix:
-        arch: [x64, arm64]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
-          pip install pyinstaller pillow
-
-      - name: Build app bundle
-        run: |
-          pyinstaller --clean --windowed --name "poolr" \
-            --distpath "dist/${{ matrix.arch }}" \
-            --osx-bundle-identifier "com.poolr.app" \
-            src/poolr.py
-
-      - name: Create DMG
-        run: |
-          mkdir -p "dmg/Poolr"
-          cp -R "dist/${{ matrix.arch }}/poolr.app" "dmg/Poolr/"
-          ln -s /Applications "dmg/Applications"
-          hdiutil create -volname "poolr Installer" \
-            -srcfolder "dmg" \
-            -ov -format UDZO \
-            "dist/poolr-${{ matrix.arch }}.dmg"
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: poolr-macos-${{ matrix.arch }}
-          path: |
-            dist/${{ matrix.arch }}/poolr.app
-            dist/poolr-${{ matrix.arch }}.dmg
-
-  build-linux:
-    name: Build Linux App
+  # ── Python suite = engine-parity oracle (C# port must match these numbers) ──
+  python-tests:
+    name: Python Engine Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-
-      - name: Install dependencies
-        run: |
+      - run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
-          pip install pyinstaller pillow
+      - run: pytest -q
 
-      - name: Build executable
-        run: |
-          pyinstaller --clean --onefile --windowed --name "poolr" --distpath "dist" src/poolr.py
+  # ── New stack compile gate (runs on every PR) ──
+  web-build:
+    name: Web Stack Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - name: Node
+        uses: actions/setup-node@v4
         with:
-          name: poolr-linux
-          path: dist/poolr
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
+      - name: .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Frontend build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: C# engine build
+        working-directory: engine
+        run: dotnet build Poolr.Engine.Api/Poolr.Engine.Api.csproj -c Release
+
+      - name: Tauri cargo check
+        working-directory: src-tauri
+        run: cargo check
+
+  # ── Native installers (develop merge or tag only) ──
   release:
-    name: Create Release
-    needs: [build-windows, build-macos, build-linux]
-    runs-on: ubuntu-latest
+    name: Native Installers (${{ matrix.os }})
+    needs: [python-tests, web-build]
     if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            arch: x64
+          - os: windows-latest
+            rid: win-x86
+            arch: x86
+          - os: windows-latest
+            rid: win-arm64
+            arch: arm64
+          - os: macos-latest
+            rid: osx-x64
+            arch: x64
+          - os: macos-latest
+            rid: osx-arm64
+            arch: arm64
+          - os: ubuntu-latest
+            rid: linux-x64
+            arch: x64
     steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Linux deps (webkit2gtk)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Build self-contained C# sidecar
+        working-directory: engine
+        run: |
+          dotnet publish Poolr.Engine.Api/Poolr.Engine.Api.csproj \
+            -c Release -r ${{ matrix.rid }} --self-contained true \
+            -o ../src-tauri/resources/engine
+
+      - name: Tauri build (native installer)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: src-tauri
+          tauriScript: npm exec tauri
+          args: ${{ runner.os == 'Windows' && '--target x86_64-pc-windows-msvc' || '' }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: poolr-${{ matrix.os }}-${{ matrix.arch }}
+          path: |
+            src-tauri/target/**/release/bundle/**/*.msi
+            src-tauri/target/**/release/bundle/**/*.exe
+            src-tauri/target/**/release/bundle/**/*.dmg
+            src-tauri/target/**/release/bundle/**/*.deb
+            src-tauri/target/**/release/bundle/**/*.AppImage
+          if-no-files-found: ignore
+
+  publish:
+    name: Publish Release
+    needs: release
+    if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
         with:
           path: artifacts
-
-      - name: Package artifacts (one archive per platform)
-        run: |
-          mkdir -p release-assets
-          cd artifacts
-          for dir in */; do
-            name="${dir%/}"
-            (cd "$dir" && zip -qry "../../release-assets/${name}.zip" .)
-          done
-          ls -la ../release-assets/
-
+          merge-multiple: true
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -147,5 +169,4 @@ jobs:
           name: ${{ startsWith(github.ref, 'refs/tags/v') && format('poolr {0}', github.ref_name) || 'Nightly Build' }}
           draft: ${{ !startsWith(github.ref, 'refs/tags/v') }}
           generate_release_notes: true
-          files: |
-            release-assets/*.zip
+          files: artifacts/**/*
