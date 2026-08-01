@@ -1,29 +1,30 @@
 @import "tailwindcss";
 
-/* ── poolr design tokens (very-dark-grey + red, glass chrome) ── */
+/* ── poolr design tokens (compact premium dark — Hermes-inspired) ── */
 @theme {
-  --color-bg: #0e0e10;
-  --color-surface: #141417;
-  --color-surface-2: #1a1a1e;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-strong: rgba(255, 255, 255, 0.14);
-  --color-text: #ededed;
-  --color-text-muted: #9a9a9e;
-  --color-accent: #e5484d;
-  --color-accent-hover: #f2555a;
-  --color-accent-deep: #c8121b;
+  --color-bg: #0c0d11;
+  --color-surface: #141519;
+  --color-surface-2: #1b1d23;
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-border-strong: rgba(255, 255, 255, 0.13);
+  --color-text: #e6e7ea;
+  --color-text-muted: #8b8d96;
+  /* refined cool accent (red dropped — single token, swap freely) */
+  --color-accent: #6e76e5;
+  --color-accent-hover: #828bf0;
+  --color-accent-deep: #5258c4;
   --color-include: #3fb950;
   --color-exclude: #f05252;
   --color-unsure: #f2b84b;
 
-  --font-sans: "Helvetica", "Helvetica Neue", "Arimo", "Liberation Sans", Arial,
+  --font-sans: "Helvetica", "Helvetica Neue", "Aromo", "Liberation Sans", Arial,
     system-ui, sans-serif;
-  --font-light: "Helvetica Light", "Helvetica Neue", "Arimo", Arial, system-ui,
+  --font-light: "Helvetica Light", "Helvetica Neue", "Aromo", Arial, system-ui,
     sans-serif;
   --font-mono: "Roboto Mono", "Helvetica Mono", Consolas, monospace;
 
-  --radius-btn: 2px;
-  --radius-card: 4px;
+  --radius-btn: 3px;
+  --radius-card: 5px;
 }
 
 @layer base {
@@ -48,7 +49,7 @@
   h2,
   h3 {
     font-family: var(--font-sans);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--color-text);
     letter-spacing: -0.2px;
     margin: 0;
@@ -56,28 +57,29 @@
 }
 
 @layer components {
-  /* Glass chrome (sidebar / header / status bar / modals) */
+  /* Chrome (sidebar / header / status bar) — subtle, not heavy glass */
   .glass {
-    background: rgba(20, 20, 23, 0.72);
-    backdrop-filter: blur(20px) saturate(120%);
-    -webkit-backdrop-filter: blur(20px) saturate(120%);
+    background: rgba(18, 19, 24, 0.82);
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
     border: 1px solid var(--color-border);
   }
 
-  /* Solid content card */
   .card {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-card);
   }
 
+  /* Compact primary button (Hermes-style: small, quiet) */
   .btn-primary {
     background: var(--color-accent);
     color: #fff;
     border-radius: var(--radius-btn);
     font-family: var(--font-sans);
-    font-weight: 700;
-    padding: 9px 16px;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 5px 12px;
     border: none;
     cursor: pointer;
     transition: background 0.12s ease;
@@ -91,12 +93,14 @@
     color: var(--color-text-muted);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-btn);
-    padding: 9px 16px;
+    font-size: 12px;
+    padding: 5px 12px;
     cursor: pointer;
     transition: all 0.12s ease;
   }
   .btn-ghost:hover {
     color: var(--color-text);
     border-color: var(--color-border-strong);
+    background: rgba(255, 255, 255, 0.03);
   }
 }
