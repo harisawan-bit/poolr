@@ -102,8 +102,8 @@ function useLineField(ref: React.RefObject<HTMLCanvasElement | null>) {
       canvas.style.width = w + "px";
       canvas.style.height = h + "px";
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      // dense: many long curves
-      const count = Math.round((w * h) / 26000);
+      // dense: many long curves (5x denser than base)
+      const count = Math.round((w * h) / 5200);
       lines = Array.from({ length: count }, () => {
         const depth = rand();
         const layered = Math.pow(depth, 1.5);
@@ -272,10 +272,10 @@ export default function App() {
           <div className="card p-4">
             <h2 className="mb-1.5 text-[14px] font-semibold">{TITLES[page]}</h2>
             <p className="text-[12.5px] text-[#8b8d96] leading-relaxed">
-              This is the <span className="text-[#e6e7ea]">{TITLES[page]}</span> page
-              placeholder. Real content (forms, virtualized screening list, forest plots)
-              lands in Phase D. The background is a random, animated, layered line field;
-              the sidebar/header/status are solid darker chrome.
+              <span className="text-[#e6e7ea]">poolr</span> — a focused workbench for
+              systematic reviews and meta-analysis. Build the protocol, screen the
+              evidence, run the pooled estimate, grade the certainty, and export a
+              PRISMA-ready report.
             </p>
             <div className="mt-4 grid grid-cols-3 gap-2.5">
               {["Studies", "Included", "RoB done"].map((k) => (
@@ -288,14 +288,27 @@ export default function App() {
           </div>
         </main>
 
-        {/* Status bar — solid darker chrome */}
+        {/* Status bar — solid darker chrome + copywriting */}
         <footer className="glass flex items-center justify-between border-t border-white/[0.07] px-4 py-1 text-[10.5px] text-[#8b8d96]">
-          <span>poolr v0.4.0</span>
+          <span>poolr v0.4.0 · systematic review &amp; meta-analysis</span>
           <span className="flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-[#3fb950]" />
             saved
           </span>
         </footer>
+
+        {/* Footer — copywriting + developed-by */}
+        <div className="border-t border-white/[0.06] bg-[#07080b] px-4 py-2.5 text-[10.5px] leading-relaxed text-[#8b8d96]">
+          <p className="max-w-[80ch]">
+            poolr helps researchers plan, screen, and synthesize evidence into a
+            defensible meta-analysis. Always verify outputs against your protocol and
+            preregister before analysis. For research use — not a substitute for
+            clinical judgment.
+          </p>
+          <p className="mt-1 text-[#b9bbc2]">
+            Developed by <span className="font-sans font-semibold text-[#e6e7ea]">M. Haris Awan</span> · © {new Date().getFullYear()} poolr
+          </p>
+        </div>
       </div>
     </div>
   );
