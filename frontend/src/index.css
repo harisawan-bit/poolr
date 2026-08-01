@@ -21,6 +21,8 @@
   --color-include: #3fb950;
   --color-exclude: #f05252;
   --color-unsure: #f2b84b;
+  /* faint background line field — barely-there, subconscious texture */
+  --color-linefield: rgba(255, 255, 255, 0.022);
 
   --font-sans: "Inter", "Helvetica Neue", system-ui, -apple-system, "Segoe UI",
     Arial, sans-serif;
@@ -62,6 +64,18 @@
 }
 
 @layer components {
+  /* Faint abstract line field — fixed, behind everything. Very fine, very
+     dark hairlines; registers subconsciously without drawing attention. */
+  .linefield {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-color: var(--color-bg);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900' viewBox='0 0 900 900'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.022' stroke-width='1'%3E%3Cpath d='M-50 120 C 180 40 320 220 520 140 S 820 40 980 160'/%3E%3Cpath d='M-50 260 C 200 180 340 360 560 280 S 840 180 980 300'/%3E%3Cpath d='M-50 400 C 160 320 360 500 540 420 S 860 320 980 440'/%3E%3Cpath d='M-50 540 C 220 460 320 640 560 560 S 820 460 980 580'/%3E%3Cpath d='M-50 680 C 180 600 380 780 540 700 S 860 600 980 720'/%3E%3Cpath d='M-50 820 C 200 740 340 920 560 840 S 840 740 980 860'/%3E%3Cpath d='M120 -50 C 60 180 240 320 160 520 S 60 820 200 980'/%3E%3Cpath d='M300 -50 C 240 180 420 320 340 520 S 240 820 380 980'/%3E%3Cpath d='M480 -50 C 420 180 600 320 520 520 S 420 820 560 980'/%3E%3Cpath d='M660 -50 C 600 180 780 320 700 520 S 600 820 740 980'/%3E%3Cpath d='M840 -50 C 780 180 960 320 880 520 S 780 820 920 980'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 900px 900px;
+  }
+
   /* Chrome (sidebar / header / status bar) — subtle, not heavy glass */
   .glass {
     background: rgba(18, 19, 24, 0.82);

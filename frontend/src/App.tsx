@@ -60,7 +60,10 @@ export default function App() {
   }, []);
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-[#0c0d11] text-[#e6e7ea]">
+    <div className="relative flex h-full w-full overflow-hidden text-[#e6e7ea]">
+      {/* Faint abstract line field — subconscious texture behind everything */}
+      <div className="linefield" aria-hidden="true" />
+
       {/* Sidebar — compact */}
       <aside
         className={`glass flex flex-col border-r border-white/[0.07] transition-[width] duration-150 ${
