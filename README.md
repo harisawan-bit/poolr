@@ -203,7 +203,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 ## 📜 License
 
-MIT License — free for academic and commercial use. See [LICENSE](LICENSE) for details.
+MIT License — free for academic and commercial use. © M. Haris Awan. All rights reserved. See [LICENSE](LICENSE) for details.
 
 ---
 
