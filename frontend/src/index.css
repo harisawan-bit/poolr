@@ -14,10 +14,10 @@
   --color-border-strong: rgba(255, 255, 255, 0.13);
   --color-text: #e6e7ea;
   --color-text-muted: #8b8d96;
-  /* refined cool accent (red dropped — single token, swap freely) */
-  --color-accent: #6e76e5;
-  --color-accent-hover: #828bf0;
-  --color-accent-deep: #5258c4;
+  /* monochrome accent — no hue (avoids AI-slop blue/purple); off-white tint */
+  --color-accent: #e6e7ea;
+  --color-accent-hover: #ffffff;
+  --color-accent-deep: #b9bbc2;
   --color-include: #3fb950;
   --color-exclude: #f05252;
   --color-unsure: #f2b84b;
@@ -76,21 +76,22 @@
     border-radius: var(--radius-card);
   }
 
-  /* Compact primary button (Hermes-style: small, quiet) */
+  /* Compact primary button — solid off-white, dark text (monochrome, tool-like) */
   .btn-primary {
     background: var(--color-accent);
-    color: #fff;
+    color: #0c0d11;
     border-radius: var(--radius-btn);
     font-family: var(--font-sans);
     font-weight: 600;
     font-size: 12px;
     padding: 5px 12px;
-    border: none;
+    border: 1px solid var(--color-accent);
     cursor: pointer;
-    transition: background 0.12s ease;
+    transition: background 0.12s ease, border-color 0.12s ease;
   }
   .btn-primary:hover {
     background: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
   }
 
   .btn-ghost {
