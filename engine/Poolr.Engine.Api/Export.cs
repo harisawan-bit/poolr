@@ -21,6 +21,69 @@ public static class Exporter
 {
     private static string F(double v, string fmt = "0.00") => v.ToString(fmt, CultureInfo.InvariantCulture);
 
+    /// <summary>
+    /// Convert an arbitrary deserialized JSON graph into a clean tree of
+    /// Dictionary&lt;string,object&gt; / List&lt;object&gt; / primitives.
+    ///
+    /// ASP.NET / System.Text.Json hands nested objects and arrays back as
+    /// <see cref="JsonElement"/>, not Dictionary/List — which made every
+    /// `is Dictionary&lt;string,object&gt;` / `is List&lt;object&gt;` check below fail
+    /// silently and produced empty md/latex/docx reports. Normalize once at the
+    /// endpoint boundary so the exporters see the shapes they expect.
+    /// </summary>
+    public static object? Normalize(object? o)
+    {
+        if (o is JsonElement je)
+        {
+            switch (je.ValueKind)
+            {
+                case JsonValueKind.Object:
+                    var d = new Dictionary<string, object>();
+                    foreach (var prop in je.EnumerateObject())
+                    {
+                        var nv = Normalize(prop.Value);
+                        if (nv != null) d[prop.Name] = nv;
+                    }
+                    return d;
+                case JsonValueKind.Array:
+                    var l = new List<object>();
+                    foreach (var e in je.EnumerateArray())
+                    {
+                        var nv = Normalize(e);
+                        if (nv != null) l.Add(nv);
+                    }
+                    return l;
+                case JsonValueKind.String: return je.GetString();
+                case JsonValueKind.Number: return je.GetDouble();
+                case JsonValueKind.True: return true;
+                case JsonValueKind.False: return false;
+                case JsonValueKind.Null: return null;
+                default: return je.GetRawText();
+            }
+        }
+        if (o is Dictionary<string, object> od)
+        {
+            var d = new Dictionary<string, object>();
+            foreach (var kv in od)
+            {
+                var nv = Normalize(kv.Value);
+                if (nv != null) d[kv.Key] = nv;
+            }
+            return d;
+        }
+        if (o is List<object> ol)
+        {
+            var l = new List<object>();
+            foreach (var x in ol)
+            {
+                var nv = Normalize(x);
+                if (nv != null) l.Add(nv);
+            }
+            return l;
+        }
+        return o;
+    }
+
     public static string ToJson(object project) => JsonSerializer.Serialize(project, new JsonSerializerOptions { WriteIndented = true });
 
     public static string ToMarkdown(Dictionary<string, object> p)
@@ -82,7 +145,7 @@ public static class Exporter
     public static string ToLatex(Dictionary<string, object> p)
     {
         var sb = new StringBuilder();
-        sb.Append("\\documentclass[11pt]{article}\n\\usepackage[utf8]{inputenc}\n\\title{Systematic Review and Meta-Analysis Report}\n\\date{}\\begin{document}\n\\maketitle}\n\n");
+        sb.Append("\\documentclass[11pt]{article}\n\\usepackage[utf8]{inputenc}\n\\title{Systematic Review and Meta-Analysis Report}\n\\date{}\n\\begin{document}\n\\maketitle\n\n");
         if (p.TryGetValue("pico", out var picoObj) && picoObj is Dictionary<string, object> pico)
         {
             sb.Append("\\section{Introduction}\n");

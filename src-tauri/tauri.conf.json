@@ -29,6 +29,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "resources": {
+      "resources/engine": "engine"
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -41,7 +44,7 @@
         "type": "embedBootstrapper"
       }
     },
-    "category": "Science",
+    "category": "Education",
     "shortDescription": "Systematic Review & Meta-Analysis",
     "longDescription": "poolr is a no-code desktop app for systematic reviews and meta-analyses — PICO, search, screening, extraction, risk of bias, meta-analysis, and PRISMA export."
   }

@@ -1,3 +1,6 @@
+using System.IO;
+using System.Text.Json;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Poolr.Engine.Api;
 
@@ -33,10 +36,22 @@ app.MapPost("/api/figure/funnel", ([FromBody] MetaResponse req) =>
     Results.Text(Figures.FunnelPlot(req), "image/svg+xml"));
 
 // Phase B6 — export. ?format=json|md|latex|docx
-app.MapPost("/api/export", ([FromBody] Dictionary<string, object> project, string format = "json") =>
+// NOTE: bind the raw request body rather than [FromBody] Dictionary<string,object>.
+// System.Text.Json materialises NESTED objects/arrays as JsonElement, so the
+// exporters' `is Dictionary<string,object>` / `is List<object>` checks failed and
+// pico / meta.results / extraction.studies were silently dropped. Normalize first.
+app.MapPost("/api/export", async (HttpRequest req, string format = "json") =>
 {
     try
     {
+        using var sr = new StreamReader(req.Body);
+        var raw = await sr.ReadToEndAsync();
+        object? parsed = string.IsNullOrWhiteSpace(raw)
+            ? new Dictionary<string, object>()
+            : JsonSerializer.Deserialize<object>(raw);
+        var project = Exporter.Normalize(parsed) as Dictionary<string, object>
+                      ?? new Dictionary<string, object>();
+
         switch (format.ToLowerInvariant())
         {
             case "md": return Results.Text(Exporter.ToMarkdown(project), "text/markdown; charset=utf-8");

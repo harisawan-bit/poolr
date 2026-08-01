@@ -1,3 +1,6 @@
+use std::path::PathBuf;
+use std::process::Child;
+
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -13,31 +16,42 @@ pub fn run() {
       }
 
       // Spawn the bundled C# engine sidecar (serves localhost:5180).
+      // Packaged: <resources>/engine/Poolr.Engine.Api.exe (self-contained, no .NET needed)
+      // Dev:      engine/Poolr.Engine.Api/bin/Release/net8.0/Poolr.Engine.Api.exe
       spawn_engine_sidecar(app.handle());
 
       // Frontend → Rust dialogs (Open/Save project).
-      app.handle().plugin(tauri_plugin_dialog::init());
+      let _ = app.handle().plugin(tauri_plugin_dialog::init());
 
       Ok(())
+    })
+    // Terminate the sidecar when the app exits so a force-close never leaves it running.
+    .on_window_event(|window, event| {
+      if let tauri::WindowEvent::Destroyed = event {
+        if let Some(mut child) = window.state::<EngineSidecar>().0.lock().unwrap().take() {
+          let _ = child.kill();
+        }
+      }
     })
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }
 
-// Spawns the bundled C# engine sidecar.
-// Packaged: <resources>/Poolr.Engine.Api.exe
-// Dev:      engine/Poolr.Engine.Api/bin/Release/net8.0/Poolr.Engine.Api.exe
+struct EngineSidecar(std::sync::Mutex<Option<Child>>);
+
+// Spawns the C# engine sidecar as a plain child process and stores its handle so
+// it can be killed on window destroy. In packaged builds the exe lives in
+// <resources>/engine/; in `tauri dev` it lives in the engine project's Release
+// build output. At least one must exist.
 fn spawn_engine_sidecar(app: &tauri::AppHandle) {
-  use std::process::Command;
+  let mut candidates: Vec<PathBuf> = Vec::new();
 
-  let mut candidates: Vec<std::path::PathBuf> = Vec::new();
-
-  // Packaged: <resources>/Poolr.Engine.Api.exe
+  // Packaged layout: resourcesDir/engine/Poolr.Engine.Api.exe
   if let Ok(res) = app.path().resource_dir() {
-    candidates.push(res.join("Poolr.Engine.Api.exe"));
+    candidates.push(res.join("engine").join("Poolr.Engine.Api.exe"));
   }
 
-  // Dev: engine/Poolr.Engine.Api/bin/Release/net8.0/Poolr.Engine.Api.exe
+  // Dev layout: <repo>/engine/Poolr.Engine.Api/bin/Release/net8.0/Poolr.Engine.Api.exe
   if let Ok(cwd) = std::env::current_dir() {
     candidates.push(
       cwd.join("engine")
@@ -49,10 +63,18 @@ fn spawn_engine_sidecar(app: &tauri::AppHandle) {
     );
   }
 
-  for path in candidates {
-    if path.exists() {
-      let _ = Command::new(&path).spawn();
-      break;
+  let exe = match candidates.into_iter().find(|p| p.exists()) {
+    Some(p) => p,
+    None => {
+      log::warn!("engine sidecar not found; poolr will run with no C# engine");
+      return;
     }
+  };
+
+  match std::process::Command::new(&exe).spawn() {
+    Ok(child) => {
+      app.manage(EngineSidecar(std::sync::Mutex::new(Some(child))));
+    }
+    Err(e) => log::error!("failed to spawn engine sidecar {exe:?}: {e}"),
   }
 }

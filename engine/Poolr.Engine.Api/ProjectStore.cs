@@ -31,15 +31,26 @@ public static class ProjectStore
         var tmp = path + ".tmp";
         var bak = path + ".bak";
 
-        // rolling backup of the previous good file
+        // rolling backup of the previous good file (written BEFORE the temp swap,
+        // so a crash mid-write always leaves the last good copy at <path>.bak)
         if (File.Exists(path))
         {
             try { File.Copy(path, bak, overwrite: true); } catch { /* best-effort */ }
         }
-        // atomic write
+        // atomic write: fully materialise the temp file, then replace the target in a
+        // single move. File.Move(overwrite:true) maps to MoveFileEx/REPLACE_EXISTING, so
+        // there is no window where <path> is missing (the old Delete+Move had one).
         File.WriteAllText(tmp, json);
-        if (File.Exists(path)) File.Delete(path);
-        File.Move(tmp, path);
+        try
+        {
+            File.Move(tmp, path, overwrite: true);
+        }
+        catch (IOException)
+        {
+            // Fallback for filesystems that reject an overwriting move.
+            if (File.Exists(path)) File.Delete(path);
+            File.Move(tmp, path);
+        }
         return path;
     }
 }
