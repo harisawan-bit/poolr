@@ -2,28 +2,34 @@
 
 ## Latest Release
 
-**poolr v0.3.3** — UI refinement release  
-Release date: 2026-08-01
+**poolr v0.4.0** — Native Tauri + React + C# overhaul  \nRelease date: 2026-08-02
 
-### Downloads
+> This release replaces the old Python / CustomTkinter app with a fully native desktop build: a **Tauri 2 (Rust)** window, a **React + TypeScript** UI, and a bundled **C# 12 / .NET 8** statistical engine sidecar. No Python runtime is required — the app runs on any stock machine. Project data auto-saves (`poolr.json` + rolling `.bak`) so multi-day reviews survive a force-close.
+
+### Downloads (native installers — full, not portable zips)
 
 | Platform | File | Notes |
 |----------|------|-------|
-| Windows x64 | `poolr-windows-x64.zip` | Recommended for most PCs — unzip and run `poolr-x64.exe` |
-| Windows x86 | `poolr-windows-x86.zip` | 32-bit Windows |
-| Windows ARM64 | `poolr-windows-arm64.zip` | Windows on ARM |
-| macOS Apple Silicon | `poolr-macos-arm64.zip` | Contains `poolr.app` + `poolr-arm64.dmg` |
-| macOS Intel | `poolr-macos-x64.zip` | Contains `poolr.app` + `poolr-x64.dmg` |
-| Linux x86_64 | `poolr-linux.zip` | Single-file executable — `chmod +x poolr && ./poolr` |
+| Windows x64 | `poolr-windows-x64.msi` | Recommended for most PCs. Also ships `poolr-windows-x64.exe` (NSIS) installer. |
+| Windows x86 | `poolr-windows-x86.msi` | 32-bit Windows. |
+| Windows ARM64 | `poolr-windows-arm64.msi` | Windows on ARM. |
+| macOS Apple Silicon | `poolr-macos-arm64.dmg` | Contains `poolr.app`. |
+| macOS Intel | `poolr-macos-x64.dmg` | Contains `poolr.app`. |
+| Linux x86_64 | `poolr-linux-x86_64.AppImage` + `poolr-linux-x86_64.deb` | AppImage (portable) or Debian package. |
 
-### What's New in v0.3.3
+### What's New in v0.4.0
 
-- **Premium UI refresh**: new shared style kit (`src/poolr/ui.py`) with a cohesive dark palette, consistent typography, and reusable components (section headers, cards, KPI tiles, branded buttons).
-- **Redesigned app shell**: branded sidebar with hover + active-state highlighting, a header bar showing the current section, and a persistent bottom status bar with version + quick actions.
-- **Dashboard polish**: KPI tiles (studies, included/excluded, RoB, meta status) and quick-action cards; project-name bug fixed (was raising `AttributeError` on project load).
-- **All 8 pages restyled** to a consistent `SectionHeader` + branded primary/secondary buttons, tighter spacing, and themed borders/inputs — logic untouched, page contracts preserved.
-- **Screening**: color-coded Include / Exclude / Unsure decision buttons for faster, clearer judgment.
-- Headless-safe throughout — no blocking dialogs in automated paths; verified by the CI GUI smoke test (including the page-revisit regression).
+- **Fully native stack**: Tauri 2 (Rust) shell + React/TypeScript UI + C# 12 / .NET 8 engine sidecar (localhost HTTP API). No Python in the shipped product.
+- **All 8 pages reimplemented** in React: Dashboard, Protocol, Search, Screening, Extraction, RoB, Meta-Analysis, PRISMA.
+- **Meta-analysis engine (C#)**: OR/RR/RD/MD/SMD/HR, fixed + random-effects (DL/REML/PM/HS/ML/EB), Cochran Q, I², τ², Egger/Begg publication bias, subgroup analysis — numerically validated against the pinned Python oracle (25 parity tests).
+- **Figures**: SkiaSharp/ SVG forest + funnel plots rendered in-app.
+- **Screening import**: parse PubMed MEDLINE, CSV, RIS / .nbib, and EndNote exports into screening items (hidden file picker — works in Tauri and plain browser).
+- **Persistence**: atomic auto-save to `poolr.json` with rolling `.bak` restore; load-on-start; force-close safe.
+- **GRADE**: Auto-GRADE evidence profile from meta results + RoB on the PRISMA page.
+- **Export**: Word (.docx), Markdown, LaTeX, JSON — with a pre-export copyright/disclaimer confirmation.
+- **Licensing**: MIT license, © 2026 M. Haris Awan. All rights reserved. Native installers carry the copyright string.
+- **Bundled engine**: self-contained C# sidecar embedded in every installer; Windows WebView2 fixed runtime bundled (no separate download).
+
 
 ### What's New in v0.3.2
 

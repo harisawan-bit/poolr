@@ -3,14 +3,14 @@
 [![Build Status](https://github.com/harisawan-bit/poolr/workflows/CI/badge.svg)](https://github.com/harisawan-bit/poolr/actions)
 [![Release](https://img.shields.io/github/v/release/harisawan-bit/poolr)](https://github.com/harisawan-bit/poolr/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![.NET 8](https://img.shields.io/badge/.NET-8-512BD4.svg)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](https://github.com/harisawan-bit/poolr/releases)
 
 **poolr** is a free, open-source, no-code desktop application for conducting **Systematic Reviews and Meta-Analyses (SRMA)**. It guides you through the entire PRISMA 2020-compliant pipeline — from PICO definition to publication-ready manuscript — with a modern, intuitive GUI.
 
 No programming required. No cloud dependency. Your data stays on your machine.
 
-> **New in v0.3.3 — Premium UI refresh.** A redesigned dark shell (branded sidebar with active/hover states, header bar, and a persistent status bar), cohesive KPI tiles and cards on the Dashboard, color-coded screening decisions, and a consistent look across all 8 pages. See [RELEASES.md](./RELEASES.md) for details.
+> **New in v0.4.0 — Native Tauri + React + C# overhaul.** The app is now a fully native desktop build (Tauri 2 / Rust shell, React + TypeScript UI, bundled C# 12 / .NET 8 engine sidecar) — no Python runtime required. All 8 pages reimplemented, screening import from PubMed/CSV/RIS/EndNote, in-app forest/funnel plots, GRADE, and 6-OS native installers. See [RELEASES.md](./RELEASES.md) for details.
 
 ---
 
@@ -88,34 +88,36 @@ No programming required. No cloud dependency. Your data stays on your machine.
 
 ### Download (Recommended)
 1. Go to [Releases](https://github.com/harisawan-bit/poolr/releases/latest)
-2. Download the zip for your platform:
-   - **Windows**: `poolr-windows-x64.zip` (or `x86` / `arm64`) — unzip, run `poolr-<arch>.exe`
-   - **macOS**: `poolr-macos-arm64.zip` (Apple Silicon) or `poolr-macos-x64.zip` (Intel) — drag `poolr.app` to Applications
-   - **Linux**: `poolr-linux.zip` — unzip, `chmod +x poolr`, run `./poolr`
-3. No Python, no dependencies needed
+2. Download the native installer for your platform:
+   - **Windows**: `poolr-windows-x64.msi` (or `x86` / `arm64`) — also ships `poolr-windows-x64.exe` (NSIS)
+   - **macOS**: `poolr-macos-arm64.dmg` (Apple Silicon) or `poolr-macos-x64.dmg` (Intel) — drag `poolr.app` to Applications
+   - **Linux**: `poolr-linux-x86_64.AppImage` (portable) or `poolr-linux-x86_64.deb` (Debian/Ubuntu)
+3. No Python, no dependencies needed — the C# engine and WebView2 (Windows) are bundled.
 
 ### Releases
 See [RELEASES.md](./RELEASES.md) for version history, migration notes, and download links.
 
 ### From Source (Developers)
 ```bash
-# Requirements: Python 3.9+, Git
+# Requirements: Node 24, .NET 8 SDK, Rust (stable), Git
 git clone https://github.com/harisawan-bit/poolr.git
 cd poolr
 
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+# Install frontend deps
+cd frontend
+npm install
+npm run dev        # launches the React UI in a browser (engine runs separately)
 
-# Install in development mode
-pip install -e ".[dev]"
+# In another terminal — run the C# engine sidecar (localhost:5180)
+cd engine
+dotnet run --project Poolr.Engine.Api
 
-# Run GUI
-poolr
-
-# Or run CLI
-poolr-cli --help
+# Or run the full native shell (Tauri + bundled engine)
+cd src-tauri
+cargo tauri dev
 ```
+
+> The Python package (`src/poolr`) is retained only as the numerical parity oracle for the C# engine; it is **not** part of the shipped product.
 
 ### CLI for Automation (CI/CD)
 ```bash
@@ -212,8 +214,10 @@ MIT License — free for academic and commercial use. © M. Haris Awan. All righ
 - **PRISMA 2020** statement authors for reporting guidelines
 - **Cochrane** for RoB 2 and GRADE methodology
 - **NCBI** for PubMed/Entrez API access
-- **matplotlib**, **pandas**, **statsmodels**, **scipy** for statistical computing
-- **CustomTkinter** for the modern GUI framework
+- **Tauri 2** (Rust) for the native desktop shell
+- **React** + **TypeScript** + **Vite** for the UI
+- **.NET 8 / C# 12** (Math.NET Numerics, SkiaSharp) for the statistics engine
+- **matplotlib**, **pandas**, **statsmodels**, **scipy** for the Python parity oracle
 
 ---
 
