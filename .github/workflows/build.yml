@@ -74,6 +74,14 @@ jobs:
         working-directory: engine
         run: dotnet build Poolr.Engine.Api/Poolr.Engine.Api.csproj -c Release
 
+      # Publish the self-contained sidecar into src-tauri/resources/engine so the
+      # Tauri build script (which maps that folder as a bundle resource) finds it.
+      # The folder is gitignored, so every job that runs `cargo check`/`cargo build`
+      # must (re)publish it first — the release job does the same for tagged builds.
+      - name: Publish C# sidecar (win-x64) into resources
+        working-directory: engine
+        run: dotnet publish Poolr.Engine.Api/Poolr.Engine.Api.csproj -c Release -r win-x64 --self-contained true -o ../src-tauri/resources/engine
+
       - name: Tauri cargo check
         working-directory: src-tauri
         run: cargo check
