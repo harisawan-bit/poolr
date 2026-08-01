@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+/* ── poolr design tokens (very-dark-grey + red, glass chrome) ── */
+@theme {
+  --color-bg: #0e0e10;
+  --color-surface: #141417;
+  --color-surface-2: #1a1a1e;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.14);
+  --color-text: #ededed;
+  --color-text-muted: #9a9a9e;
+  --color-accent: #e5484d;
+  --color-accent-hover: #f2555a;
+  --color-accent-deep: #c8121b;
+  --color-include: #3fb950;
+  --color-exclude: #f05252;
+  --color-unsure: #f2b84b;
+
+  --font-sans: "Helvetica", "Helvetica Neue", "Arimo", "Liberation Sans", Arial,
+    system-ui, sans-serif;
+  --font-light: "Helvetica Light", "Helvetica Neue", "Arimo", Arial, system-ui,
+    sans-serif;
+  --font-mono: "Roboto Mono", "Helvetica Mono", Consolas, monospace;
+
+  --radius-btn: 7px;
+  --radius-card: 11px;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-light);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.2px;
+    margin: 0;
+  }
+}
+
+@layer components {
+  /* Glass chrome (sidebar / header / status bar / modals) */
+  .glass {
+    background: rgba(20, 20, 23, 0.72);
+    backdrop-filter: blur(20px) saturate(120%);
+    -webkit-backdrop-filter: blur(20px) saturate(120%);
+    border: 1px solid var(--color-border);
+  }
+
+  /* Solid content card */
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+  }
+
+  .btn-primary {
+    background: var(--color-accent);
+    color: #fff;
+    border-radius: var(--radius-btn);
+    font-family: var(--font-sans);
+    font-weight: 700;
+    padding: 9px 16px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+  .btn-primary:hover {
+    background: var(--color-accent-hover);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-btn);
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+  }
+  .btn-ghost:hover {
+    color: var(--color-text);
+    border-color: var(--color-border-strong);
+  }
+}
