@@ -22,8 +22,8 @@
     sans-serif;
   --font-mono: "Roboto Mono", "Helvetica Mono", Consolas, monospace;
 
-  --radius-btn: 7px;
-  --radius-card: 11px;
+  --radius-btn: 2px;
+  --radius-card: 4px;
 }
 
 @layer base {
@@ -38,8 +38,8 @@
     background: var(--color-bg);
     color: var(--color-text);
     font-family: var(--font-light);
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 12.5px;
+    line-height: 1.45;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
