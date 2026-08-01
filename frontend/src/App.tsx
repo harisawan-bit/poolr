@@ -41,13 +41,13 @@ function LogoMark({ size = 20 }: { size?: number }) {
    - floating: each line drifts slowly; wraps at edges
    - layered: depth controls opacity/width/speed (parallax feel)            */
 type Line = {
-  x: number;
+  x: number; // drift offset (whole curve translates)
   y: number;
-  angle: number;
-  len: number;
   depth: number; // 0..1 (1 = closest/brightest)
   vx: number;
   vy: number;
+  // curve control points (normalized-ish, in px) — long + flowing
+  pts: { x: number; y: number }[];
 };
 
 function useLineField(ref: React.RefObject<HTMLCanvasElement | null>) {
@@ -70,6 +70,30 @@ function useLineField(ref: React.RefObject<HTMLCanvasElement | null>) {
       return seed / 4294967296;
     };
 
+    // build one long, continuous, curvy polyline (smoothed via quadratic curves)
+    const makeCurve = (depth: number) => {
+      const span = Math.max(w, h) * (1.1 + depth * 0.6);
+      const segs = 14 + Math.floor(rand() * 8);
+      const startX = rand() * w;
+      const startY = rand() * h;
+      const ang = rand() * Math.PI * 2;
+      let x = startX;
+      let y = startY;
+      const dx = Math.cos(ang);
+      const dy = Math.sin(ang);
+      const step = span / segs;
+      const pts: { x: number; y: number }[] = [];
+      for (let i = 0; i <= segs; i++) {
+        // wander: rotate direction by a smooth random amount
+        const wobble = (rand() - 0.5) * 1.1;
+        const a = Math.atan2(dy, dx) + wobble;
+        x += Math.cos(a) * step;
+        y += Math.sin(a) * step;
+        pts.push({ x, y });
+      }
+      return pts;
+    };
+
     const build = () => {
       w = window.innerWidth;
       h = window.innerHeight;
@@ -78,44 +102,54 @@ function useLineField(ref: React.RefObject<HTMLCanvasElement | null>) {
       canvas.style.width = w + "px";
       canvas.style.height = h + "px";
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const count = Math.round((w * h) / 9000); // high density
+      // dense: many long curves
+      const count = Math.round((w * h) / 26000);
       lines = Array.from({ length: count }, () => {
         const depth = rand();
-        // bias depth toward far (more faint/thin layers) for layered density
-        const layered = Math.pow(depth, 1.6);
+        const layered = Math.pow(depth, 1.5);
         return {
-          x: rand() * w,
-          y: rand() * h,
-          angle: rand() * Math.PI * 2,
-          len: 30 + rand() * 200, // more short lines -> denser feel
+          x: 0,
+          y: 0,
           depth: layered,
-          vx: (rand() - 0.5) * (0.03 + layered * 0.16),
-          vy: (rand() - 0.5) * (0.03 + layered * 0.16),
+          vx: (rand() - 0.5) * (0.1 + layered * 0.5),
+          vy: (rand() - 0.5) * (0.1 + layered * 0.5),
+          pts: makeCurve(layered),
         };
       });
     };
 
+    const drawCurve = (pts: { x: number; y: number }[], ox: number, oy: number) => {
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x + ox, pts[0].y + oy);
+      // smooth through midpoints with quadratic curves -> continuous, curvy
+      for (let i = 1; i < pts.length - 1; i++) {
+        const mx = (pts[i].x + pts[i + 1].x) / 2 + ox;
+        const my = (pts[i].y + pts[i + 1].y) / 2 + oy;
+        ctx.quadraticCurveTo(pts[i].x + ox, pts[i].y + oy, mx, my);
+      }
+      const n = pts.length - 1;
+      ctx.lineTo(pts[n].x + ox, pts[n].y + oy);
+      ctx.stroke();
+    };
+
     const draw = () => {
       ctx.clearRect(0, 0, w, h);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
       for (const l of lines) {
         l.x += l.vx;
         l.y += l.vy;
-        // wrap
-        if (l.x < -l.len) l.x = w + l.len;
-        if (l.x > w + l.len) l.x = -l.len;
-        if (l.y < -l.len) l.y = h + l.len;
-        if (l.y > h + l.len) l.y = -l.len;
-        const dx = Math.cos(l.angle) * l.len * 0.5;
-        const dy = Math.sin(l.angle) * l.len * 0.5;
-        // layered: far layers very faint (subconscious), near slightly brighter
-        const alpha = 0.008 + l.depth * 0.05;
+        // wrap the whole curve around the viewport
+        const span = Math.max(w, h) * 1.8;
+        if (l.x < -span) l.x = span;
+        if (l.x > span) l.x = -span;
+        if (l.y < -span) l.y = span;
+        if (l.y > span) l.y = -span;
+        // very thin + faint; layered by depth
+        const alpha = 0.01 + l.depth * 0.05;
         ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
-        // thinned: keep strokes hairline-thin, depth adds at most ~0.7px
-        ctx.lineWidth = 0.4 + l.depth * 0.7;
-        ctx.beginPath();
-        ctx.moveTo(l.x - dx, l.y - dy);
-        ctx.lineTo(l.x + dx, l.y + dy);
-        ctx.stroke();
+        ctx.lineWidth = 0.25 + l.depth * 0.55; // hairline, sub-pixel feel
+        drawCurve(l.pts, l.x, l.y);
       }
       raf = requestAnimationFrame(draw);
     };
@@ -124,6 +158,7 @@ function useLineField(ref: React.RefObject<HTMLCanvasElement | null>) {
     draw();
     window.addEventListener("resize", build);
     return () => {
+
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", build);
     };
