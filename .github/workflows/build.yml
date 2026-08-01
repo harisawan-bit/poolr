@@ -140,6 +140,12 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      # Install frontend deps so @tauri-apps/cli is available for `npm exec tauri`
+      # (the native build invokes the Tauri CLI from frontend/node_modules).
+      - name: Frontend deps (install Tauri CLI)
+        working-directory: frontend
+        run: npm ci
+
       - name: Linux deps (webkit2gtk)
         if: runner.os == 'Linux'
         run: |
