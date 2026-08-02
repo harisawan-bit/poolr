@@ -27,6 +27,9 @@ export default function DisclaimerModal({ onClose }: { onClose: () => void }) {
         <div className="mt-3 text-[10.5px] text-[#8b8d96]">
           Developed by M. Haris Awan · © 2026 M. Haris Awan. All rights reserved.
         </div>
+        <div className="mt-1 text-[10px] text-[#6f7178]">
+          100% Python-free · Tauri 2 + React + C#/.NET engine
+        </div>
         <div className="mt-4 flex justify-end">
           <button className="btn-primary" onClick={onClose}>I understand</button>
         </div>

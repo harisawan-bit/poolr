@@ -11,26 +11,22 @@ permissions:
   contents: write
 
 env:
-  PYTHON_VERSION: "3.11"
   NODE_VERSION: "24"
   DOTNET_VERSION: "8.0.x"
   RUST_VERSION: "stable"
 
 jobs:
-  # ── Python suite = engine-parity oracle (C# port must match these numbers) ──
-  python-tests:
-    name: Python Engine Tests
+  # ── C# engine self-test (replaces the old Python parity oracle) ──
+  dotnet-tests:
+    name: C# Engine Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-      - run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
-      - run: pytest tests/verification -q
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - run: dotnet test engine/Poolr.Engine.Tests/Poolr.Engine.Tests.csproj -c Release
 
   # ── New stack compile gate (runs on every PR) ──
   web-build:
@@ -89,7 +85,7 @@ jobs:
   # ── Native installers (tagged release only — heavy 6-OS build) ──
   release:
     name: Native Installers (${{ matrix.os }})
-    needs: [python-tests, web-build]
+    needs: [dotnet-tests, web-build]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ${{ matrix.os }}
     strategy:

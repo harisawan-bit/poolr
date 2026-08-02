@@ -46,8 +46,7 @@ and tagged `vX.Y.Z` (the tag triggers the 6-OS installer build).
 | `frontend/` | React + TypeScript (Vite) | The 8 SRMA pages + `lib/` (engine bridge, import parser) |
 | `src-tauri/` | Rust (Tauri 2) | Native shell; spawns the C# engine; bundle config in `tauri.conf.json` |
 | `engine/` | C# 12 / .NET 8 | Meta-analysis HTTP API (`:5180`). Math.NET for stats, SkiaSharp for figures |
-| `src/poolr/` | Python | **Parity oracle only** — validates the C# engine numerics in CI. Not shipped |
-| `tests/verification/` | Python (`pytest`) | Runs the C# engine vs the Python reference (`tests/verification/test_meta_analysis.py`) |
+| `engine/Poolr.Engine.Tests/` | C# 12 / .NET 8 (xUnit) | Numerics regression suite — the CI gate that keeps the engine honest |
 | `.github/workflows/` | YAML | `ci.yml` (lint/type/test) + `build.yml` (6-OS installer matrix on tags) |
 
 ## 🧪 Local Checks
@@ -59,9 +58,8 @@ cd frontend && npm ci && npm run build
 # Rust shell
 cd src-tauri && cargo check
 
-# C# engine ↔ Python reference parity (the CI gate that keeps numerics honest)
-pip install -e ".[dev]"
-pytest tests/verification -q
+# C# engine numerics suite (the CI gate that keeps the engine honest)
+dotnet test engine/Poolr.Engine.Tests/Poolr.Engine.Tests.csproj -c Release
 
 # Run the engine locally for manual API calls
 cd engine && dotnet run --project Poolr.Engine.Api
@@ -79,8 +77,7 @@ In CI this happens automatically when you push a `vX.Y.Z` tag.
 ## 🏷️ Versioning & Releases
 
 - Semantic Versioning: `MAJOR.MINOR.PATCH`
-- Bump `version` in `frontend/package.json`, `src-tauri/tauri.conf.json`, and
-  `pyproject.toml` together
+- Bump `version` in `frontend/package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/package.json` together
 - Update `RELEASES.md` + `CHANGELOG.md`
 - Merge `develop` → `main`, then `git tag -a vX.Y.Z -m "poolr vX.Y.Z"` and push the tag
 - `build.yml` builds and publishes the 6-OS installers to the GitHub Release
