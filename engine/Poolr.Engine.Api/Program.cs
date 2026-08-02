@@ -29,7 +29,7 @@ app.Use(async (ctx, next) =>
 app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.4.0", engine = "csharp" }));
 app.MapGet("/version", () => Results.Ok(new { version = "0.4.0" }));
 
-// Phase B — C# meta-analysis port (numerically identical to python/poolr/meta/analysis.py).
+// Phase B — C# meta-analysis engine (numerics covered by engine/Poolr.Engine.Tests xUnit).
 app.MapPost("/api/meta", ([FromBody] MetaRequest req) =>
 {
     try

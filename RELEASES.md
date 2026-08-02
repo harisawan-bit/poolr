@@ -19,9 +19,9 @@
 
 ### What's New in v0.4.0
 
-- **Fully native stack**: Tauri 2 (Rust) shell + React/TypeScript UI + C# 12 / .NET 8 engine sidecar (localhost HTTP API). No Python in the shipped product.
+- **Fully native stack**: Tauri 2 (Rust) shell + React/TypeScript UI + C# 12 / .NET 8 engine sidecar (localhost HTTP API). **100% Python-free** — no Python in the product or the repo.
 - **All 8 pages reimplemented** in React: Dashboard, Protocol, Search, Screening, Extraction, RoB, Meta-Analysis, PRISMA.
-- **Meta-analysis engine (C#)**: OR/RR/RD/MD/SMD/HR, fixed + random-effects (DL/REML/PM/HS/ML/EB), Cochran Q, I², τ², Egger/Begg publication bias, subgroup analysis — numerically validated against the pinned Python oracle (25 parity tests).
+- **Meta-analysis engine (C#)**: OR/RR/RD/MD/SMD/HR, fixed + random-effects (DL/REML/PM/HS/ML/EB), Cochran Q, I², τ², Egger/Begg publication bias, subgroup analysis — guarded by the `engine/Poolr.Engine.Tests` xUnit suite.
 - **Figures**: SkiaSharp/ SVG forest + funnel plots rendered in-app.
 - **Screening import**: parse PubMed MEDLINE, CSV, RIS / .nbib, and EndNote exports into screening items (hidden file picker — works in Tauri and plain browser).
 - **Persistence**: atomic auto-save to `poolr.json` with rolling `.bak` restore; load-on-start; force-close safe.

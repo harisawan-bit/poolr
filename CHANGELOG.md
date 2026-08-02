@@ -19,15 +19,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0] - 2026-08-02
 
 ### Added
-- **Native desktop overhaul**: Tauri 2 (Rust) shell + React/TypeScript UI + C# 12 / .NET 8 engine sidecar. No Python in the shipped product.
+- **Native desktop overhaul**: Tauri 2 (Rust) shell + React/TypeScript UI + C# 12 / .NET 8 engine sidecar. **100% Python-free** — no Python in the product or the repo.
 - All 8 pages reimplemented in React (Dashboard, Protocol, Search, Screening, Extraction, RoB, Meta-Analysis, PRISMA).
-- C# meta-analysis engine: OR/RR/RD/MD/SMD/HR, fixed + random-effects (DL/REML/PM/HS/ML/EB), Cochran Q, I², τ², Egger/Begg publication bias, subgroup analysis — validated against the pinned Python oracle (25 parity tests).
+- C# meta-analysis engine: OR/RR/RD/MD/SMD/HR, fixed + random-effects (DL/REML/PM/HS/ML/EB), Cochran Q, I², τ², Egger/Begg publication bias, subgroup analysis — guarded by the `engine/Poolr.Engine.Tests` xUnit suite.
 - In-app SVG forest + funnel plots (SkiaSharp).
 - Screening import: PubMed MEDLINE, CSV, RIS/.nbib, EndNote parsers.
 - Auto-GRADE evidence profile on the PRISMA page.
 - Word (.docx)/Markdown/LaTeX/JSON export with a pre-export copyright confirmation.
 - MIT license + © 2026 M. Haris Awan copyright embedded in installers/footer/disclaimer.
-- 6-OS native installer matrix (MSI/NSIS win x64/x86/arm64, DMG mac x64/arm64, deb/AppImage linux x64); WebView2 fixed runtime bundled on Windows.
+- 6-OS native installer matrix (MSI/NSIS win x64/x86/arm64, DMG mac x64/arm64, deb/rpm linux x64); WebView2 fixed runtime bundled on Windows.
 
 ### Changed
 - Persistence: atomic auto-save to `poolr.json` with rolling `.bak` restore; load-on-start; force-close safe.
@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Added
-- Shared UI style kit (`src/poolr/ui.py`): dark palette, typography helpers, `SectionHeader`, `Card`, `StatTile`, branded `PrimaryButton`/`SecondaryButton` (override-safe colors), and a scrollable-helper — all headless-safe (no display access, no blocking dialogs).
+- Shared UI style kit (`src/poolr/ui.py`, legacy Python/CustomTkinter app): dark palette, typography helpers, `SectionHeader`, `Card`, `StatTile`, branded `PrimaryButton`/`SecondaryButton` (override-safe colors), and a scrollable-helper — all headless-safe (no display access, no blocking dialogs).
 
 ### Changed
 - **Premium UI refresh**: redesigned app shell with a branded sidebar (hover + active-state), a header bar showing the current section, and a persistent bottom status bar with version + quick actions.

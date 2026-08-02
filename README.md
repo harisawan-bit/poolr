@@ -10,7 +10,7 @@
 
 No programming required. No cloud dependency. Your data stays on your machine.
 
-> **New in v0.4.0 — Native Tauri + React + C# overhaul.** The app is now a fully native desktop build (Tauri 2 / Rust shell, React + TypeScript UI, bundled C# 12 / .NET 8 engine sidecar) — no Python runtime required. All 8 pages reimplemented, screening import from PubMed/CSV/RIS/EndNote, in-app forest/funnel plots, GRADE, and 6-OS native installers. See [RELEASES.md](./RELEASES.md) for details.
+> **New in v0.4.0 — Native Tauri + React + C# overhaul.** The app is now a fully native desktop build (Tauri 2 / Rust shell, React + TypeScript UI, bundled C# 12 / .NET 8 engine sidecar) — **100% Python-free**. All 8 pages reimplemented, screening import from PubMed/CSV/RIS/EndNote, in-app forest/funnel plots, GRADE, and 6-OS native installers. See [RELEASES.md](./RELEASES.md) for details.
 
 ---
 
@@ -91,8 +91,8 @@ No programming required. No cloud dependency. Your data stays on your machine.
 2. Download the native installer for your platform:
    - **Windows**: `poolr-windows-x64.msi` (or `x86` / `arm64`) — also ships `poolr-windows-x64.exe` (NSIS)
    - **macOS**: `poolr-macos-arm64.dmg` (Apple Silicon) or `poolr-macos-x64.dmg` (Intel) — drag `poolr.app` to Applications
-   - **Linux**: `poolr-linux-x86_64.AppImage` (portable) or `poolr-linux-x86_64.deb` (Debian/Ubuntu)
-3. No Python, no dependencies needed — the C# engine and WebView2 (Windows) are bundled.
+   - **Linux**: `poolr-linux-x86_64.deb` (Debian/Ubuntu) or `poolr-linux-x86_64.rpm` (RHEL/Fedora)
+3. 100% Python-free — the C# engine and WebView2 (Windows) are bundled, with no Python runtime anywhere in the product or the repo.
 
 ### Releases
 See [RELEASES.md](./RELEASES.md) for version history, migration notes, and download links.
@@ -117,7 +117,7 @@ cd src-tauri
 cargo tauri dev
 ```
 
-> The Python package (`src/poolr`) is retained only as the numerical parity oracle for the C# engine; it is **not** part of the shipped product.
+> The stats engine is a pure C# 12 / .NET 8 implementation (no Python). Its numerics are guarded by the `engine/Poolr.Engine.Tests` xUnit suite that runs in CI.
 
 ### Engine API (for Automation / CI)
 
@@ -134,7 +134,7 @@ curl -X POST http://127.0.0.1:5180/api/meta \
        "data":[{"study":"A","type":"binary","int_events":10,"int_n":50,"ctrl_events":5,"ctrl_n":50}]}'
 ```
 
-> The Python package (`src/poolr`) is retained only as the numerical **parity oracle** for the C# engine; it is **not** part of the shipped product and has no `poolr-cli` entry point.
+> The engine is pure C# — there is no Python anywhere in the product or the repository.
 
 ---
 
@@ -157,26 +157,19 @@ poolr/
 │   └── package.json           # @tauri-apps/cli (build script)
 ├── engine/                   # C# 12 / .NET 8 meta-analysis engine (sidecar)
 │   ├── Poolr.Engine.Api/     # ASP.NET localhost HTTP API (:5180)
-│   └── Poolr.Engine/         # Math.NET stats (OR/RR/MD/SMD/HR, I², GRADE, subgroups)
-├── src/poolr/                # Python parity oracle only (NOT shipped) — see note below
-├── tests/verification/       # parity tests: C# engine vs Python reference (CI)
+│   ├── Poolr.Engine/         # Math.NET stats (OR/RR/MD/SMD/HR, I², GRADE, subgroups)
+│   └── Poolr.Engine.Tests/   # xUnit numerics suite (CI gate — 100% Python-free)
 ├── .github/workflows/        # CI (lint/type/test) + Build Installers (6-OS matrix)
-├── pyproject.toml            # parity-oracle packaging (not part of the product)
 ├── README.md · RELEASES.md · CHANGELOG.md · LICENSE
-```
 
-> **Note:** The product ships as a native Tauri + React + C# app. `src/poolr` (Python) and
-> `pyproject.toml` exist **only** to validate the C# engine's numerics against an independent
-> reference in CI. They are not installed or bundled into the released app.
 
 ---
 
 ## 🧪 Testing
 
 ```bash
-# C# engine ↔ Python reference parity (CI: Python Engine Tests job)
-pip install -e ".[dev]"
-pytest tests/verification -q
+# C# engine numerics suite (CI: C# Engine Tests job)
+dotnet test engine/Poolr.Engine.Tests/Poolr.Engine.Tests.csproj -c Release
 
 # Frontend type-check + build
 cd frontend && npm ci && npm run build
@@ -185,8 +178,7 @@ cd frontend && npm ci && npm run build
 cd src-tauri && cargo check
 ```
 
-> The old CustomTkinter GUI smoke test (`tests/gui_smoke_test.py`) is no longer applicable
-> to the native shell and is excluded from CI.
+> The entire product and its test suite are **100% Python-free** — the engine is C#/.NET and CI validates it with xUnit.
 
 ---
 
@@ -197,15 +189,14 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 ### Development Workflow
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes with tests
-4. Run the test suite: `pytest`
+3. Make your changes with tests (C# engine changes go in `engine/Poolr.Engine.Tests`)
+4. Run the test suite: `dotnet test engine/Poolr.Engine.Tests -c Release`
 5. Submit a Pull Request to `develop`
 
 ### Code Style
-- **Formatter**: `black` (line length 100)
-- **Linter**: `ruff`
-- **Type hints**: Required for new functions
-- **Docstrings**: NumPy style
+- **C#**: `dotnet format` (CI enforces `--verify-no-changes`)
+- **Frontend**: Prettier + ESLint via `npm run build` (tsc)
+- **Rust**: `cargo fmt` / `cargo clippy`
 
 ---
 
@@ -222,8 +213,7 @@ MIT License — free for academic and commercial use. © M. Haris Awan. All righ
 - **NCBI** for PubMed/Entrez API access
 - **Tauri 2** (Rust) for the native desktop shell
 - **React** + **TypeScript** + **Vite** for the UI
-- **.NET 8 / C# 12** (Math.NET Numerics, SkiaSharp) for the statistics engine
-- **matplotlib**, **pandas**, **statsmodels**, **scipy** for the Python parity oracle
+- **.NET 8 / C# 12** (Math.NET Numerics, SkiaSharp) for the statistics engine — 100% Python-free
 
 ---
 

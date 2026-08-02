@@ -5,9 +5,9 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// C# port of python/poolr/meta/analysis.py — kept numerically identical so the
-/// pinned Python verification tests are the oracle. DO NOT "improve" formulas
-/// without re-validating against tests/verification/test_meta_analysis.py.
+/// C# meta-analysis engine. Numerics are guarded by the xUnit suite in
+/// engine/Poolr.Engine.Tests (replaces the old Python parity oracle). DO NOT
+/// "improve" formulas without re-running that suite.
 /// </summary>
 public static class Stats
 {
@@ -103,6 +103,16 @@ public class MetaAnalysis
     {
         if (data == null || data.Count == 0)
             throw new ArgumentException("No data provided");
+
+        var validMeasures = new[] { "OR", "RR", "RD", "MD", "SMD", "HR" };
+        var validModels = new[] { "random", "fixed" };
+        var validMethods = new[] { "DL", "REML", "PM", "HS", "ML", "EB" };
+        if (!validMeasures.Contains(_measure))
+            throw new ArgumentException($"Invalid effect measure '{_measure}'");
+        if (!validModels.Contains(_model))
+            throw new ArgumentException($"Invalid model '{_model}'");
+        if (!validMethods.Contains(_method))
+            throw new ArgumentException($"Invalid method '{_method}'");
 
         var binary = data.Where(s => s.type == "binary").ToList();
         var continuous = data.Where(s => s.type == "continuous").ToList();
