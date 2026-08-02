@@ -231,7 +231,7 @@ MIT License — free for academic and commercial use. © M. Haris Awan. All righ
 
 - **Issues**: [GitHub Issues](https://github.com/harisawan-bit/poolr/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/harisawan-bit/poolr/discussions)
-- **Email**: poolr-support@example.com
+- **Email**: m.harisawan@icloud.com
 
 ---
 

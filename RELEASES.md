@@ -89,7 +89,7 @@
 ### Support
 
 - Report issues: https://github.com/harisawan-bit/poolr/issues
-- Email: poolr-support@example.com
+- Email: m.harisawan@icloud.com
 
 ---
 

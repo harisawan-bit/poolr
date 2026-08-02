@@ -39,7 +39,7 @@ class PubMedRecord:
 class PubMedClient:
     """Client for PubMed Entrez API"""
 
-    def __init__(self, email: str = "user@example.com", api_key: Optional[str] = None):
+    def __init__(self, email: str = "m.harisawan@icloud.com", api_key: Optional[str] = None):
         if not BIOPYTHON_AVAILABLE:
             raise ImportError("biopython not installed. Install with: pip install biopython")
 
@@ -240,7 +240,7 @@ class PubMedClient:
 class PubMedImporter:
     """High-level importer for integrating PubMed searches into poolr"""
 
-    def __init__(self, email: str = "user@example.com", api_key: Optional[str] = None):
+    def __init__(self, email: str = "m.harisawan@icloud.com", api_key: Optional[str] = None):
         self.client = PubMedClient(email, api_key)
 
     def import_to_project(
@@ -312,7 +312,7 @@ def show_pubmed_search_dialog(parent, app):
     ctk.CTkLabel(dialog, text="NCBI Email (required):").pack(anchor="w", padx=20, pady=(20, 5))
     email_entry = ctk.CTkEntry(dialog, width=400)
     email_entry.pack(padx=20, pady=(0, 10))
-    email_entry.insert(0, "user@example.com")
+    email_entry.insert(0, "m.harisawan@icloud.com")
 
     ctk.CTkLabel(dialog, text="API Key (optional, for higher rate limits):").pack(anchor="w", padx=20, pady=(0, 5))
     api_entry = ctk.CTkEntry(dialog, width=400)
