@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Added
-- Shared UI style kit (`src/poolr/ui.py`): dark palette, typography helpers, `SectionHeader`, `Card`, `StatTile`, branded `PrimaryButton`/`SecondaryButton` (override-safe colors), and a scrollable-helper — all headless-safe (no display access, no blocking dialogs).
+- Shared UI style kit (`src/poolr/ui.py`, legacy Python/CustomTkinter app): dark palette, typography helpers, `SectionHeader`, `Card`, `StatTile`, branded `PrimaryButton`/`SecondaryButton` (override-safe colors), and a scrollable-helper — all headless-safe (no display access, no blocking dialogs).
 
 ### Changed
 - **Premium UI refresh**: redesigned app shell with a branded sidebar (hover + active-state), a header bar showing the current section, and a persistent bottom status bar with version + quick actions.
