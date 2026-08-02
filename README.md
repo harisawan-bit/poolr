@@ -78,9 +78,9 @@ No programming required. No cloud dependency. Your data stays on your machine.
 ### 🖥️ **Cross-Platform Desktop App**
 | Platform | Architectures | Package |
 |----------|---------------|---------|
-| **Windows** | x64, x86, ARM64 | portable `.exe` in `poolr-windows-<arch>.zip` |
-| **macOS** | Intel (x64), Apple Silicon (ARM64) | `.app` bundle + `.dmg` in `poolr-macos-<arch>.zip` |
-| **Linux** | x64 | single-file executable in `poolr-linux.zip` |
+| **Windows** | x64, x86, ARM64 | native `.msi` installer + `.exe` (NSIS) with WebView2 embedded |
+| **macOS** | Intel (x64), Apple Silicon (ARM64) | `.dmg` (drag `poolr.app` to Applications) |
+| **Linux** | x64 | native `.deb` (+ `.rpm`) |
 
 ---
 
@@ -119,14 +119,22 @@ cargo tauri dev
 
 > The Python package (`src/poolr`) is retained only as the numerical parity oracle for the C# engine; it is **not** part of the shipped product.
 
-### CLI for Automation (CI/CD)
-```bash
-# Run meta-analysis and export Word report headlessly
-poolr-cli ./my_srma_project --run-meta --export word --output ./reports/
+### Engine API (for Automation / CI)
 
-# Export all formats
-poolr-cli ./my_srma_project --export all --output ./dist/
+The bundled C# engine exposes a local REST API (default `http://127.0.0.1:5180`). You can drive meta-analyses headlessly without the GUI:
+
+```bash
+# Health check
+curl http://127.0.0.1:5180/health
+
+# Run a meta-analysis (binary OR, random-effects, DerSimonian-Laird)
+curl -X POST http://127.0.0.1:5180/api/meta \
+  -H "Content-Type: application/json" \
+  -d '{"model":"random","measure":"OR","method":"DL",
+       "data":[{"study":"A","type":"binary","int_events":10,"int_n":50,"ctrl_events":5,"ctrl_n":50}]}'
 ```
+
+> The Python package (`src/poolr`) is retained only as the numerical **parity oracle** for the C# engine; it is **not** part of the shipped product and has no `poolr-cli` entry point.
 
 ---
 
@@ -134,53 +142,51 @@ poolr-cli ./my_srma_project --export all --output ./dist/
 
 ```
 poolr/
-├── src/poolr/                 # Main package
-│   ├── main.py               # GUI entry point
-│   ├── cli.py                # Headless CLI
-│   ├── pages/                # GUI pages (one per SRMA phase)
-│   │   ├── dashboard.py      # Overview, quick actions, project info
-│   │   ├── protocol.py       # PICO + protocol metadata
-│   │   ├── search.py         # Search strategy builder
-│   │   ├── screening.py      # Dual-reviewer screening
-│   │   ├── extraction.py     # Data extraction forms
-│   │   ├── rob.py            # RoB 2 / NOS / PROBAST
-│   │   ├── meta.py           # Meta-analysis settings + results
-│   │   └── prisma.py         # PRISMA checklist + flow + GRADE
-│   ├── meta/                 # Statistical engine
-│   │   ├── analysis.py       # Meta-analysis (OR, RR, MD, SMD, HR)
-│   │   └── grade.py          # GRADE evidence profiling
-│   ├── plotting/             # Publication figures
-│   │   └── figures.py        # Forest, funnel, PRISMA flow (matplotlib)
-│   ├── export/               # Manuscript export
-│   │   └── reports.py        # Word, LaTeX, JSON
-│   ├── import_/              # Data import
-│   │   ├── pubmed.py         # NCBI Entrez API client
-│   │   └── ris.py            # RIS format (EndNote/Zotero)
-│   └── grade.py              # GRADE table generator
-├── assets/                   # Icons, themes, templates
-├── tests/                    # Unit + integration tests
-├── scripts/                  # Build/packaging scripts
-├── .github/workflows/        # CI/CD (Windows, macOS, Linux)
-├── pyproject.toml            # Package config
-└── README.md                 # This file
+├── frontend/                  # React + TypeScript UI (Vite)
+│   ├── src/
+│   │   ├── pages/             # 8 SRMA pages (Dashboard, Protocol, Search, Screening,
+│   │   │                      #   Extraction, Risk of Bias, Meta, PRISMA)
+│   │   ├── lib/               # engine API bridge, screening-import parser, project store
+│   │   └── components/        # shared UI (sidebar, header, status bar)
+│   └── package.json
+├── src-tauri/                # Tauri 2 (Rust) shell
+│   ├── src/                  # Rust app + C# engine spawner (JobObject reaping)
+│   ├── resources/engine/     # bundled self-contained C# sidecar (gitignored, built in CI)
+│   ├── icons/                # app icons (png/ico/icns)
+│   ├── tauri.conf.json        # bundle config: msi/nsis/dmg/deb/rpm + WebView2 embed
+│   └── package.json           # @tauri-apps/cli (build script)
+├── engine/                   # C# 12 / .NET 8 meta-analysis engine (sidecar)
+│   ├── Poolr.Engine.Api/     # ASP.NET localhost HTTP API (:5180)
+│   └── Poolr.Engine/         # Math.NET stats (OR/RR/MD/SMD/HR, I², GRADE, subgroups)
+├── src/poolr/                # Python parity oracle only (NOT shipped) — see note below
+├── tests/verification/       # parity tests: C# engine vs Python reference (CI)
+├── .github/workflows/        # CI (lint/type/test) + Build Installers (6-OS matrix)
+├── pyproject.toml            # parity-oracle packaging (not part of the product)
+├── README.md · RELEASES.md · CHANGELOG.md · LICENSE
 ```
+
+> **Note:** The product ships as a native Tauri + React + C# app. `src/poolr` (Python) and
+> `pyproject.toml` exist **only** to validate the C# engine's numerics against an independent
+> reference in CI. They are not installed or bundled into the released app.
 
 ---
 
 ## 🧪 Testing
 
 ```bash
-# Run all tests
-pytest -v
+# C# engine ↔ Python reference parity (CI: Python Engine Tests job)
+pip install -e ".[dev]"
+pytest tests/verification -q
 
-# With coverage
-pytest --cov=poolr --cov-report=html
+# Frontend type-check + build
+cd frontend && npm ci && npm run build
 
-# Specific test suites
-pytest tests/test_meta_analysis.py -v
-pytest tests/test_grade.py -v
-pytest tests/test_import_export.py -v
+# Rust shell check
+cd src-tauri && cargo check
 ```
+
+> The old CustomTkinter GUI smoke test (`tests/gui_smoke_test.py`) is no longer applicable
+> to the native shell and is excluded from CI.
 
 ---
 
