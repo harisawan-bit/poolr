@@ -41,3 +41,6 @@ engine/**/obj/
 # Node deps (frontend + src-tauri)
 frontend/node_modules/
 src-tauri/node_modules/
+
+# Agent scaffolding (never committed)
+.hermes/

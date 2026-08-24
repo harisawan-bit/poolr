@@ -98,9 +98,9 @@ jobs:
           OUTPUT=$(dotnet list engine/Poolr.Engine.Api/Poolr.Engine.Api.csproj package --vulnerable --include-transitive 2>&1)
           echo "$OUTPUT"
           if echo "$OUTPUT" | grep -q "no vulnerable packages"; then
-            echo "✅ No vulnerable packages."
+            echo "OK: no vulnerable packages."
           else
-            echo "❌ Vulnerable packages detected — failing the build."
+            echo "FAIL: vulnerable packages detected — failing the build."
             exit 1
           fi
 

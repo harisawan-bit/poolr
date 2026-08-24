@@ -29,35 +29,35 @@ No programming required. No cloud dependency. Your data stays on your machine.
 
 ---
 
-## ✨ Features
+## Features
 
-### 📋 **Protocol & Planning**
+### **Protocol & Planning**
 - **PICO Builder** for Population, Intervention, Comparator, Outcomes with placeholders
 - Protocol registration fields (PROSPERO ID, study designs, date range, languages)
 - Auto-saves to local `poolr.json` — fully portable projects
 
-### 🔍 **Search Strategy Builder**
+### **Search Strategy Builder**
 - Auto-generates search strings for **PubMed/MEDLINE, Embase, Cochrane CENTRAL, Scopus, Web of Science** from your PICO
 - Editable syntax-highlighted text areas per database
 - Export all strategies as `.txt` for protocol appendix
 
-### ☑️ **Dual Independent Screening**
+### **Dual Independent Screening**
 - **Title/Abstract** and **Full-Text** screening modes
 - Two-reviewer workflow with **conflict detection and resolution UI**
 - CSV import/export for Rayyan/Covidence interoperability
 - PRISMA flow numbers auto-calculated from decisions
 
-### 📝 **Structured Data Extraction**
+### **Structured Data Extraction**
 - Comprehensive forms: Study ID, Design, Population, Intervention/Control groups (binary, continuous, time-to-event), Outcomes, Neurosurgery-specific fields
 - CSV and **RIS (EndNote/Zotero/Mendeley)** import/export
 - Add/edit/delete studies with validation
 
-### ⚠️ **Risk of Bias Assessment**
+### **Risk of Bias Assessment**
 - **RoB 2** (RCTs), **NOS** (cohort/case-control), **PROBAST** (diagnostic/prognostic)
 - Domain-level judgments with overall rating
 - Summary tables auto-generated + **domain-coverage radar chart**
 
-### 📈 **Advanced Meta-Analysis Engine**
+### **Advanced Meta-Analysis Engine**
 | Outcome Type | Effect Measures | Models | Methods |
 |--------------|----------------|--------|---------|
 | Binary | OR, RR, RD | Fixed / Random-effects | DerSimonian-Laird, REML, Paule-Mandel, Hunter-Schmidt |
@@ -70,28 +70,28 @@ No programming required. No cloud dependency. Your data stays on your machine.
 - **Heterogeneity**: Cochran's Q, I², τ², prediction intervals
 - **Study-weight ring chart** — see each study's contribution at a glance
 
-### 📊 **Publication-Ready Figures**
+### **Publication-Ready Figures**
 - **Forest plots**: weight-proportional squares, diamond pooled estimate, log/linear scale, SVG/PNG/PDF export
 - **Funnel plots**: pseudo-95% CI contours, study weights as bubble size, color-coded
 - **PRISMA 2020 Flow Diagram**: interactive canvas with auto-population from screening data, SVG export
 
-### 📋 **GRADE Evidence Profiles**
+### **GRADE Evidence Profiles**
 - Auto-populated from meta-analysis results + RoB assessments
 - Five-domain assessment (Risk of Bias, Inconsistency, Indirectness, Imprecision, Publication Bias)
 - Starting certainty (RCT=High, Observational=Low) with automatic downgrade logic
 - Export as Word table, LaTeX, JSON
 
-### 📄 **Manuscript Export**
+### **Manuscript Export**
 - **Word (.docx)**: full PRISMA-structured manuscript with tables, figures, references
 - **LaTeX (.tex)**: journal-ready with `booktabs`, `forestplot`, `pgfplots` support
 - **JSON**: complete project archive for reproducibility
 
-### 🔬 **PubMed Direct Import**
+### **PubMed Direct Import**
 - Search PubMed via NCBI Entrez API (with API key support for 10 req/s)
 - Import records directly into screening with PMID, abstract, MeSH, keywords
 - Date range filters, query history
 
-### 🖥️ **Cross-Platform Desktop App**
+### **Cross-Platform Desktop App**
 | Platform | Architectures | Package |
 |----------|---------------|---------|
 | **Windows** | x64, x86, ARM64 | native `.msi` installer + `.exe` (NSIS) with WebView2 embedded |
@@ -100,22 +100,22 @@ No programming required. No cloud dependency. Your data stays on your machine.
 
 ---
 
-## 🆚 How poolr compares
+## How poolr compares
 
 | | **poolr** | RevMan (Cochrane) | R `metafor` | JASP |
 |---|---|---|---|---|
 | Price | **Free, open source** | Free (web) | Free | Free |
-| No coding | ✅ | ✅ | ❌ | ✅ |
-| Offline / local data | ✅ | ❌ | ✅ | ✅ |
-| Full PRISMA 2020 pipeline | ✅ | Partial | ❌ | ❌ |
-| Dual screening + conflicts | ✅ | ❌ | ❌ | ❌ |
-| GRADE profiles | ✅ | Partial | ❌ | ❌ |
-| Word/LaTeX manuscript export | ✅ | ❌ | ❌ | ❌ |
-| Windows / macOS / Linux | ✅ | Web only | ✅ | ✅ |
+| No coding | Yes | Yes | No | Yes |
+| Offline / local data | Yes | No | Yes | Yes |
+| Full PRISMA 2020 pipeline | Yes | Partial | No | No |
+| Dual screening + conflicts | Yes | No | No | No |
+| GRADE profiles | Yes | Partial | No | No |
+| Word/LaTeX manuscript export | Yes | No | No | No |
+| Windows / macOS / Linux | Yes | Web only | Yes | Yes |
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Download (Recommended)
 1. Go to [Releases](https://github.com/harisawan-bit/poolr/releases/latest)
@@ -169,7 +169,7 @@ curl -X POST http://127.0.0.1:5180/api/meta \
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 poolr/
@@ -197,7 +197,7 @@ poolr/
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # C# engine numerics suite (CI: C# Engine Tests job)
@@ -214,7 +214,7 @@ cd src-tauri && cargo fmt --check && cargo clippy --all-targets -- -D warnings
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
@@ -232,13 +232,13 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 ---
 
-## 📜 License
+## License
 
 MIT License — free for academic and commercial use. © M. Haris Awan. See [LICENSE](LICENSE) for details.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **PRISMA 2020** statement authors for reporting guidelines
 - **Cochrane** for RoB 2 and GRADE methodology
@@ -250,14 +250,12 @@ MIT License — free for academic and commercial use. © M. Haris Awan. See [LIC
 
 ---
 
-## 📞 Support
+## Support
 
 - **Issues**: [GitHub Issues](https://github.com/harisawan-bit/poolr/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/harisawan-bit/poolr/discussions)
 - **Email**: m.harisawan@icloud.com
 
 ---
-
-**Made with ❤️ for the evidence-based medicine community**
 
 > *"Systematic reviews are the cornerstone of evidence-based practice. poolr makes them accessible to everyone."*
