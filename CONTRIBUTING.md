@@ -52,14 +52,20 @@ and tagged `vX.Y.Z` (the tag triggers the 6-OS installer build).
 ## 🧪 Local Checks
 
 ```bash
-# Frontend type-check + production build
-cd frontend && npm ci && npm run build
+# Frontend type-check + production build + unit tests
+cd frontend && npm ci && npm run build && npm run test -- --run
 
-# Rust shell
-cd src-tauri && cargo check
+# Frontend lint
+cd frontend && npm run lint
+
+# Rust shell (format + clippy, both enforced in CI)
+cd src-tauri && cargo fmt --check && cargo clippy --all-targets -- -D warnings
 
 # C# engine numerics suite (the CI gate that keeps the engine honest)
 dotnet test engine/Poolr.Engine.Tests/Poolr.Engine.Tests.csproj -c Release
+
+# C# engine format gate (CI enforces --verify-no-changes)
+dotnet format engine/Poolr.Engine.Api/Poolr.Engine.Api.csproj --verify-no-changes
 
 # Run the engine locally for manual API calls
 cd engine && dotnet run --project Poolr.Engine.Api

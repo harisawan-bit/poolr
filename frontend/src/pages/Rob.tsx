@@ -1,6 +1,11 @@
 import { useState } from "react";
 import type { Project, RobAssessment } from "../lib/project";
 import { Card, Select, Pill, EmptyState } from "../components/ui";
+import { RadarChart } from "../components/charts/radar-chart";
+import { RadarGrid } from "../components/charts/radar-grid";
+import { RadarAxis } from "../components/charts/radar-axis";
+import { RadarLabels } from "../components/charts/radar-labels";
+import { RadarArea } from "../components/charts/radar-area";
 
 const TOOLS = ["RoB2", "NOS", "PROBAST"] as const;
 const OVERALL = ["Low", "Some concerns", "High", "—"] as const;
@@ -100,6 +105,40 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
           </div>
         )}
       </Card>
+
+      {list.length > 0 && (
+        <Card title="Domain coverage — % of studies rated low risk">
+          <DomainRadar list={list} tool={tool} />
+        </Card>
+      )}
+    </div>
+  );
+}
+
+/** Bklit RadarChart: one axis per RoB domain, value = % of studies at "Low". */
+function DomainRadar({ list, tool }: { list: RobAssessment[]; tool: (typeof TOOLS)[number] }) {
+  const domains = DOMAINS[tool];
+  const forTool = list.filter((a) => a.tool === tool);
+  if (forTool.length === 0) {
+    return <EmptyState>No {tool} assessments yet.</EmptyState>;
+  }
+  const metrics = domains.map((d, i) => ({ key: `d${i}`, label: d }));
+  const values: Record<string, number> = {};
+  domains.forEach((d, i) => {
+    const low = forTool.filter((a) => (a.domains[d] ?? "Low") === "Low").length;
+    values[`d${i}`] = Math.round((low / forTool.length) * 100);
+  });
+  return (
+    <div className="mx-auto max-w-[380px]">
+      <RadarChart data={[{ label: `${tool} — low risk`, values }]} metrics={metrics} margin={64} levels={4}>
+        <RadarGrid />
+        <RadarAxis />
+        <RadarLabels />
+        <RadarArea index={0} />
+      </RadarChart>
+      <p className="mt-1 text-center text-[10.5px] text-[#8b8d96]">
+        {forTool.length} {tool} assessment{forTool.length === 1 ? "" : "s"} — outer edge = 100% low risk
+      </p>
     </div>
   );
 }

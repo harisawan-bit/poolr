@@ -1,17 +1,18 @@
 [package]
-name = "app"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["M. Haris Awan"]
+name = "poolr"
+version = "0.5.0"
+description = "poolr — free, no-code desktop app for Systematic Reviews & Meta-Analyses (PRISMA 2020)"
+authors = ["M. Haris Awan <m.harisawan@icloud.com>"]
 license = "MIT"
-repository = ""
+repository = "https://github.com/harisawan-bit/poolr"
+homepage = "https://github.com/harisawan-bit/poolr"
 edition = "2021"
 rust-version = "1.77.2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-name = "app_lib"
+name = "poolr_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

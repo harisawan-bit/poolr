@@ -1,0 +1,45 @@
+name: Feature request
+description: Suggest a new capability for poolr
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What SRMA workflow step is this about, and what's painful today?
+      placeholder: "When running subgroup analyses I have to…"
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe what you'd like poolr to do.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Protocol / PICO
+        - Search strategy
+        - Screening
+        - Data extraction
+        - Risk of bias
+        - Meta-analysis engine
+        - Figures (forest/funnel/PRISMA)
+        - GRADE
+        - Export (Word/LaTeX/JSON)
+        - UI / UX
+        - Other
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: How do you work around this today (RevMan, R metafor, JASP…)?
+    validations:
+      required: false

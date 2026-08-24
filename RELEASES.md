@@ -2,6 +2,33 @@
 
 ## Latest Release
 
+**poolr v0.5.0** — Quality & polish release  
+Release date: 2026-08-24
+
+> Hardened CI with real gates, frontend unit-test suite, premium Bklit UI charts (screening rings, I² gauge, RoB radar, study-weight rings), pure-MIT license fix, and repo-professionalism pass.
+
+### What's New in v0.5.0
+
+- **Bklit UI charts** themed to poolr's monochrome palette: animated screening-progress rings + I² heterogeneity gauge on the Dashboard, per-study weight rings on Meta-Analysis, RoB domain-coverage radar.
+- **Frontend unit tests** (Vitest, 38): citation parsers + engine API bridge — wired into CI as a required gate.
+- **CI hardened**: every gate fails the build now (C# format without bypass, oxlint, Vitest, cargo fmt --check, clippy -D warnings, vulnerability scan that exits non-zero).
+- **Fixed**: CSV import losing the first record when a header-less file mentioned "abstract"; Rust `static mut` undefined behaviour replaced with a safe `OnceLock`.
+- **License**: pure MIT (contradictory footer removed) — GitHub now recognises the license correctly.
+
+### Downloads (native installers)
+
+| Platform | File | Notes |
+|----------|------|-------|
+| Windows x64 | `poolr-windows-x64.msi` | Recommended for most PCs. Also ships `poolr-windows-x64.exe` (NSIS) installer. |
+| Windows x86 | `poolr-windows-x86.msi` | 32-bit Windows. |
+| Windows ARM64 | `poolr-windows-arm64.msi` | Windows on ARM. |
+| macOS Apple Silicon | `poolr-macos-arm64.dmg` | Contains `poolr.app`. |
+| macOS Intel | `poolr-macos-x64.dmg` | Contains `poolr.app`. |
+| Linux x86_64 | `poolr-linux-x86_64.deb` + `poolr-linux-x86_64.rpm` | Debian or RPM package. |
+
+---
+
+
 **poolr v0.4.0** — Native Tauri + React + C# overhaul  \nRelease date: 2026-08-02
 
 > This release replaces the old Python / CustomTkinter app with a fully native desktop build: a **Tauri 2 (Rust)** window, a **React + TypeScript** UI, and a bundled **C# 12 / .NET 8** statistical engine sidecar. No Python runtime is required — the app runs on any stock machine. Project data auto-saves (`poolr.json` + rolling `.bak`) so multi-day reviews survive a force-close.

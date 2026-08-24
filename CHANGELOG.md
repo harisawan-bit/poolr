@@ -5,16 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - develop branch
+## [0.5.0] - 2026-08-24
 
 ### Added
-- N/A
+- **Bklit UI charts** (visx + motion, shadcn-registry components) themed to poolr's monochrome palette: animated screening-progress rings + I² heterogeneity gauge on the Dashboard, per-study weight rings on Meta-Analysis, and a RoB domain-coverage radar chart.
+- **Frontend unit tests** (Vitest, 38 tests): citation-import parsers (MEDLINE/RIS/EndNote/CSV detection + parsing) and the engine API bridge (health, postJson, offline/timeout errors). Wired into CI.
+- Issue templates (bug report, feature request) and a PR template with the local-checks checklist.
+- README: real app screenshots, feature comparison table (poolr vs RevMan vs R metafor vs JASP), updated structure/testing docs.
 
 ### Changed
-- N/A
+- **CI hardened — every gate now fails the build**: removed the `|| true` bypass on `dotnet format --verify-no-changes`; added oxlint, Vitest, `cargo fmt --check`, and `cargo clippy -- -D warnings` jobs; the .NET vulnerability scan now exits non-zero on findings.
+- **LICENSE is now pure MIT** — removed the contradictory "no copying without written permission" footer that made GitHub classify the repo as "Other".
+- Rust shell identity: crate renamed `app` → `poolr`, real repository/homepage metadata, professional bundle descriptions.
 
 ### Fixed
-- N/A
+- CSV citation import: header-less files whose first row contained the word "abstract" lost their first record (fuzzy header detection now requires short, header-like cells).
+- Rust: replaced undefined-behaviour `static mut` JobObject handle with a safe `OnceLock`; removed unused import (clippy `-D warnings` clean).
+- C# engine whitespace formatting (format gate now enforced in CI).
 
 ## [0.4.0] - 2026-08-02
 
