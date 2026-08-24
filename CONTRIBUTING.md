@@ -4,7 +4,7 @@ Thank you for your interest in contributing to **poolr** — a native desktop ap
 (Tauri 2 / Rust + React/TypeScript + a C# 12 / .NET 8 engine sidecar) for
 systematic reviews and meta-analyses.
 
-## 🌿 Branch Strategy
+## Branch Strategy
 
 We keep it simple and protected:
 
@@ -22,7 +22,7 @@ and tagged `vX.Y.Z` (the tag triggers the 6-OS installer build).
 - Features: `feature/short-description`
 - Fixes: `fix/short-description`
 
-## 🔄 Pull Request Process
+## Pull Request Process
 
 ### 1. Before Opening a PR
 - [ ] Branch from `develop`: `git checkout -b feature/my-change develop`
@@ -39,7 +39,7 @@ and tagged `vX.Y.Z` (the tag triggers the 6-OS installer build).
 - CI must be green (`ci.yml` + `build.yml` matrix across Windows/macOS/Linux)
 - Squash-merge feature branches; delete the branch after merge
 
-## 🧱 Repo Layout (what lives where)
+## Repo Layout (what lives where)
 
 | Path | Stack | Notes |
 |------|-------|-------|
@@ -49,7 +49,7 @@ and tagged `vX.Y.Z` (the tag triggers the 6-OS installer build).
 | `engine/Poolr.Engine.Tests/` | C# 12 / .NET 8 (xUnit) | Numerics regression suite — the CI gate that keeps the engine honest |
 | `.github/workflows/` | YAML | `ci.yml` (lint/type/test) + `build.yml` (6-OS installer matrix on tags) |
 
-## 🧪 Local Checks
+## Local Checks
 
 ```bash
 # Frontend type-check + production build + unit tests
@@ -72,7 +72,7 @@ cd engine && dotnet run --project Poolr.Engine.Api
 # then:  curl http://127.0.0.1:5180/health
 ```
 
-## 📦 Building Installers (locally, optional)
+## Building Installers (locally, optional)
 
 ```bash
 cd src-tauri && cargo tauri build        # produces msi/nsis/dmg/deb/rpm in target/
@@ -80,7 +80,7 @@ cd src-tauri && cargo tauri build        # produces msi/nsis/dmg/deb/rpm in targ
 
 In CI this happens automatically when you push a `vX.Y.Z` tag.
 
-## 🏷️ Versioning & Releases
+## Versioning & Releases
 
 - Semantic Versioning: `MAJOR.MINOR.PATCH`
 - Bump `version` in `frontend/package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/package.json` together
@@ -88,11 +88,11 @@ In CI this happens automatically when you push a `vX.Y.Z` tag.
 - Merge `develop` → `main`, then `git tag -a vX.Y.Z -m "poolr vX.Y.Z"` and push the tag
 - `build.yml` builds and publishes the 6-OS installers to the GitHub Release
 
-## 🔒 Security
+## Security
 
 Do **not** open public issues for vulnerabilities. Email the maintainer directly.
 CI runs dependency scanning; never commit secrets or `.env` files.
 
-## 📜 License
+## License
 
 MIT — © M. Haris Awan. All rights reserved. See [LICENSE](LICENSE).
