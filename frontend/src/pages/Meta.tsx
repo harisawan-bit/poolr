@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import type { Project, MetaRequest, MetaResponse } from "../lib/project";
 import { Card, Select, Pill, EmptyState } from "../components/ui";
 import { runMeta, getFigure } from "../lib/project";
+import { RingChart } from "../components/charts/ring-chart";
+import { Ring } from "../components/charts/ring";
+import { RingCenter } from "../components/charts/ring-center";
 
 const MEASURES: MetaRequest["measure"][] = ["OR", "RR", "RD", "MD", "SMD", "HR"];
 const METHODS: MetaRequest["method"][] = ["DL", "REML", "PM", "HS", "ML", "EB"];
@@ -127,6 +130,10 @@ export default function Meta({ project, onChange }: { project: Project; onChange
             )}
           </Card>
 
+          <Card title="Study weights">
+            <WeightRings resp={resp} />
+          </Card>
+
           <Card title="Forest plot">
             {forest ? <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: forest }} /> : <EmptyState>{busy ? "Rendering…" : "Run the analysis to render the forest plot."}</EmptyState>}
           </Card>
@@ -149,6 +156,40 @@ function Stat({ k, v, accent }: { k: string; v: string; accent?: boolean }) {
     <div className="card p-2.5">
       <div className={`text-[18px] font-semibold tabular-nums ${accent ? "text-[#e6e7ea]" : "text-[#e6e7ea]"}`}>{v}</div>
       <div className="text-[10.5px] text-[#8b8d96]">{k}</div>
+    </div>
+  );
+}
+
+/** Bklit RingChart — one ring per study, arc length = its meta-analysis weight.
+ *  Hover a ring to see the study name + weight in the center. */
+function WeightRings({ resp }: { resp: MetaResponse }) {
+  const studies = resp.studies ?? [];
+  if (studies.length === 0) {
+    return <EmptyState>No per-study results.</EmptyState>;
+  }
+  // Weights may be fractions (sum≈1) or percentages (sum≈100) — normalise.
+  const rawSum = studies.reduce((s, x) => s + (x.weight || 0), 0);
+  const scale = rawSum > 0 && rawSum <= 1.5 ? 100 : 1;
+  const data = studies.map((s) => ({
+    label: s.study,
+    value: Number(((s.weight || 0) * scale).toFixed(1)),
+    maxValue: 100,
+  }));
+  return (
+    <div className="flex flex-wrap items-center gap-5">
+      <RingChart data={data} size={220} strokeWidth={9} ringGap={4} baseInnerRadius={40}>
+        {data.map((_, i) => <Ring key={i} index={i} />)}
+        <RingCenter defaultLabel="weight %" suffix="" />
+      </RingChart>
+      <div className="min-w-[180px] flex-1 space-y-1">
+        {data.slice(0, 8).map((d, i) => (
+          <div key={i} className="flex items-center justify-between gap-3 text-[11.5px]">
+            <span className="truncate text-[#8b8d96]">{d.label}</span>
+            <span className="font-mono text-[#e6e7ea]">{d.value}%</span>
+          </div>
+        ))}
+        {data.length > 8 && <div className="text-[10.5px] text-[#8b8d96]">+{data.length - 8} more (hover rings)</div>}
+      </div>
     </div>
   );
 }

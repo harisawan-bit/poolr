@@ -12,73 +12,106 @@ env:
   RUST_VERSION: "stable"
 
 jobs:
-  lint-and-typecheck:
-    name: Lint & Type Check
+  # ── C# engine: format gate (must pass, no bypass) ─────────────────────────
+  dotnet-format:
+    name: C# Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Verify formatting
+        run: dotnet format engine/Poolr.Engine.Api/Poolr.Engine.Api.csproj --verify-no-changes
 
-      - name: Run dotnet format (C# engine)
-        run: dotnet format engine/Poolr.Engine.Api/Poolr.Engine.Api.csproj --verify-no-changes || true
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
+  # ── Frontend: lint + type-check + build + unit tests ───────────────────────
+  frontend:
+    name: Frontend (lint · type · build · test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-
-      - name: Frontend install
+      - name: Install
         working-directory: frontend
         run: npm ci
-
-      - name: Frontend type-check + build
+      - name: Lint (oxlint)
+        working-directory: frontend
+        run: npm run lint
+      - name: Type-check + build
         working-directory: frontend
         run: npm run build
+      - name: Unit tests (Vitest)
+        working-directory: frontend
+        run: npm run test -- --run
 
+  # ── C# engine: numerics regression suite ───────────────────────────────────
   dotnet-tests:
     name: C# Engine Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-
       - name: Run C# engine tests
         run: dotnet test engine/Poolr.Engine.Tests/Poolr.Engine.Tests.csproj -c Release
 
+  # ── Rust shell: format + clippy ────────────────────────────────────────────
+  rust:
+    name: Rust (fmt · clippy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Linux deps (webkit2gtk)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - name: Publish C# sidecar stub (needed for cargo check resources)
+        working-directory: src-tauri
+        run: mkdir -p resources/engine
+      - name: cargo fmt
+        working-directory: src-tauri
+        run: cargo fmt --check
+      - name: cargo clippy
+        working-directory: src-tauri
+        run: cargo clippy --all-targets -- -D warnings
+
+  # ── Security: fail the build on vulnerable .NET dependencies ───────────────
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-
       - name: Scan .NET dependencies for vulnerabilities
-        run: dotnet list engine/Poolr.Engine.Api/Poolr.Engine.Api.csproj package --vulnerable --include-transitive
+        run: |
+          set -o pipefail
+          OUTPUT=$(dotnet list engine/Poolr.Engine.Api/Poolr.Engine.Api.csproj package --vulnerable --include-transitive 2>&1)
+          echo "$OUTPUT"
+          if echo "$OUTPUT" | grep -q "no vulnerable packages"; then
+            echo "✅ No vulnerable packages."
+          else
+            echo "❌ Vulnerable packages detected — failing the build."
+            exit 1
+          fi
 
+  # ── Dependency review (PRs only) ───────────────────────────────────────────
   dependency-review:
     name: Dependency Review
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Review dependencies
-        uses: actions/dependency-review-action@v4
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
         with:
           config-file: '.github/dependency-review.yml'
           fail-on-severity: high
