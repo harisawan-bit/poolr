@@ -1,16 +1,31 @@
 # poolr
 
-[![Build Status](https://github.com/harisawan-bit/poolr/workflows/CI/badge.svg)](https://github.com/harisawan-bit/poolr/actions)
+[![CI](https://github.com/harisawan-bit/poolr/actions/workflows/ci.yml/badge.svg)](https://github.com/harisawan-bit/poolr/actions/workflows/ci.yml)
+[![Build & Release](https://github.com/harisawan-bit/poolr/actions/workflows/build.yml/badge.svg)](https://github.com/harisawan-bit/poolr/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/harisawan-bit/poolr)](https://github.com/harisawan-bit/poolr/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![.NET 8](https://img.shields.io/badge/.NET-8-512BD4.svg)](https://dotnet.microsoft.com/)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](https://github.com/harisawan-bit/poolr/releases)
 
-**poolr** is a free, open-source, no-code desktop application for conducting **Systematic Reviews and Meta-Analyses (SRMA)**. It guides you through the entire PRISMA 2020-compliant pipeline — from PICO definition to publication-ready manuscript — with a modern, intuitive GUI.
+**poolr** is a free, open-source, no-code desktop application for conducting **Systematic Reviews and Meta-Analyses (SRMA)**. It guides you through the entire PRISMA 2020-compliant pipeline — from PICO definition to publication-ready manuscript — with a modern, native GUI.
 
 No programming required. No cloud dependency. Your data stays on your machine.
 
 > **New in v0.4.0 — Native Tauri + React + C# overhaul.** The app is now a fully native desktop build (Tauri 2 / Rust shell, React + TypeScript UI, bundled C# 12 / .NET 8 engine sidecar) — **100% Python-free**. All 8 pages reimplemented, screening import from PubMed/CSV/RIS/EndNote, in-app forest/funnel plots, GRADE, and 6-OS native installers. See [RELEASES.md](./RELEASES.md) for details.
+
+---
+
+## Screenshots
+
+| Dashboard — screening rings & heterogeneity gauge | Meta-analysis — pooled estimate, study weights, forest plot |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Meta-analysis](docs/screenshots/meta-top.png) |
+
+| Risk of bias — domain radar | Screening — dual-reviewer decisions |
+|---|---|
+| ![Risk of Bias](docs/screenshots/rob-radar.png) | ![Screening](docs/screenshots/screening.png) |
+
+*Charts are rendered with [Bklit UI](https://bklit.com) components (visx + motion), themed to poolr's monochrome palette.*
 
 ---
 
@@ -40,7 +55,7 @@ No programming required. No cloud dependency. Your data stays on your machine.
 ### ⚠️ **Risk of Bias Assessment**
 - **RoB 2** (RCTs), **NOS** (cohort/case-control), **PROBAST** (diagnostic/prognostic)
 - Domain-level judgments with overall rating
-- Summary tables auto-generated
+- Summary tables auto-generated + **domain-coverage radar chart**
 
 ### 📈 **Advanced Meta-Analysis Engine**
 | Outcome Type | Effect Measures | Models | Methods |
@@ -53,11 +68,12 @@ No programming required. No cloud dependency. Your data stays on your machine.
 - **Meta-regression** (year, sample size, continuous covariates)
 - **Publication bias**: Egger's test, Begg's test, funnel plot asymmetry
 - **Heterogeneity**: Cochran's Q, I², τ², prediction intervals
+- **Study-weight ring chart** — see each study's contribution at a glance
 
 ### 📊 **Publication-Ready Figures**
-- **Forest plots**: Weight-proportional squares, diamond pooled estimate, log/linear scale, SVG/PNG/PDF export
-- **Funnel plots**: Pseudo-95% CI contours, study weights as bubble size, color-coded
-- **PRISMA 2020 Flow Diagram**: Interactive canvas with auto-population from screening data, SVG export
+- **Forest plots**: weight-proportional squares, diamond pooled estimate, log/linear scale, SVG/PNG/PDF export
+- **Funnel plots**: pseudo-95% CI contours, study weights as bubble size, color-coded
+- **PRISMA 2020 Flow Diagram**: interactive canvas with auto-population from screening data, SVG export
 
 ### 📋 **GRADE Evidence Profiles**
 - Auto-populated from meta-analysis results + RoB assessments
@@ -66,9 +82,9 @@ No programming required. No cloud dependency. Your data stays on your machine.
 - Export as Word table, LaTeX, JSON
 
 ### 📄 **Manuscript Export**
-- **Word (.docx)**: Full PRISMA-structured manuscript with tables, figures, references
-- **LaTeX (.tex)**: Journal-ready with `booktabs`, `forestplot`, `pgfplots` support
-- **JSON**: Complete project archive for reproducibility
+- **Word (.docx)**: full PRISMA-structured manuscript with tables, figures, references
+- **LaTeX (.tex)**: journal-ready with `booktabs`, `forestplot`, `pgfplots` support
+- **JSON**: complete project archive for reproducibility
 
 ### 🔬 **PubMed Direct Import**
 - Search PubMed via NCBI Entrez API (with API key support for 10 req/s)
@@ -81,6 +97,21 @@ No programming required. No cloud dependency. Your data stays on your machine.
 | **Windows** | x64, x86, ARM64 | native `.msi` installer + `.exe` (NSIS) with WebView2 embedded |
 | **macOS** | Intel (x64), Apple Silicon (ARM64) | `.dmg` (drag `poolr.app` to Applications) |
 | **Linux** | x64 | native `.deb` (+ `.rpm`) |
+
+---
+
+## 🆚 How poolr compares
+
+| | **poolr** | RevMan (Cochrane) | R `metafor` | JASP |
+|---|---|---|---|---|
+| Price | **Free, open source** | Free (web) | Free | Free |
+| No coding | ✅ | ✅ | ❌ | ✅ |
+| Offline / local data | ✅ | ❌ | ✅ | ✅ |
+| Full PRISMA 2020 pipeline | ✅ | Partial | ❌ | ❌ |
+| Dual screening + conflicts | ✅ | ❌ | ❌ | ❌ |
+| GRADE profiles | ✅ | Partial | ❌ | ❌ |
+| Word/LaTeX manuscript export | ✅ | ❌ | ❌ | ❌ |
+| Windows / macOS / Linux | ✅ | Web only | ✅ | ✅ |
 
 ---
 
@@ -146,22 +177,23 @@ poolr/
 │   ├── src/
 │   │   ├── pages/             # 8 SRMA pages (Dashboard, Protocol, Search, Screening,
 │   │   │                      #   Extraction, Risk of Bias, Meta, PRISMA)
+│   │   ├── components/charts/ # Bklit UI chart components (ring, radar, gauge)
 │   │   ├── lib/               # engine API bridge, screening-import parser, project store
-│   │   └── components/        # shared UI (sidebar, header, status bar)
+│   │   └── __tests__/         # Vitest unit tests (parsers, API bridge)
 │   └── package.json
-├── src-tauri/                # Tauri 2 (Rust) shell
-│   ├── src/                  # Rust app + C# engine spawner (JobObject reaping)
-│   ├── resources/engine/     # bundled self-contained C# sidecar (gitignored, built in CI)
-│   ├── icons/                # app icons (png/ico/icns)
+├── src-tauri/                 # Tauri 2 (Rust) shell
+│   ├── src/                   # Rust app + C# engine spawner (JobObject reaping)
+│   ├── resources/engine/      # bundled self-contained C# sidecar (gitignored, built in CI)
+│   ├── icons/                 # app icons (png/ico/icns)
 │   ├── tauri.conf.json        # bundle config: msi/nsis/dmg/deb/rpm + WebView2 embed
 │   └── package.json           # @tauri-apps/cli (build script)
-├── engine/                   # C# 12 / .NET 8 meta-analysis engine (sidecar)
-│   ├── Poolr.Engine.Api/     # ASP.NET localhost HTTP API (:5180)
-│   ├── Poolr.Engine/         # Math.NET stats (OR/RR/MD/SMD/HR, I², GRADE, subgroups)
-│   └── Poolr.Engine.Tests/   # xUnit numerics suite (CI gate — 100% Python-free)
-├── .github/workflows/        # CI (lint/type/test) + Build Installers (6-OS matrix)
-├── README.md · RELEASES.md · CHANGELOG.md · LICENSE
-
+├── engine/                    # C# 12 / .NET 8 meta-analysis engine (sidecar)
+│   ├── Poolr.Engine.Api/      # ASP.NET localhost HTTP API (:5180)
+│   └── Poolr.Engine.Tests/    # xUnit numerics suite (CI gate — 100% Python-free)
+├── docs/screenshots/          # README screenshots
+├── .github/workflows/         # CI (lint/type/test/clippy/security) + Build Installers (6-OS matrix)
+└── README.md · RELEASES.md · CHANGELOG.md · LICENSE
+```
 
 ---
 
@@ -171,14 +203,14 @@ poolr/
 # C# engine numerics suite (CI: C# Engine Tests job)
 dotnet test engine/Poolr.Engine.Tests/Poolr.Engine.Tests.csproj -c Release
 
-# Frontend type-check + build
-cd frontend && npm ci && npm run build
+# Frontend type-check + build + unit tests
+cd frontend && npm ci && npm run build && npm run test -- --run
 
-# Rust shell check
-cd src-tauri && cargo check
+# Rust shell format + lint
+cd src-tauri && cargo fmt --check && cargo clippy --all-targets -- -D warnings
 ```
 
-> The entire product and its test suite are **100% Python-free** — the engine is C#/.NET and CI validates it with xUnit.
+> The entire product and its test suite are **100% Python-free** — the engine is C#/.NET and CI validates it with xUnit; the UI is guarded by Vitest + TypeScript.
 
 ---
 
@@ -189,20 +221,20 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 ### Development Workflow
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes with tests (C# engine changes go in `engine/Poolr.Engine.Tests`)
+3. Make your changes with tests (C# engine changes go in `engine/Poolr.Engine.Tests`, UI logic in `frontend/src/**/__tests__`)
 4. Run the test suite: `dotnet test engine/Poolr.Engine.Tests -c Release`
 5. Submit a Pull Request to `develop`
 
 ### Code Style
 - **C#**: `dotnet format` (CI enforces `--verify-no-changes`)
-- **Frontend**: Prettier + ESLint via `npm run build` (tsc)
-- **Rust**: `cargo fmt` / `cargo clippy`
+- **Frontend**: oxlint + TypeScript strict (`npm run lint`, `npm run build`)
+- **Rust**: `cargo fmt` / `cargo clippy -- -D warnings` (both enforced in CI)
 
 ---
 
 ## 📜 License
 
-MIT License — free for academic and commercial use. © M. Haris Awan. All rights reserved. See [LICENSE](LICENSE) for details.
+MIT License — free for academic and commercial use. © M. Haris Awan. See [LICENSE](LICENSE) for details.
 
 ---
 
@@ -213,6 +245,7 @@ MIT License — free for academic and commercial use. © M. Haris Awan. All righ
 - **NCBI** for PubMed/Entrez API access
 - **Tauri 2** (Rust) for the native desktop shell
 - **React** + **TypeScript** + **Vite** for the UI
+- **Bklit UI** for the chart component library (visx + motion)
 - **.NET 8 / C# 12** (Math.NET Numerics, SkiaSharp) for the statistics engine — 100% Python-free
 
 ---

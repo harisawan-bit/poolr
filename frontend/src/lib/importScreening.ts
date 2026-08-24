@@ -250,12 +250,17 @@ export function parseCsv(text: string): CitationRecord[] {
   if (rows.length === 0) return [];
 
   const header = (rows[0] ?? []).map((h) => clean(h).toLowerCase().replace(/^"|"$/g, ""));
+  // Exact key match first; a fuzzy "contains title/abstract" fallback only for
+  // short, header-like cells (≤40 chars) so a long abstract that merely
+  // mentions the word "abstract" is never mistaken for a header row.
+  const headerLike = (h: string) => h.length > 0 && h.length <= 40;
   let titleIdx = header.findIndex((h) => TITLE_KEYS.includes(h));
   let abstractIdx = header.findIndex((h) => ABSTRACT_KEYS.includes(h));
-  if (titleIdx < 0) titleIdx = header.findIndex((h) => h.includes("title"));
-  if (abstractIdx < 0) abstractIdx = header.findIndex((h) => h.includes("abstract"));
+  if (titleIdx < 0) titleIdx = header.findIndex((h) => headerLike(h) && h.includes("title"));
+  if (abstractIdx < 0) abstractIdx = header.findIndex((h) => headerLike(h) && h.includes("abstract"));
 
-  // Row 0 is a header if it names a title/abstract column, or looks bibliographic otherwise.
+  // Row 0 is a header only if it names a title/abstract column or looks
+  // bibliographic; otherwise it is data and must be kept.
   const hasHeader = titleIdx >= 0 || abstractIdx >= 0 || header.some((h) => HEADER_KEYS.includes(h));
   // No recognisable title column → fall back to the first two columns.
   const ti = titleIdx >= 0 ? titleIdx : 0;

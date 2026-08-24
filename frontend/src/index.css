@@ -36,6 +36,22 @@
 }
 
 @layer base {
+  /* ── Bklit UI chart tokens (shadcn-style vars, poolr monochrome palette) ──
+     No blue/purple — grayscale ramp + semantic green/red/amber only. */
+  :root {
+    --chart-background: transparent;
+    --chart-foreground: #e6e7ea;
+    --chart-foreground-muted: #8b8d96;
+    --chart-label: #8b8d96;
+    --chart-grid: rgba(255, 255, 255, 0.07);
+    --border: rgba(255, 255, 255, 0.07);
+    --chart-1: #e6e7ea; /* off-white — primary series */
+    --chart-2: #b9bbc2; /* light gray */
+    --chart-3: #8b8d96; /* muted gray */
+    --chart-4: #5c5e66; /* deep gray */
+    --chart-5: #3fb950; /* semantic green */
+  }
+
   html,
   body,
   #root {

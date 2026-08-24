@@ -1,0 +1,57 @@
+name: Bug report
+description: Something in poolr isn't working as expected
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill in as much detail as possible.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug and what you expected to happen instead.
+      placeholder: "I clicked Run on the Meta-Analysis page and…"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps to trigger the bug.
+      placeholder: |
+        1. Open a project with 3 binary studies
+        2. Set measure to OR, model to random
+        3. Click Run
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Windows (x64)
+        - Windows (ARM64)
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Linux (deb)
+        - Linux (rpm)
+        - From source
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: poolr version
+      description: Shown in the app title bar / Releases page (e.g. v0.4.0)
+      placeholder: v0.4.0
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Drag screenshots here, or paste relevant log output.
+    validations:
+      required: false

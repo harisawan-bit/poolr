@@ -302,12 +302,22 @@ public class MetaAnalysis
             studies = studyResults,
             pooled = new PooledResult
             {
-                effect = est, ci_lower = lo, ci_upper = hi, se = finalSe,
-                z = finalZ, p = finalP, model = finalModel,
+                effect = est,
+                ci_lower = lo,
+                ci_upper = hi,
+                se = finalSe,
+                z = finalZ,
+                p = finalP,
+                model = finalModel,
             },
             heterogeneity = new Heterogeneity
             {
-                q = q, df = df, q_p = qP, i2 = i2, tau2 = tau2, tau = Math.Sqrt(Math.Max(tau2, 0)),
+                q = q,
+                df = df,
+                q_p = qP,
+                i2 = i2,
+                tau2 = tau2,
+                tau = Math.Sqrt(Math.Max(tau2, 0)),
             },
         };
 
