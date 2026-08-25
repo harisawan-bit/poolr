@@ -302,7 +302,7 @@ public class ExtendedMetaAnalysis
     private ExtendedMetaResponse BuildResponse(List<MaWork> works, CoreResult core,
         double eff, double se, double crit, string ciMethod, double? tVal, int? dfT)
     {
-        bool logScale = _measure is "OR" or "RR" or "HR" or "IRR";
+        bool logScale = _measure is "OR" or "RR" or "HR" or "IRR" or "MH_OR" or "PETO";
         bool propScale = _measure == "LOGIT_PROP";
         Func<double, double> bt = BackTransformer(logScale, propScale);
         int k = works.Count;
@@ -426,7 +426,7 @@ public class ExtendedMetaAnalysis
         foreach (var g in groups.OrderBy(x => x.Key))
         {
             var subCore = PoolOf(g.Value);
-            bool logScale = _measure is "OR" or "RR" or "HR" or "IRR";
+            bool logScale = _measure is "OR" or "RR" or "HR" or "IRR" or "MH_OR" or "PETO";
             bool propScale = _measure == "LOGIT_PROP";
             var bt = BackTransformer(logScale, propScale);
             bool random = _model != "fixed";
@@ -469,7 +469,7 @@ public class ExtendedMetaAnalysis
         var baseCore = PoolOf(works);
         bool random = _model != "fixed";
         double baseEff = random ? baseCore.ReEff : baseCore.FeEff;
-        bool logScale = _measure is "OR" or "RR" or "HR" or "IRR";
+        bool logScale = _measure is "OR" or "RR" or "HR" or "IRR" or "MH_OR" or "PETO";
         var bt = BackTransformer(logScale, _measure == "LOGIT_PROP");
         double Crit(int kk) => (_kh && random && !baseCore.IsSpecialPooler) ? ExtendedStats.TCrit975(kk - 1) : 1.959964;
         double PooledP(double e, double s, int kk)

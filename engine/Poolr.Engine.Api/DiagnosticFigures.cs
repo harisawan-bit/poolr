@@ -140,7 +140,7 @@ public static class DiagnosticFigures
     public static string ContourFunnel(MetaResponse r)
     {
         var studies = r.studies ?? new List<StudyResult>();
-        bool useLog = r.measure is "OR" or "RR" or "HR" or "IRR";
+        bool useLog = r.measure is "OR" or "RR" or "HR" or "IRR" or "MH_OR" or "PETO";
         const double W = 600, H = 540;
         const double ml = 70, mr = 24, mt = 50, mb = 54;
         double plotW = W - ml - mr, plotH = H - mt - mb;

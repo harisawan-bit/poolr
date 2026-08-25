@@ -27,7 +27,7 @@ public static class Figures
     public static string ForestPlot(MetaResponse r)
     {
         var studies = r.studies ?? new List<StudyResult>();
-        bool useLog = r.measure is "OR" or "RR" or "HR";
+        bool useLog = r.measure is "OR" or "RR" or "HR" or "IRR" or "MH_OR" or "PETO";
         int k = studies.Count;
 
         const double x0 = 150;      // left margin for study names
@@ -130,7 +130,7 @@ public static class Figures
     public static string FunnelPlot(MetaResponse r)
     {
         var studies = r.studies ?? new List<StudyResult>();
-        bool useLog = r.measure is "OR" or "RR" or "HR";
+        bool useLog = r.measure is "OR" or "RR" or "HR" or "IRR" or "MH_OR" or "PETO";
         const double W = 560, H = 520;
         const double ml = 70, mr = 24, mt = 50, mb = 50;
         double plotW = W - ml - mr, plotH = H - mt - mb;
