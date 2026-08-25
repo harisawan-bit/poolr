@@ -1,0 +1,49 @@
+{
+  "metadata": { "version": "0.5.1", "created": "2026-08-25T12:00:00Z", "title": "BCG vaccine for tuberculosis (demo)" },
+  "pico": {
+    "population": "People at risk of tuberculosis (all ages)",
+    "intervention": "BCG vaccination",
+    "comparator": "No vaccination / placebo",
+    "outcomes": "TB incidence; adverse events"
+  },
+  "protocol": {
+    "databases": "PubMed, Embase, Cochrane CENTRAL",
+    "registration": "Demo — not registered (PROSPERO ID or 'Not registered')",
+    "objective": "Estimate the protective effect of BCG vaccination against tuberculosis."
+  },
+  "screening": {
+    "title_abstract": [
+      { "id": "demo1", "title": "Aronson 1948 — Protective effect of BCG in American Indians", "abstract": "20-year follow-up of BCG vaccination.", "decision": "include", "stage": "title_abstract" },
+      { "id": "demo2", "title": "Ferguson & Simes 1949 — BCG vaccination of Indian children", "abstract": "Controlled trial, Saskatchewan.", "decision": "include", "stage": "title_abstract" },
+      { "id": "demo3", "title": "Rosenthal 1960 — BCG vaccination against tuberculin converters", "abstract": "Chicago trial.", "decision": "include", "stage": "title_abstract" },
+      { "id": "demo4", "title": "Editorial: The value of BCG — a review", "abstract": "Narrative review, excluded as not primary research.", "decision": "exclude", "stage": "title_abstract", "exclusion_reason": "Review / meta-analysis (not primary)" }
+    ],
+    "full_text": []
+  },
+  "extraction": {
+    "studies": [
+      { "study": "Aronson 1948", "type": "binary", "int_events": 4, "int_n": 123, "ctrl_events": 11, "ctrl_n": 139, "year": 1948 },
+      { "study": "Ferguson & Simes 1949", "type": "binary", "int_events": 6, "int_n": 306, "ctrl_events": 29, "ctrl_n": 303, "year": 1949 },
+      { "study": "Rosenthal et al 1960", "type": "binary", "int_events": 3, "int_n": 231, "ctrl_events": 11, "ctrl_n": 220, "year": 1960 },
+      { "study": "Hart & Sutherland 1977", "type": "binary", "int_events": 62, "int_n": 13598, "ctrl_events": 248, "ctrl_n": 12867, "year": 1977 },
+      { "study": "Frimodt-Moller 1973", "type": "binary", "int_events": 33, "int_n": 5069, "ctrl_events": 47, "ctrl_n": 5808, "year": 1973 },
+      { "study": "Stein & Aronson 1953", "type": "binary", "int_events": 180, "int_n": 1541, "ctrl_events": 372, "ctrl_n": 1451, "year": 1953 }
+    ]
+  },
+  "rob": {
+    "assessments": [
+      { "id": "r1", "study": "Aronson 1948", "tool": "RoB2", "overall": "Some concerns", "domains": { "Randomization": "Low", "Deviations from intended": "Low", "Missing outcome": "Some concerns", "Measurement of outcome": "Low", "Selection of reported result": "Low" } },
+      { "id": "r2", "study": "Hart & Sutherland 1977", "tool": "RoB2", "overall": "Low", "domains": { "Randomization": "Low", "Deviations from intended": "Low", "Missing outcome": "Low", "Measurement of outcome": "Low", "Selection of reported result": "Low" } }
+    ]
+  },
+  "meta": {
+    "results": null,
+    "settings": { "model": "random", "measure": "OR", "method": "DL", "subgroup": "none", "pub_bias": "none", "knapp_hartung": true, "sensitivity": true, "bias_depth": "egger", "data": [] }
+  },
+  "prisma": {
+    "flow": { "identified": 13, "duplicates": 0, "screened": 13, "excludedTa": 1, "fullText": 6, "excludedFt": 0, "included": 6 },
+    "grade": [],
+    "checklist": {}
+  },
+  "search": { "databases": [ { "name": "PubMed", "query": "(BCG OR \"bacillus Calmette-Guerin\") AND tuberculosis AND vaccine*", "results": 13 } ] }
+}

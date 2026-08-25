@@ -11,7 +11,7 @@
 
 No programming required. No cloud dependency. Your data stays on your machine.
 
-> **New in v0.4.0 — Native Tauri + React + C# overhaul.** The app is now a fully native desktop build (Tauri 2 / Rust shell, React + TypeScript UI, bundled C# 12 / .NET 8 engine sidecar) — **100% Python-free**. All 8 pages reimplemented, screening import from PubMed/CSV/RIS/EndNote, in-app forest/funnel plots, GRADE, and 6-OS native installers. See [RELEASES.md](./RELEASES.md) for details.
+> **New in v0.5.1 — Complete classical meta-analysis.** Knapp–Hartung CIs, Mantel-Haenszel & Peto poolers (validated against `metafor`'s published outputs), leave-one-out/cumulative sensitivity, computed trim-and-fill, PET/PEESE/p-curve/selection models, proportions/rates/correlations/generic-IV outcome types, robvis-style risk-of-bias figures with ROBINS-I/QUADAS-2/AMSTAR-2, a GRADE Summary-of-Findings generator with OIS imprecision, R replication-script export, BibTeX/RIS citations, structured exclusion reasons with import de-duplication, a PRISMA 27-item checklist tracker, and a one-click demo project. The app is a fully native desktop build (Tauri 2 / Rust shell, The app is now a fully native desktop build (Tauri 2 / Rust shell, React + TypeScript UI, bundled C# 12 / .NET 8 engine sidecar) — **100% Python-free**. All 8 pages reimplemented, screening import from PubMed/CSV/RIS/EndNote, in-app forest/funnel plots, GRADE, and 6-OS native installers. See [RELEASES.md](./RELEASES.md) for details.
 
 ---
 
@@ -53,7 +53,7 @@ No programming required. No cloud dependency. Your data stays on your machine.
 - Add/edit/delete studies with validation
 
 ### **Risk of Bias Assessment**
-- **RoB 2** (RCTs), **NOS** (cohort/case-control), **PROBAST** (diagnostic/prognostic)
+- **RoB 2** (RCTs), **NOS** (cohort/case-control), **PROBAST** (diagnostic/prognostic), **ROBINS-I** (non-randomized), **QUADAS-2** (diagnostic accuracy), **AMSTAR-2** (reviews); robvis-style traffic-light + weighted summary-bar figures
 - Domain-level judgments with overall rating
 - Summary tables auto-generated + **domain-coverage radar chart**
 
@@ -67,7 +67,11 @@ No programming required. No cloud dependency. Your data stays on your machine.
 - **Subgroup analysis** by design, country, year, or custom fields
 - **Meta-regression** (year, sample size, continuous covariates)
 - **Publication bias**: Egger's test, Begg's test, funnel plot asymmetry
-- **Heterogeneity**: Cochran's Q, I², τ², prediction intervals
+- **Heterogeneity**: Cochran's Q, I² (with 95% CI), τ², H², prediction intervals
+- **Sensitivity**: leave-one-out with influence ranking, cumulative meta-analysis, fixed-vs-random comparison
+- **Publication-bias depth**: Egger's test, Begg's test, computed trim-and-fill, Peters & Harbord, PET/PEESE, p-curve, Henmi-Copas limit meta-analysis, step-function selection model (3PSM), fail-safe N
+- **More outcome types**: single-arm proportions (logit/arcsine), incidence rates (IRR/IRD), correlations (Fisher z), generic inverse-variance; Glass's delta; OR↔RR↔RD↔NNT and SMD↔OR conversions; Wan-2014 median→mean/SD completion
+- **Subgroups done right**: model-consistent per-group pooling, within-group heterogeneity, and the Q-between interaction test
 - **Study-weight ring chart** — see each study's contribution at a glance
 
 ### **Publication-Ready Figures**

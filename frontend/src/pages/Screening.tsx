@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Project, ScreeningItem, ScreenDecision } from "../lib/project";
-import { CITATION_ACCEPT, importCitationText, mergeScreeningItems } from "../lib/project";
+import { CITATION_ACCEPT, importCitationText, mergeScreeningItems, dedupeRecords } from "../lib/project";
 import { readTextFiles } from "../lib/api";
 import { Card, Pill, Input, Textarea, EmptyState } from "../components/ui";
 
@@ -9,6 +9,19 @@ const DEC_LABEL: Record<ScreenDecision, string> = { include: "Include", exclude:
 const DEC_TONE: Record<ScreenDecision, "include" | "exclude" | "unsure" | "neutral"> = {
   include: "include", exclude: "exclude", unsure: "unsure", unset: "neutral",
 };
+// v0.5.1 — structured PICO-failure exclusion reasons (PRISMA-reportable)
+const EXCLUSION_REASONS = [
+  "Population not relevant",
+  "Intervention not relevant",
+  "Comparator not relevant",
+  "Outcome not reported",
+  "Study design not eligible",
+  "Review / meta-analysis (not primary)",
+  "Case report / series",
+  "Insufficient data for extraction",
+  "Wrong language",
+  "Duplicate publication",
+] as const;
 
 // Lightweight windowing virtualization (no external dep) — only renders visible rows.
 const ROW_H = 64;
@@ -94,20 +107,25 @@ export default function Screening({ project, onChange }: { project: Project; onC
 
     let next = project;
     let imported = 0;
+    let dupes = 0;
     const formats = new Set<string>();
     for (const f of files) {
       const stageItems = next.screening[stage] ?? [];
       const res = importCitationText(f.text, f.name, stage, stageItems.length + 1);
       if (res.items.length > 0) {
-        next = mergeScreeningItems(next, stage, res.items);
-        imported += res.items.length;
+        // v0.5.1 — de-duplicate against what is already in the stage before merging
+        const { kept, duplicatesRemoved } = dedupeRecords(res.items, stageItems);
+        if (kept.length > 0) next = mergeScreeningItems(next, stage, kept);
+        imported += kept.length;
+        dupes += duplicatesRemoved;
         formats.add(res.format);
       }
     }
 
     if (imported > 0) onChange(next);
-    const suffix = formats.size > 0 ? ` (${Array.from(formats).join(", ")})` : "";
-    flash(imported > 0 ? `Imported ${imported} records${suffix}` : "Imported 0 records — no citations recognised");
+    const fmt = formats.size > 0 ? ` (${Array.from(formats).join(", ")})` : "";
+    const dupeNote = dupes > 0 ? ` — ${dupes} duplicate${dupes === 1 ? "" : "s"} removed automatically` : "";
+    flash(imported > 0 ? `Imported ${imported} records${fmt}${dupeNote}` : "Imported 0 records — no citations recognised");
   };
 
   // Resolve the selected record id to its position in the current visible list.
@@ -208,6 +226,21 @@ export default function Screening({ project, onChange }: { project: Project; onC
                         onChange({ ...project, screening: { ...project.screening, [stage]: next } });
                       }} />
                       <Input className="mt-2" placeholder="Note (optional)" value={it.note ?? ""} onChange={(e) => setNote(it.id, e.target.value)} />
+                      {it.decision === "exclude" && (
+                        <select
+                          className="mt-2 w-full rounded-[3px] border border-[var(--color-border)] bg-[#0c0d11] px-2 py-1.5 text-[12px] text-[#e6e7ea]"
+                          value={(it as ScreeningItem).exclusion_reason ?? ""}
+                          onChange={(e) => {
+                            const next = items.map((x) => (x.id === it.id ? { ...x, exclusion_reason: e.target.value } : x));
+                            onChange({ ...project, screening: { ...project.screening, [stage]: next } });
+                          }}>
+                          <option value="">Exclusion reason…</option>
+                          {EXCLUSION_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                      )}
+                      {(it as ScreeningItem).exclusion_reason && (
+                        <div className="mt-1 text-[10.5px] text-[#8b8d96]">Reason: {(it as ScreeningItem).exclusion_reason}</div>
+                      )}
                       <div className="mt-3 grid grid-cols-3 gap-1.5">
                         {DECISIONS.map((d) => (
                           <button key={d} className={`btn-ghost ${it.decision === d ? "!border-[var(--color-border-strong)]" : ""}`}

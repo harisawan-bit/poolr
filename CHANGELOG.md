@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-08-25
+
+### Added
+- **Engine**: Knapp-Hartung(-Sidik-Jonman) CI adjustment; Mantel-Haenszel (RBG variance) and Peto one-step OR poolers; leave-one-out + cumulative + fixed-vs-random sensitivity pack; computed Duval-Tweedie trim-and-fill; Peters & Harbord regression tests; PET/PEESE; p-curve right/left-skew tests; Henmi-Copas limit meta-analysis; experimental step-function selection model (3PSM); Rosenthal & Orwin fail-safe N; H² and I² 95% CI (noncentral chi-square); subgroup Q-between interaction test with per-group heterogeneity; new outcome types — single-arm proportions (logit/arcsine), incidence rates (IRR/IRD), correlations (Fisher z), generic inverse-variance, Glass's delta; effect-size conversion endpoint incl. Wan-2014 median→mean/SD.
+- **Figures**: contour-enhanced funnel, Galbraith/radial, L'Abbe, Baujat, robvis-style RoB traffic-light and weighted summary-bar plots.
+- **GRADE**: Summary-of-Findings generator (markdown + structured rows) with OIS-based imprecision assessment.
+- **Export**: R/metafor replication-script generator, BibTeX/RIS citation export, methods-section paragraph generator.
+- **Frontend**: extended measure list + Knapp-Hartung toggle on Meta page; leave-one-out table with influence highlighting; I²-CI/H² tiles; Q-between display; contour-funnel card; structured exclusion-reason dropdown in Screening; automatic import de-duplication (PMID/DOI/title) with duplicate counts; ROBINS-I/QUADAS-2/AMSTAR-2 tools on Risk-of-Bias page; PRISMA 27-item checklist tracker; bundled BCG demo project with one-click loader.
+- **Tests**: xUnit benchmarks validating MH/Peto against metafor's published dat.bcg results; engine suite now 22 tests.
+
+### Changed
+- Version constants unified at 0.5.1 (engine /health, /version, tauri.conf.json, package.json, Cargo.toml).
+- Meta-Analysis page now calls the extended /api/meta2 endpoint; legacy /api/meta remains byte-compatible for automation.
+
 ## [0.5.0] - 2026-08-24
 
 ### Added

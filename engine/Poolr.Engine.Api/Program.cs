@@ -26,8 +26,8 @@ app.Use(async (ctx, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.4.0", engine = "csharp" }));
-app.MapGet("/version", () => Results.Ok(new { version = "0.4.0" }));
+app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.5.1", engine = "csharp" }));
+app.MapGet("/version", () => Results.Ok(new { version = "0.5.1" }));
 
 // Phase B — C# meta-analysis engine (numerics covered by engine/Poolr.Engine.Tests xUnit).
 app.MapPost("/api/meta", ([FromBody] MetaRequest req) =>
@@ -43,6 +43,90 @@ app.MapPost("/api/meta", ([FromBody] MetaRequest req) =>
         return Results.BadRequest(new { error = ex.Message });
     }
 });
+
+// v0.5.1 — extended meta-analysis (KH, MH/Peto, subgroups w/ Q-between, sensitivity, bias depth, new outcome types)
+app.MapPost("/api/meta2", async (HttpRequest httpReq) =>
+{
+    try
+    {
+        using var sr = new StreamReader(httpReq.Body);
+        var raw = await sr.ReadToEndAsync();
+        var req = System.Text.Json.JsonSerializer.Deserialize<ExtendedMetaRequest>(raw,
+            new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+            ?? new ExtendedMetaRequest();
+        var ma = new ExtendedMetaAnalysis(req.model, req.measure, req.method, req.subgroup,
+            req.knapp_hartung, string.IsNullOrWhiteSpace(req.bias_depth) ? req.pub_bias : req.bias_depth);
+        var result = ma.Run(req.data ?? new(), req.exclude, req.sensitivity);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.5.1 — effect-size conversions / median completion
+app.MapPost("/api/convert", ([FromBody] ConvertRequest req) =>
+{
+    try { return Results.Ok(Converters.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.5.1 — diagnostic figures (Galbraith, L'Abbe, Baujat, contour funnel)
+app.MapPost("/api/figure/galbraith", (DiagnosticFigures.PlotInput req) =>
+    Results.Text(DiagnosticFigures.Galbraith(req, 0), "image/svg+xml"));
+app.MapPost("/api/figure/labbe", (List<DiagnosticFigures.LabbeArm> arms) =>
+{
+    try
+    {
+        var list = arms.Select(t => (t.name, t.a, t.n1, t.c, t.n2)).ToList();
+        return Results.Text(DiagnosticFigures.Labbe(list), "image/svg+xml");
+    }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/figure/baujat", (DiagnosticFigures.PlotInput req) =>
+    Results.Text(DiagnosticFigures.Baujat(req), "image/svg+xml"));
+app.MapPost("/api/figure/funnel_contour", ([FromBody] MetaResponse req) =>
+    Results.Text(DiagnosticFigures.ContourFunnel(req), "image/svg+xml"));
+
+// v0.5.1 — export suite (R replication, citations, methods paragraph)
+app.MapPost("/api/export/r_code", async (HttpRequest httpReq) =>
+{
+    try
+    {
+        using var sr = new StreamReader(httpReq.Body);
+        var raw = await sr.ReadToEndAsync();
+        var doc = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(raw);
+        var resp = doc.GetProperty("response").Deserialize<ExtendedMetaResponse>();
+        var data = doc.GetProperty("data").Deserialize<List<Study>>();
+        return Results.Text(ExportSuite.RReplication(resp!, data ?? new()), "text/plain");
+    }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/export/citations", async (HttpRequest httpReq) =>
+{
+    try
+    {
+        using var sr = new StreamReader(httpReq.Body);
+        var raw = await sr.ReadToEndAsync();
+        var doc = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(raw);
+        var data = doc.GetProperty("data").Deserialize<List<Study>>() ?? new();
+        string fmt = httpReq.Query["format"].ToString().ToLowerInvariant();
+        string text = fmt == "bibtex"
+            ? ExportSuite.BibTeX(data)
+            : ExportSuite.RisExport(data);
+        return Results.Text(text, "text/plain");
+    }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/export/methods", ([FromBody] ExtendedMetaResponse req) =>
+    Results.Text(ExportSuite.MethodsParagraph(req), "text/plain"));
+
+// v0.5.1 — robvis-style RoB figures
+app.MapPost("/api/figure/rob_traffic", ([FromBody] RobFigures.TrafficLightRequest req) =>
+    Results.Text(RobFigures.TrafficLight(req), "image/svg+xml"));
+app.MapPost("/api/figure/rob_summary", ([FromBody] RobFigures.TrafficLightRequest req) =>
+    Results.Text(RobFigures.SummaryBar(req), "image/svg+xml"));
 
 // Phase B5 — figures (SVG). Returns image/svg+xml.
 app.MapPost("/api/figure/forest", ([FromBody] MetaResponse req) =>
@@ -87,6 +171,17 @@ app.MapPost("/api/project/save", ([FromBody] ProjectSaveRequest req) =>
 app.MapPost("/api/project/load", ([FromBody] ProjectLoadRequest req) =>
 {
     try { return Results.Ok(ProjectStore.Load(req.path ?? "poolr.json")); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.5.1 — GRADE Summary-of-Findings
+app.MapPost("/api/grade/sof", ([FromBody] SofGenerator.SofRequest req) =>
+{
+    try
+    {
+        var (rows, markdown) = SofGenerator.Generate(req);
+        return Results.Json(new { rows, markdown }, SofJson.Options);
+    }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
