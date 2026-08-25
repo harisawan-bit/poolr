@@ -254,6 +254,19 @@ export default function App() {
     }
   };
 
+  const loadDemo = async () => {
+    cancelPendingSave();
+    try {
+      const r = await fetch("demo-project.json", { signal: AbortSignal.timeout(10000) });
+      const raw = await r.json();
+      setProject(normalizeProject(raw));
+      setSaveState("idle"); setBanner(null);
+    } catch (e) {
+      console.error(e);
+      setSaveState("error");
+    }
+  };
+
   const handleSave = async () => {
     if (!project) return;
     cancelPendingSave();
@@ -341,7 +354,8 @@ export default function App() {
           </div>
           <div className="flex gap-1.5">
             <button className="btn-ghost" disabled={busy} onClick={handleOpen}>Open</button>
-            <button className="btn-ghost" disabled={busy} onClick={handleNew}>New</button>
+            <button className="btn-ghost" disabled={busy} onClick={loadDemo}>Demo</button>
+            <button className="btn-ghost" onClick={handleNew}>New</button>
             <button className="btn-ghost" disabled={!project} onClick={handleSave}>Save</button>
             <button className="btn-primary" disabled={!project || busy} onClick={handleExport}>Export</button>
           </div>
