@@ -72,6 +72,23 @@ app.MapPost("/api/convert", ([FromBody] ConvertRequest req) =>
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
+// v0.5.1 — diagnostic figures (Galbraith, L'Abbe, Baujat, contour funnel)
+app.MapPost("/api/figure/galbraith", (DiagnosticFigures.PlotInput req) =>
+    Results.Text(DiagnosticFigures.Galbraith(req, 0), "image/svg+xml"));
+app.MapPost("/api/figure/labbe", (List<DiagnosticFigures.LabbeArm> arms) =>
+{
+    try
+    {
+        var list = arms.Select(t => (t.name, t.a, t.n1, t.c, t.n2)).ToList();
+        return Results.Text(DiagnosticFigures.Labbe(list), "image/svg+xml");
+    }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/figure/baujat", (DiagnosticFigures.PlotInput req) =>
+    Results.Text(DiagnosticFigures.Baujat(req), "image/svg+xml"));
+app.MapPost("/api/figure/funnel_contour", ([FromBody] MetaResponse req) =>
+    Results.Text(DiagnosticFigures.ContourFunnel(req), "image/svg+xml"));
+
 // Phase B5 — figures (SVG). Returns image/svg+xml.
 app.MapPost("/api/figure/forest", ([FromBody] MetaResponse req) =>
     Results.Text(Figures.ForestPlot(req), "image/svg+xml"));
