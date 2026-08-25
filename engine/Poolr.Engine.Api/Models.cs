@@ -18,6 +18,15 @@ public class Study
     public double? hr { get; set; }
     public double? hr_lower { get; set; }
     public double? hr_upper { get; set; }
+    // v0.5.1 extensions
+    public double? aux_time_int { get; set; }   // person-time, intervention arm (rates)
+    public double? aux_time_ctrl { get; set; }  // person-time, control arm (rates)
+    public double? correlation { get; set; }    // raw r (correlation MA)
+    public int? n_total { get; set; }           // total N (correlations / single-arm)
+    public double? effect_size { get; set; }    // generic inverse-variance entry
+    public double? effect_se { get; set; }      // generic inverse-variance entry
+    public double? aux_n_int { get; set; }      // multi-arm / shared-group correction total
+    public double? aux_n_ctrl { get; set; }     // cluster design effect multiplier
     // shared / optional
     public string? subgroup { get; set; }
     public string? design { get; set; }

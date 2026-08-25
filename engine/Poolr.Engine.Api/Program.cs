@@ -26,8 +26,8 @@ app.Use(async (ctx, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.4.0", engine = "csharp" }));
-app.MapGet("/version", () => Results.Ok(new { version = "0.4.0" }));
+app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.5.1", engine = "csharp" }));
+app.MapGet("/version", () => Results.Ok(new { version = "0.5.1" }));
 
 // Phase B — C# meta-analysis engine (numerics covered by engine/Poolr.Engine.Tests xUnit).
 app.MapPost("/api/meta", ([FromBody] MetaRequest req) =>
@@ -42,6 +42,34 @@ app.MapPost("/api/meta", ([FromBody] MetaRequest req) =>
     {
         return Results.BadRequest(new { error = ex.Message });
     }
+});
+
+// v0.5.1 — extended meta-analysis (KH, MH/Peto, subgroups w/ Q-between, sensitivity, bias depth, new outcome types)
+app.MapPost("/api/meta2", async (HttpRequest httpReq) =>
+{
+    try
+    {
+        using var sr = new StreamReader(httpReq.Body);
+        var raw = await sr.ReadToEndAsync();
+        var req = System.Text.Json.JsonSerializer.Deserialize<ExtendedMetaRequest>(raw,
+            new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+            ?? new ExtendedMetaRequest();
+        var ma = new ExtendedMetaAnalysis(req.model, req.measure, req.method, req.subgroup,
+            req.knapp_hartung, string.IsNullOrWhiteSpace(req.bias_depth) ? req.pub_bias : req.bias_depth);
+        var result = ma.Run(req.data ?? new(), req.exclude, req.sensitivity);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.5.1 — effect-size conversions / median completion
+app.MapPost("/api/convert", ([FromBody] ConvertRequest req) =>
+{
+    try { return Results.Ok(Converters.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
 // Phase B5 — figures (SVG). Returns image/svg+xml.
