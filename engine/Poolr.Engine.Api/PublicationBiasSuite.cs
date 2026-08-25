@@ -273,18 +273,19 @@ public static class PublicationBiasSuite
             note = "Studies needed to nullify significance at alpha=.05 (one-sided)",
         });
 
-        // Orwin (1983): studies needed to bring standardized mean effect down to d_trivial (=0.1)
-        double meanStdEff = effs.Zip(ses, (e, s) => e).Average(); // unstandardized mean
+        // Orwin (1983): studies needed to bring mean effect down to a trivial target.
+        // Works on the standardized mean regardless of direction (protective or harmful).
+        double meanEff = effs.Average();
         double target = 0.1;
-        if (Math.Abs(meanStdEff) > target)
+        if (Math.Abs(meanEff) > target)
         {
-            double nOrwin = Math.Max(0, Math.Ceiling(k * (meanStdEff - target) / target));
+            double nOrwin = Math.Max(0, Math.Ceiling(k * (Math.Abs(meanEff) - target) / target));
             list.Add(new FailsafeResult
             {
                 method = "orwin",
                 n_required = nOrwin,
                 target = target,
-                note = $"Studies with zero effect needed to drop the mean effect to {target}",
+                note = $"Studies with zero effect needed to drop the mean effect to +/-{target}",
             });
         }
         return list;

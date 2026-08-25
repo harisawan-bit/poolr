@@ -362,22 +362,26 @@ public class ExtendedMetaAnalysis
         : propScale ? (Func<double, double>)(v => ExtendedStats.Logistic(v))
         : (v => v);
 
-    /// <summary>Non-centrality-parameter limits for the I^2 CI.</summary>
+    /// <summary>Non-centrality-parameter limits for the I^2 CI (metafor confint logic):
+    /// the noncentral-chi2 CDF DECREASES in lambda, so the upper-ncp bound satisfies
+    /// CDF(q|lam_hi)=alpha/2 and the lower-ncp bound satisfies CDF(q|lam_lo)=1-alpha/2.</summary>
     private static (double lo, double hi) LambdaLimits(double q, int df)
     {
         double Solve(double targetCdf)
         {
-            double lo = 0, hi = 300;
-            for (int i = 0; i < 90; i++)
+            // find lambda where CDF(q|df,lambda) == targetCdf; CDF is decreasing in lambda
+            double lo = 0, hi = 500;
+            for (int i = 0; i < 100; i++)
             {
                 double mid = (lo + hi) / 2;
-                if (ExtendedStats.NoncentralChi2Cdf(q, df, mid) > targetCdf) hi = mid; else lo = mid;
+                if (ExtendedStats.NoncentralChi2Cdf(q, df, mid) > targetCdf) lo = mid; // cdf too high -> need larger lambda
+                else hi = mid;
             }
             return (lo + hi) / 2;
         }
-        double hiLim = Solve(0.025);
-        double loLim = q <= df ? 0.0 : Solve(0.975);
-        return (loLim, hiLim);
+        double lamHi = Solve(0.025);
+        double lamLo = q <= df ? 0.0 : Solve(0.975);
+        return (lamLo, lamHi);
     }
 
     // ---------------- subgroups ------------------------------------------------
