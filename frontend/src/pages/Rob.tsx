@@ -7,13 +7,16 @@ import { RadarAxis } from "../components/charts/radar-axis";
 import { RadarLabels } from "../components/charts/radar-labels";
 import { RadarArea } from "../components/charts/radar-area";
 
-const TOOLS = ["RoB2", "NOS", "PROBAST"] as const;
-const OVERALL = ["Low", "Some concerns", "High", "—"] as const;
+const TOOLS = ["RoB2", "NOS", "PROBAST", "ROBINS-I", "QUADAS-2", "AMSTAR-2"] as const;
+const OVERALL = ["Low", "Some concerns", "High", "Critical", "—"] as const;
 
 const DOMAINS: Record<(typeof TOOLS)[number], string[]> = {
   RoB2: ["Randomization", "Deviations from intended", "Missing outcome", "Measurement of outcome", "Selection of reported result"],
   NOS: ["Selection", "Comparability", "Exposure / Outcome"],
   PROBAST: ["Participants", "Predictors", "Outcome", "Analysis"],
+  "ROBINS-I": ["Confounding", "Selection of participants", "Classification of interventions", "Deviations from intended interventions", "Missing data", "Measurement of outcomes", "Selection of reported result"],
+  "QUADAS-2": ["Patient selection", "Index test", "Reference standard", "Flow and timing"],
+  "AMSTAR-2": ["Protocol a priori", "Comprehensive literature search", "Study selection in duplicate", "Data extraction in duplicate", "Excluded studies listed", "Risk of bias assessed", "Publication bias assessed", "Certainty of evidence reported"],
 };
 
 function blank(study: string, tool: (typeof TOOLS)[number]): RobAssessment {

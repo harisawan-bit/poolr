@@ -1,9 +1,9 @@
 // Shared project model + engine client helpers for Phase D pages.
 
-// ── Engine request/response types (mirror engine/Poolr.Engine.Api/Models.cs) ──
+// ── Engine request/response types (mirror engine/Poolr.Engine.Api/*.cs) ──
 export interface Study {
   study?: string;
-  type?: "binary" | "continuous" | "survival";
+  type?: "binary" | "continuous" | "survival" | "proportion" | "rate" | "correlation" | "generic";
   int_events?: number | null;
   int_n?: number | null;
   ctrl_events?: number | null;
@@ -15,6 +15,13 @@ export interface Study {
   hr?: number | null;
   hr_lower?: number | null;
   hr_upper?: number | null;
+  // v0.5.1 extensions
+  aux_time_int?: number | null;   // person-time, intervention arm (IRR/IRD)
+  aux_time_ctrl?: number | null;  // person-time, control arm (IRR/IRD)
+  correlation?: number | null;    // raw r (Z_CORR)
+  n_total?: number | null;        // total N (Z_CORR / single-arm)
+  effect_size?: number | null;    // generic inverse-variance entry
+  effect_se?: number | null;      // generic inverse-variance entry
   subgroup?: string;
   design?: string;
   year?: number | null;
@@ -22,11 +29,19 @@ export interface Study {
 
 export interface MetaRequest {
   model?: "random" | "fixed";
-  measure?: "OR" | "RR" | "RD" | "MD" | "SMD" | "HR";
+  measure?: string; // OR|RR|RD|MD|SMD|HR plus v0.5.1: MH_OR|PETO|GLASS|LOGIT_PROP|ARS_PROP|IRR|IRD|Z_CORR|GEN_IV
   method?: "DL" | "REML" | "PM" | "HS" | "ML" | "EB";
   subgroup?: string;
   pub_bias?: "none" | "egger" | "begg" | "all";
   data?: Study[];
+}
+
+/** v0.5.1 extended request (POST /api/meta2) */
+export interface ExtendedMetaRequest extends MetaRequest {
+  knapp_hartung?: boolean;
+  exclude?: string[] | null;
+  sensitivity?: boolean;
+  bias_depth?: "" | "none" | "egger" | "all" | "full";
 }
 
 export interface StudyResult {
@@ -78,6 +93,47 @@ export interface PublicationBias {
   begg?: BeggResult | null;
   trimfill?: unknown | null;
 }
+/** v0.5.1 extended response shapes (subset — unknown fields pass through) */
+export interface ExtendedPooledResult extends PooledResult {
+  ci_method?: string;
+  t_value?: number | null;
+  df_t?: number | null;
+}
+export interface ExtendedHeterogeneity extends Heterogeneity {
+  h?: number; h2?: number; i2_lower?: number | null; i2_upper?: number | null;
+}
+export interface SubgroupTest { q: number; df: number; p: number; method?: string }
+export interface ExtendedSubgroupResult extends SubgroupResult {
+  q_within?: number; df_within?: number; i2_within?: number; tau2_within?: number;
+}
+export interface LeaveOneOutEntry {
+  excluded: string; k: number; effect: number; ci_lower: number; ci_upper: number; p: number; i2: number;
+}
+export interface CumulativeEntry {
+  added: string; year?: number | null; k: number; effect: number; ci_lower: number; ci_upper: number; p: number;
+}
+export interface SensitivityPack {
+  leave_one_out: LeaveOneOutEntry[];
+  cumulative: CumulativeEntry[];
+  fixed_vs_random?: {
+    fe_effect: number; fe_ci_lower: number; fe_ci_upper: number; fe_p: number;
+    re_effect: number; re_ci_lower: number; re_ci_upper: number; re_p: number; divergent: boolean;
+  } | null;
+  influence_max_change_pct: number;
+  most_influential?: string | null;
+}
+export interface ExtendedMetaResponse extends MetaResponse {
+  pooled: ExtendedPooledResult;
+  heterogeneity: ExtendedHeterogeneity;
+  subgroups_extended?: {
+    groups: ExtendedSubgroupResult[];
+    between?: SubgroupTest | null;
+  } | null;
+  knapp_hartung?: boolean;
+  sensitivity?: SensitivityPack | null;
+  notes?: string | null;
+}
+
 export interface MetaResponse {
   model: string;
   measure: string;
@@ -131,6 +187,10 @@ export interface ScreeningItem {
   decision: ScreenDecision;
   stage: "title_abstract" | "full_text";
   note?: string;
+  // v0.5.1 — structured exclusion reason (PICO-failure tags) + dedup key
+  exclusion_reason?: string;
+  doi?: string;
+  pmid?: string;
 }
 export interface ProtocolData {
   databases: string;
@@ -139,7 +199,7 @@ export interface ProtocolData {
 }
 export interface ExtractedStudy {
   study: string;
-  type: "binary" | "continuous" | "survival";
+  type: "binary" | "continuous" | "survival" | "proportion" | "rate" | "correlation" | "generic";
   int_events?: number | null;
   int_n?: number | null;
   ctrl_events?: number | null;
@@ -151,6 +211,12 @@ export interface ExtractedStudy {
   hr?: number | null;
   hr_lower?: number | null;
   hr_upper?: number | null;
+  aux_time_int?: number | null;
+  aux_time_ctrl?: number | null;
+  correlation?: number | null;
+  n_total?: number | null;
+  effect_size?: number | null;
+  effect_se?: number | null;
   subgroup?: string;
   design?: string;
   year?: number | null;
@@ -158,8 +224,8 @@ export interface ExtractedStudy {
 export interface RobAssessment {
   id: string;
   study: string;
-  tool: "RoB2" | "NOS" | "PROBAST";
-  overall: "Low" | "Some concerns" | "High" | "—";
+  tool: "RoB2" | "NOS" | "PROBAST" | "ROBINS-I" | "QUADAS-2" | "AMSTAR-2";
+  overall: "Low" | "Some concerns" | "High" | "Critical" | "—";
   domains: Record<string, string>;
 }
 export interface SearchDb {
@@ -191,7 +257,7 @@ export interface Project {
 
 export function emptyProject(): Project {
   return {
-    metadata: { version: "0.5.0", created: new Date().toISOString(), title: "Untitled review" },
+    metadata: { version: "0.5.1", created: new Date().toISOString(), title: "Untitled review" },
     pico: { population: "", intervention: "", comparator: "", outcomes: "" },
     protocol: { databases: "PubMed, Embase, Cochrane CENTRAL, Scopus", registration: "Not registered", objective: "" },
     screening: { title_abstract: [], full_text: [] },
@@ -242,11 +308,15 @@ export function normalizeProject(raw: unknown): Project {
         decision: validDecision(i.decision),
         stage: i.stage === "full_text" || i.stage === "title_abstract" ? i.stage : stage,
         ...(typeof i.note === "string" ? { note: i.note } : {}),
+        ...(typeof i.exclusion_reason === "string" ? { exclusion_reason: i.exclusion_reason } : {}),
+        ...(typeof i.doi === "string" ? { doi: i.doi } : {}),
+        ...(typeof i.pmid === "string" ? { pmid: i.pmid } : {}),
       }));
 
-  const validTool = (v: unknown): RobAssessment["tool"] => (v === "NOS" || v === "PROBAST" ? v : "RoB2");
+  const validTool = (v: unknown): RobAssessment["tool"] =>
+    v === "NOS" || v === "PROBAST" || v === "ROBINS-I" || v === "QUADAS-2" || v === "AMSTAR-2" ? v : "RoB2";
   const validOverall = (v: unknown): RobAssessment["overall"] =>
-    v === "Low" || v === "Some concerns" || v === "High" ? v : "—";
+    v === "Low" || v === "Some concerns" || v === "High" || v === "Critical" ? v : "—";
 
   return {
     metadata: {
@@ -315,10 +385,18 @@ import { ENGINE_URL, postJson } from "./api";
 export async function runMeta(req: MetaRequest): Promise<MetaResponse> {
   return postJson<MetaResponse>("/api/meta", req);
 }
+
+/** v0.5.1 — extended analysis endpoint (KH, MH/Peto, sensitivity, bias depth, new outcome types). */
+export async function runMetaExtended(req: ExtendedMetaRequest): Promise<ExtendedMetaResponse> {
+  return postJson<ExtendedMetaResponse>("/api/meta2", req);
+}
+
 export async function runGrade(req: { outcomes?: GradeOutcomeInput[]; meta?: MetaResponse | null; rob?: { overall?: string }[] }): Promise<GradeRow[]> {
   return postJson<GradeRow[]>("/api/grade", req);
 }
-export async function getFigure(kind: "forest" | "funnel", resp: MetaResponse): Promise<string> {
+
+/** Fetch an SVG figure by kind (v0.5.1 adds galbraith/labbe/baujat/funnel_contour). */
+export async function getFigure(kind: string, resp: MetaResponse): Promise<string> {
   let r: Response;
   try {
     r = await fetch(`${ENGINE_URL}/api/figure/${kind}`, {
@@ -332,6 +410,44 @@ export async function getFigure(kind: "forest" | "funnel", resp: MetaResponse): 
   }
   if (!r.ok) throw new Error(`figure ${kind} failed (${r.status})`);
   return r.text();
+}
+
+/** v0.5.1 effect-size conversions (POST /api/convert). */
+export interface ConvertResult { conversion: string; result: number; extra?: Record<string, number>; note?: string }
+export async function runConvert(body: Record<string, unknown>): Promise<ConvertResult> {
+  return postJson<ConvertResult>("/api/convert", body);
+}
+
+/**
+ * v0.5.1 de-duplication across imported records.
+ * A record is a duplicate of an earlier one when PMID or DOI match exactly,
+ * or when the normalized titles (lowercase, alphanumeric-only) match.
+ * Returns the deduped list plus how many were dropped and their ids.
+ */
+export function dedupeRecords(
+  incoming: ScreeningItem[],
+  existing: ScreeningItem[]
+): { kept: ScreeningItem[]; duplicatesRemoved: number; duplicateIds: string[] } {
+  const keyOf = (i: ScreeningItem): string => {
+    if (i.pmid) return `pmid:${i.pmid}`;
+    if (i.doi) return `doi:${i.doi.toLowerCase()}`;
+    const t = i.title.toLowerCase().replace(/[^a-z0-9]/g, "");
+    return t.length >= 12 ? `t:${t}` : "";
+  };
+  const seen = new Set<string>();
+  for (const e of existing) {
+    const k = keyOf(e);
+    if (k) seen.add(k);
+  }
+  const kept: ScreeningItem[] = [];
+  const duplicateIds: string[] = [];
+  for (const item of incoming) {
+    const k = keyOf(item);
+    if (k && seen.has(k)) { duplicateIds.push(item.id); continue; }
+    if (k) seen.add(k);
+    kept.push(item);
+  }
+  return { kept, duplicatesRemoved: incoming.length - kept.length, duplicateIds };
 }
 
 // ── Citation import (see lib/importScreening.ts) ──
