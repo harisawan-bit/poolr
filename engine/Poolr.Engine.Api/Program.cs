@@ -122,6 +122,12 @@ app.MapPost("/api/export/citations", async (HttpRequest httpReq) =>
 app.MapPost("/api/export/methods", ([FromBody] ExtendedMetaResponse req) =>
     Results.Text(ExportSuite.MethodsParagraph(req), "text/plain"));
 
+// v0.5.1 — robvis-style RoB figures
+app.MapPost("/api/figure/rob_traffic", ([FromBody] RobFigures.TrafficLightRequest req) =>
+    Results.Text(RobFigures.TrafficLight(req), "image/svg+xml"));
+app.MapPost("/api/figure/rob_summary", ([FromBody] RobFigures.TrafficLightRequest req) =>
+    Results.Text(RobFigures.SummaryBar(req), "image/svg+xml"));
+
 // Phase B5 — figures (SVG). Returns image/svg+xml.
 app.MapPost("/api/figure/forest", ([FromBody] MetaResponse req) =>
     Results.Text(Figures.ForestPlot(req), "image/svg+xml"));
@@ -165,6 +171,17 @@ app.MapPost("/api/project/save", ([FromBody] ProjectSaveRequest req) =>
 app.MapPost("/api/project/load", ([FromBody] ProjectLoadRequest req) =>
 {
     try { return Results.Ok(ProjectStore.Load(req.path ?? "poolr.json")); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.5.1 — GRADE Summary-of-Findings
+app.MapPost("/api/grade/sof", ([FromBody] SofGenerator.SofRequest req) =>
+{
+    try
+    {
+        var (rows, markdown) = SofGenerator.Generate(req);
+        return Results.Json(new { rows, markdown }, SofJson.Options);
+    }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
