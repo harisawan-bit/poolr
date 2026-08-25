@@ -23,13 +23,21 @@ public static class ExportSuite
         sb.AppendLine("# Regenerates every analysis shown in the app from the raw data.");
         var measureMap = new Dictionary<string, string>
         {
-            ["OR"] = "\"OR\"", ["RR"] = "\"RR\"", ["RD"] = "\"RD\"",
-            ["MH_OR"] = "\"OR\"", ["PETO"] = "\"OR\"",
-            ["MD"] = "\"MD\"", ["SMD"] = "\"SMD\"", ["GLASS"] = "\"SMD\"",
+            ["OR"] = "\"OR\"",
+            ["RR"] = "\"RR\"",
+            ["RD"] = "\"RD\"",
+            ["MH_OR"] = "\"OR\"",
+            ["PETO"] = "\"OR\"",
+            ["MD"] = "\"MD\"",
+            ["SMD"] = "\"SMD\"",
+            ["GLASS"] = "\"SMD\"",
             ["HR"] = "\"HR\"",
-            ["LOGIT_PROP"] = "\"PLO\"", ["ARS_PROP"] = "\"PAS\"",
-            ["IRR"] = "\"IRR\"", ["IRD"] = "\"IRD\"",
-            ["Z_CORR"] = "\"ZCOR\"", ["GEN_IV"] = "\"GEN\"",
+            ["LOGIT_PROP"] = "\"PLO\"",
+            ["ARS_PROP"] = "\"PAS\"",
+            ["IRR"] = "\"IRR\"",
+            ["IRD"] = "\"IRD\"",
+            ["Z_CORR"] = "\"ZCOR\"",
+            ["GEN_IV"] = "\"GEN\"",
         };
         string method = r.method switch
         {
@@ -133,7 +141,7 @@ public static class ExportSuite
             string key = (s.study ?? $"study{i}").Replace(" ", "").Replace(",", "");
             sb.AppendLine($"@misc{{{key},");
             sb.AppendLine($"  title = {{{s.study}}},");
-            if (s.year.HasValue) sb.AppendLine($"  year = {{{s.year.Value}}}"); 
+            if (s.year.HasValue) sb.AppendLine($"  year = {{{s.year.Value}}}");
             sb.AppendLine("}");
             i++;
         }
@@ -177,8 +185,12 @@ public static class ExportSuite
 
     private static string MethodLong(string m) => m switch
     {
-        "DL" => "DerSimonian-Laird", "REML" => "restricted maximum-likelihood",
-        "PM" => "Paule-Mandel", "HS" => "Hunter-Schmidt", "ML" => "maximum likelihood",
-        "EB" => "empirical Bayes", _ => m,
+        "DL" => "DerSimonian-Laird",
+        "REML" => "restricted maximum-likelihood",
+        "PM" => "Paule-Mandel",
+        "HS" => "Hunter-Schmidt",
+        "ML" => "maximum likelihood",
+        "EB" => "empirical Bayes",
+        _ => m,
     };
 }

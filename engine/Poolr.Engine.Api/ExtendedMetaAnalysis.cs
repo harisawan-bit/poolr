@@ -224,9 +224,15 @@ public class ExtendedMetaAnalysis
 
         return new CoreResult
         {
-            FeEff = fe, FeSe = Math.Sqrt(1 / sumFeW),
-            ReEff = re, ReSe = Math.Sqrt(1 / sumReW),
-            Tau2 = tau2, Q = q, Df = df, Qp = qp, I2 = i2,
+            FeEff = fe,
+            FeSe = Math.Sqrt(1 / sumFeW),
+            ReEff = re,
+            ReSe = Math.Sqrt(1 / sumReW),
+            Tau2 = tau2,
+            Q = q,
+            Df = df,
+            Qp = qp,
+            I2 = i2,
             StudyWeights = _model == "fixed" ? feW : reW,
             TotalWeight = _model == "fixed" ? sumFeW : sumReW,
         };
@@ -326,16 +332,29 @@ public class ExtendedMetaAnalysis
             k = k,
             pooled = new ExtendedPooledResult
             {
-                effect = bt(eff), ci_lower = bt(eff - crit * se), ci_upper = bt(eff + crit * se),
-                se = se, z = z, p = pval,
+                effect = bt(eff),
+                ci_lower = bt(eff - crit * se),
+                ci_upper = bt(eff + crit * se),
+                se = se,
+                z = z,
+                p = pval,
                 model = _model == "fixed" ? "Fixed-effect" : "Random-effects",
-                ci_method = ciMethod, t_value = tVal, df_t = dfT,
+                ci_method = ciMethod,
+                t_value = tVal,
+                df_t = dfT,
             },
             heterogeneity = new ExtendedHeterogeneity
             {
-                q = core.Q, df = core.Df, q_p = core.Qp, i2 = core.I2,
-                tau2 = core.Tau2, tau = Math.Sqrt(Math.Max(core.Tau2, 0)),
-                h = Math.Sqrt(h2), h2 = h2, i2_lower = i2lo, i2_upper = i2hi,
+                q = core.Q,
+                df = core.Df,
+                q_p = core.Qp,
+                i2 = core.I2,
+                tau2 = core.Tau2,
+                tau = Math.Sqrt(Math.Max(core.Tau2, 0)),
+                h = Math.Sqrt(h2),
+                h2 = h2,
+                i2_lower = i2lo,
+                i2_upper = i2hi,
             },
             notes = core.Note.Length > 0 ? core.Note : null,
         };
@@ -435,7 +454,8 @@ public class ExtendedMetaAnalysis
         int dfb = Math.Max(0, groups.Count - 1);
         out_.between = new BetweenSubgroupTest
         {
-            q = qb, df = dfb,
+            q = qb,
+            df = dfb,
             p = dfb > 0 ? 1 - Chi2.Cdf(qb, dfb) : 1,
         };
         return out_;
@@ -471,10 +491,13 @@ public class ExtendedMetaAnalysis
             int kk = rest.Count;
             pack.leave_one_out.Add(new LeaveOneOutEntry
             {
-                excluded = s.S.study ?? "?", k = kk,
+                excluded = s.S.study ?? "?",
+                k = kk,
                 effect = bt(eff),
-                ci_lower = bt(eff - Crit(kk) * se), ci_upper = bt(eff + Crit(kk) * se),
-                p = PooledP(eff, se, kk), i2 = c.I2,
+                ci_lower = bt(eff - Crit(kk) * se),
+                ci_upper = bt(eff + Crit(kk) * se),
+                p = PooledP(eff, se, kk),
+                i2 = c.I2,
             });
             double chg = baseEff != 0 ? Math.Abs(eff - baseEff) / Math.Abs(baseEff) * 100 : 0;
             if (chg > worstChange) { worstChange = chg; worstName = s.S.study; }
@@ -494,9 +517,12 @@ public class ExtendedMetaAnalysis
             int kk = running.Count;
             pack.cumulative.Add(new CumulativeEntry
             {
-                added = w.S.study ?? "?", year = w.S.year, k = kk,
+                added = w.S.study ?? "?",
+                year = w.S.year,
+                k = kk,
                 effect = bt(eff),
-                ci_lower = bt(eff - Crit(kk) * se), ci_upper = bt(eff + Crit(kk) * se),
+                ci_lower = bt(eff - Crit(kk) * se),
+                ci_upper = bt(eff + Crit(kk) * se),
                 p = PooledP(eff, se, kk),
             });
         }

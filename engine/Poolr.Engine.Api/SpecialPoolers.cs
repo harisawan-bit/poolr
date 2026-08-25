@@ -86,12 +86,19 @@ public static class SpecialPoolers
 
         return new CoreResult
         {
-            FeEff = lnOR, FeSe = se,
-            ReEff = lnOR, ReSe = se,   // MH is an equal-effects estimator; no tau2
-            Tau2 = 0, Q = q, Df = df, Qp = qp, I2 = i2,
+            FeEff = lnOR,
+            FeSe = se,
+            ReEff = lnOR,
+            ReSe = se,   // MH is an equal-effects estimator; no tau2
+            Tau2 = 0,
+            Q = q,
+            Df = df,
+            Qp = qp,
+            I2 = i2,
             IsSpecialPooler = true,
             Note = "Mantel-Haenszel equal-effects OR; Robins-Breslow-Greenland SE",
-            StudyWeights = wl, TotalWeight = wl.Sum(),
+            StudyWeights = wl,
+            TotalWeight = wl.Sum(),
         };
     }
 
@@ -129,12 +136,19 @@ public static class SpecialPoolers
 
         return new CoreResult
         {
-            FeEff = beta, FeSe = se,
-            ReEff = beta, ReSe = se,
-            Tau2 = 0, Q = q, Df = df, Qp = qp, I2 = i2,
+            FeEff = beta,
+            FeSe = se,
+            ReEff = beta,
+            ReSe = se,
+            Tau2 = 0,
+            Q = q,
+            Df = df,
+            Qp = qp,
+            I2 = i2,
             IsSpecialPooler = true,
             Note = "Peto one-step OR (Yusuf O-E/V); robust to rare events",
-            StudyWeights = vi, TotalWeight = sumV,
+            StudyWeights = vi,
+            TotalWeight = sumV,
         };
     }
 }
