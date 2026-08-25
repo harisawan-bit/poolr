@@ -89,6 +89,39 @@ app.MapPost("/api/figure/baujat", (DiagnosticFigures.PlotInput req) =>
 app.MapPost("/api/figure/funnel_contour", ([FromBody] MetaResponse req) =>
     Results.Text(DiagnosticFigures.ContourFunnel(req), "image/svg+xml"));
 
+// v0.5.1 — export suite (R replication, citations, methods paragraph)
+app.MapPost("/api/export/r_code", async (HttpRequest httpReq) =>
+{
+    try
+    {
+        using var sr = new StreamReader(httpReq.Body);
+        var raw = await sr.ReadToEndAsync();
+        var doc = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(raw);
+        var resp = doc.GetProperty("response").Deserialize<ExtendedMetaResponse>();
+        var data = doc.GetProperty("data").Deserialize<List<Study>>();
+        return Results.Text(ExportSuite.RReplication(resp!, data ?? new()), "text/plain");
+    }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/export/citations", async (HttpRequest httpReq) =>
+{
+    try
+    {
+        using var sr = new StreamReader(httpReq.Body);
+        var raw = await sr.ReadToEndAsync();
+        var doc = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(raw);
+        var data = doc.GetProperty("data").Deserialize<List<Study>>() ?? new();
+        string fmt = httpReq.Query["format"].ToString().ToLowerInvariant();
+        string text = fmt == "bibtex"
+            ? ExportSuite.BibTeX(data)
+            : ExportSuite.RisExport(data);
+        return Results.Text(text, "text/plain");
+    }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/export/methods", ([FromBody] ExtendedMetaResponse req) =>
+    Results.Text(ExportSuite.MethodsParagraph(req), "text/plain"));
+
 // Phase B5 — figures (SVG). Returns image/svg+xml.
 app.MapPost("/api/figure/forest", ([FromBody] MetaResponse req) =>
     Results.Text(Figures.ForestPlot(req), "image/svg+xml"));
