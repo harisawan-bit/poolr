@@ -58,7 +58,7 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
           <button className="btn-primary" onClick={add} disabled={!studyNames.length}>+ Add</button>
         </div>
       }>
-        <p className="mb-3 text-[12.5px] text-[#8b8d96]">
+        <p className="mb-3 text-[12.5px] text-[var(--color-text-muted)]">
           Rate each study with the {tool} tool. Overall rating feeds the GRADE certainty on the PRISMA page.
         </p>
 
@@ -67,7 +67,7 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
         ) : (
           <div className="space-y-3">
             {list.map((a) => (
-              <div key={a.id} className="rounded-[5px] border border-[var(--color-border)] bg-[#0c0d11] p-3">
+              <div key={a.id} className="rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)] p-3">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <Select className="max-w-[220px]" value={a.study} onChange={(e) => update(a.id, { study: e.target.value })}>
                     {studyNames.map((n) => <option key={n} value={n}>{n}</option>)}
@@ -77,7 +77,7 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
                     {TOOLS.map((t) => <option key={t} value={t}>{t}</option>)}
                   </Select>
                   <div className="ml-auto flex items-center gap-2">
-                    <span className="text-[10.5px] text-[#8b8d96]">Overall</span>
+                    <span className="text-[10.5px] text-[var(--color-text-muted)]">Overall</span>
                     <Select className="w-auto" value={a.overall} onChange={(e) => update(a.id, { overall: e.target.value as RobAssessment["overall"] })}>
                       {OVERALL.map((o) => <option key={o} value={o}>{o}</option>)}
                     </Select>
@@ -87,7 +87,7 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
                 <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                   {DOMAINS[a.tool].map((d) => (
                     <div key={d} className="flex items-center gap-2">
-                      <span className="flex-1 text-[12px] text-[#8b8d96]">{d}</span>
+                      <span className="flex-1 text-[12px] text-[var(--color-text-muted)]">{d}</span>
                       <Select className="w-auto" value={a.domains[d] ?? "Low"} onChange={(e) => update(a.id, { domains: { ...a.domains, [d]: e.target.value } })}>
                         <option>Low</option><option>Some concerns</option><option>High</option>
                       </Select>
@@ -101,7 +101,7 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
 
         {list.length > 0 && (
           <div className="mt-3 flex items-center gap-2 border-t border-[var(--color-border)] pt-3">
-            <span className="text-[11px] text-[#8b8d96]">Distribution:</span>
+            <span className="text-[11px] text-[var(--color-text-muted)]">Distribution:</span>
             {(["Low", "Some concerns", "High"] as const).map((o) => (
               <Pill key={o} tone={o === "Low" ? "include" : o === "High" ? "exclude" : "unsure"}>{o}: {counts[o] ?? 0}</Pill>
             ))}
@@ -139,7 +139,7 @@ function DomainRadar({ list, tool }: { list: RobAssessment[]; tool: (typeof TOOL
         <RadarLabels />
         <RadarArea index={0} />
       </RadarChart>
-      <p className="mt-1 text-center text-[10.5px] text-[#8b8d96]">
+      <p className="mt-1 text-center text-[10.5px] text-[var(--color-text-muted)]">
         {forTool.length} {tool} assessment{forTool.length === 1 ? "" : "s"} — outer edge = 100% low risk
       </p>
     </div>

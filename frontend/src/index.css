@@ -5,26 +5,14 @@
 @import "@fontsource/inter/600.css";
 @import "@fontsource/inter/700.css";
 
-/* ── poolr design tokens (compact premium dark — Hermes-inspired) ── */
-@theme {
-  --color-bg: #0c0d11;
-  --color-chrome: #07080b; /* chrome (sidebar/header/status) — darker than viewport */
-  --color-surface: #141519;
-  --color-surface-2: #1b1d23;
-  --color-border: rgba(255, 255, 255, 0.07);
-  --color-border-strong: rgba(255, 255, 255, 0.13);
-  --color-text: #e6e7ea;
-  --color-text-muted: #8b8d96;
-  /* monochrome accent — no hue (avoids AI-slop blue/purple); off-white tint */
-  --color-accent: #e6e7ea;
-  --color-accent-hover: #ffffff;
-  --color-accent-deep: #b9bbc2;
-  --color-include: #3fb950;
-  --color-exclude: #f05252;
-  --color-unsure: #f2b84b;
-  /* faint background line field — barely-there, subconscious texture */
-  --color-linefield: rgba(255, 255, 255, 0.022);
+/* ── poolr design tokens ──────────────────────────────────────────────
+   v0.5.3: full light + dark theming. Every surface reads a CSS variable;
+   `html.dark` flips the set. Dark palette is byte-identical to v0.5.2's
+   premium monochrome dark, so the default look is unchanged.
+   Tailwind v4: class-based dark variants keyed off `.dark` on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
   --font-sans: "Inter", "Helvetica Neue", system-ui, -apple-system, "Segoe UI",
     Arial, sans-serif;
   --font-light: "Inter", "Helvetica Neue", system-ui, -apple-system, "Segoe UI",
@@ -35,23 +23,96 @@
   --radius-card: 5px;
 }
 
-@layer base {
-  /* ── Bklit UI chart tokens (shadcn-style vars, poolr monochrome palette) ──
-     No blue/purple — grayscale ramp + semantic green/red/amber only. */
-  :root {
-    --chart-background: transparent;
-    --chart-foreground: #e6e7ea;
-    --chart-foreground-muted: #8b8d96;
-    --chart-label: #8b8d96;
-    --chart-grid: rgba(255, 255, 255, 0.07);
-    --border: rgba(255, 255, 255, 0.07);
-    --chart-1: #e6e7ea; /* off-white — primary series */
-    --chart-2: #b9bbc2; /* light gray */
-    --chart-3: #8b8d96; /* muted gray */
-    --chart-4: #5c5e66; /* deep gray */
-    --chart-5: #3fb950; /* semantic green */
-  }
+/* Light theme (default when html lacks .dark) */
+:root {
+  --color-bg: #f4f4f6;
+  --color-chrome: #fbfbfc;
+  --color-surface: #ffffff;
+  --color-surface-2: #eef0f3;
+  --color-border: rgba(15, 17, 21, 0.09);
+  --color-border-strong: rgba(15, 17, 21, 0.18);
+  --color-text: #1a1c20;
+  --color-text-muted: #6a6d76;
 
+  --color-accent: #23262c;
+  --color-accent-hover: #000000;
+  --color-accent-deep: #4a4d55;
+  --color-include: #1f9d55;
+  --color-exclude: #d64545;
+  --color-unsure: #b97f18;
+  --color-linefield: rgba(15, 17, 21, 0.03);
+
+  /* component-level tokens (shadcn-flavored, poolr palette) */
+  --btn-bg: #23262c;
+  --btn-fg: #ffffff;
+  --btn-hover-bg: #000000;
+  --btn-border: #23262c;
+  --input-bg: #ffffff;
+  --placeholder-fg: #9aa0aa;
+  --card-bg: #ffffff;
+  --card-border: rgba(15, 17, 21, 0.08);
+  --drawer-bg: #ffffff;
+  --hover-surface: rgba(15, 17, 21, 0.05);
+
+  /* chart tokens */
+  --chart-background: transparent;
+  --chart-foreground: #1a1c20;
+  --chart-foreground-muted: #6a6d76;
+  --chart-label: #6a6d76;
+  --chart-grid: rgba(15, 17, 21, 0.09);
+  --border: rgba(15, 17, 21, 0.09);
+  --chart-1: #23262c;
+  --chart-2: #4a4d55;
+  --chart-3: #6a6d76;
+  --chart-4: #9aa0aa;
+  --chart-5: #1f9d55;
+}
+
+/* Dark theme — identical to the v0.5.2 palette */
+html.dark {
+  color-scheme: dark;
+  --color-bg: #0c0d11;
+  --color-chrome: #07080b;
+  --color-surface: #141519;
+  --color-surface-2: #1b1d23;
+  --color-border: rgba(255, 255, 255, 0.07);
+  --color-border-strong: rgba(255, 255, 255, 0.13);
+  --color-text: #e6e7ea;
+  --color-text-muted: #8b8d96;
+
+  --color-accent: #e6e7ea;
+  --color-accent-hover: #ffffff;
+  --color-accent-deep: #b9bbc2;
+  --color-include: #3fb950;
+  --color-exclude: #f05252;
+  --color-unsure: #f2b84b;
+  --color-linefield: rgba(255, 255, 255, 0.022);
+
+  --btn-bg: #e6e7ea;
+  --btn-fg: #0c0d11;
+  --btn-hover-bg: #ffffff;
+  --btn-border: #e6e7ea;
+  --input-bg: #0c0d11;
+  --placeholder-fg: #5a5c63;
+  --card-bg: #141519;
+  --card-border: rgba(255, 255, 255, 0.07);
+  --drawer-bg: #101116;
+  --hover-surface: rgba(255, 255, 255, 0.04);
+
+  --chart-background: transparent;
+  --chart-foreground: #e6e7ea;
+  --chart-foreground-muted: #8b8d96;
+  --chart-label: #8b8d96;
+  --chart-grid: rgba(255, 255, 255, 0.07);
+  --border: rgba(255, 255, 255, 0.07);
+  --chart-1: #e6e7ea;
+  --chart-2: #b9bbc2;
+  --chart-3: #8b8d96;
+  --chart-4: #5c5e66;
+  --chart-5: #3fb950;
+}
+
+@layer base {
   html,
   body,
   #root {
@@ -67,6 +128,7 @@
     line-height: 1.45;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 
   h1,
@@ -78,11 +140,15 @@
     letter-spacing: -0.2px;
     margin: 0;
   }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--btn-fg);
+  }
 }
 
 @layer components {
-  /* Animated random line field — canvas behind content (z-0).
-     Drawn/driven in App.tsx; this just positions it. */
+  /* Animated random line field — canvas behind content (z-0). */
   .linefield {
     position: fixed;
     inset: 0;
@@ -91,40 +157,37 @@
     display: block;
   }
 
-  /* Chrome (sidebar / header / status bar) — SOLID, darker than viewport.
-     No glass/blur: a flat, darker slab so the floating field stays in the
-     content viewport only. Adds a subtle top hairline + depth shadow. */
+  /* Chrome (dock / header / status bar) — solid slab darker than viewport */
   .glass {
     background: var(--color-chrome);
     border: 1px solid var(--color-border);
-    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
-      0 8px 24px -12px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 1px 0 0 var(--hairline-inset),
+      0 8px 24px -12px var(--chrome-shadow);
   }
 
   .card {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-card);
-    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.03) inset,
-      0 10px 30px -16px rgba(0, 0, 0, 0.65);
+    box-shadow: 0 1px 0 0 var(--hairline-inset),
+      0 10px 30px -16px var(--chrome-shadow);
   }
 
-  /* Compact primary button — solid off-white, dark text (monochrome, tool-like) */
   .btn-primary {
-    background: var(--color-accent);
-    color: #0c0d11;
+    background: var(--btn-bg);
+    color: var(--btn-fg);
     border-radius: var(--radius-btn);
     font-family: var(--font-sans);
     font-weight: 600;
     font-size: 12px;
     padding: 5px 12px;
-    border: 1px solid var(--color-accent);
+    border: 1px solid var(--btn-border);
     cursor: pointer;
     transition: background 0.12s ease, border-color 0.12s ease;
   }
   .btn-primary:hover {
-    background: var(--color-accent-hover);
-    border-color: var(--color-accent-hover);
+    background: var(--btn-hover-bg);
+    border-color: var(--btn-hover-bg);
   }
 
   .btn-ghost {
@@ -140,6 +203,26 @@
   .btn-ghost:hover {
     color: var(--color-text);
     border-color: var(--color-border-strong);
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--hover-surface);
+  }
+}
+
+/* Per-theme shadows/hairlines that can't live inside @theme vars cleanly */
+:root {
+  --hairline-inset: rgba(15, 17, 21, 0.04);
+  --chrome-shadow: rgba(15, 17, 21, 0.12);
+}
+html.dark {
+  --hairline-inset: rgba(255, 255, 255, 0.04);
+  --chrome-shadow: rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

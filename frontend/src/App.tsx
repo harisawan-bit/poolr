@@ -1,5 +1,24 @@
 import { Component, useEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
 import {
+  ClipboardList,
+  FileDown,
+  FilePlus2,
+  FolderOpen,
+  LayoutDashboard,
+  ListChecks,
+  Moon,
+  Settings2,
+  Sigma,
+  Sparkles,
+  Sun,
+  Save,
+  Search as SearchIcon,
+  ShieldAlert,
+  Table2,
+  Workflow,
+} from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import {
   engineHealth,
   openProjectDialog,
   exportProject,
@@ -8,6 +27,7 @@ import {
 } from "./lib/api";
 import { emptyProject, normalizeProject, type Project } from "./lib/project";
 import { APP_VERSION } from "./lib/version";
+import { ThemeProvider, useTheme } from "./lib/theme";
 import Dashboard from "./pages/Dashboard";
 import Protocol from "./pages/Protocol";
 import Search from "./pages/Search";
@@ -18,17 +38,27 @@ import Meta from "./pages/Meta";
 import Prisma from "./pages/Prisma";
 import DisclaimerModal from "./components/DisclaimerModal";
 
+// v0.5.3 kokonutui component family (adapted, MIT — see file headers)
+import FloatingDock, { type DockItem } from "./components/kokonut/FloatingDock";
+import DynamicGreeting from "./components/kokonut/DynamicGreeting";
+import ProfileSetup, { type ProfileData } from "./components/kokonut/ProfileSetup";
+import ProfileDropdown from "./components/kokonut/ProfileDropdown";
+import SwitchButton from "./components/kokonut/SwitchButton";
+import CommandSearch, { type CommandAction } from "./components/kokonut/CommandSearch";
+import OptionsDrawer from "./components/kokonut/OptionsDrawer";
+
 const LAST_PATH_KEY = "poolr.lastProjectPath";
+const PROFILE_KEY = "poolr.profile";
 
 const NAV = [
-  { key: "dashboard", label: "Dashboard", icon: "▦" },
-  { key: "protocol", label: "Protocol", icon: "✎" },
-  { key: "search", label: "Search", icon: "⌕" },
-  { key: "screening", label: "Screening", icon: "☑" },
-  { key: "extraction", label: "Extraction", icon: "▤" },
-  { key: "rob", label: "Risk of Bias", icon: "⚠" },
-  { key: "meta", label: "Meta-Analysis", icon: "📈" },
-  { key: "prisma", label: "PRISMA", icon: "◫" },
+  { key: "dashboard", label: "Dashboard", Icon: LayoutDashboard },
+  { key: "protocol", label: "Protocol", Icon: ClipboardList },
+  { key: "search", label: "Search", Icon: SearchIcon },
+  { key: "screening", label: "Screening", Icon: ListChecks },
+  { key: "extraction", label: "Extraction", Icon: Table2 },
+  { key: "rob", label: "Risk of Bias", Icon: ShieldAlert },
+  { key: "meta", label: "Meta-Analysis", Icon: Sigma },
+  { key: "prisma", label: "PRISMA", Icon: Workflow },
 ] as const;
 
 type PageKey = (typeof NAV)[number]["key"];
@@ -53,9 +83,10 @@ function LogoMark({ size = 20 }: { size?: number }) {
   );
 }
 
-/* Animated random floating line field (behind content, z-0). */
+/* Animated random floating line field (behind content, z-0).
+   v0.5.3: stroke tint follows the active theme. */
 type Line = { x: number; y: number; depth: number; vx: number; vy: number; pts: { x: number; y: number }[] };
-function useLineField(ref: React.RefObject<HTMLCanvasElement | null>) {
+function useLineField(ref: React.RefObject<HTMLCanvasElement | null>, theme: "light" | "dark") {
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return;
@@ -64,6 +95,7 @@ function useLineField(ref: React.RefObject<HTMLCanvasElement | null>) {
     let raf = 0; let w = 0; let h = 0;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     let lines: Line[] = [];
+    const isDark = theme === "dark";
     let seed = 1337;
     const rand = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
     const makeCurve = (depth: number) => {
@@ -105,14 +137,16 @@ function useLineField(ref: React.RefObject<HTMLCanvasElement | null>) {
         if (l.x < -span) l.x = span; if (l.x > span) l.x = -span;
         if (l.y < -span) l.y = span; if (l.y > span) l.y = -span;
         const alpha = 0.01 + l.depth * 0.05;
-        ctx!.strokeStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
+        ctx!.strokeStyle = isDark
+          ? `rgba(255,255,255,${alpha.toFixed(3)})`
+          : `rgba(15,17,21,${(alpha * 1.15).toFixed(3)})`;
         ctx!.lineWidth = 0.25 + l.depth * 0.55; drawCurve(l.pts, l.x, l.y);
       }
       raf = requestAnimationFrame(draw);
     };
     build(); draw(); window.addEventListener("resize", build);
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", build); };
-  }, [ref]);
+  }, [ref, theme]);
 }
 
 /** localStorage can throw (private mode / disabled storage) — never let it break boot. */
@@ -124,6 +158,19 @@ const store = {
     try { localStorage.setItem(key, value); } catch { /* quota or blocked — non-fatal */ }
   },
 };
+
+interface StoredProfile extends ProfileData {}
+
+function readProfile(): StoredProfile | null {
+  try {
+    const raw = store.get(PROFILE_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw) as StoredProfile;
+    return p && typeof p.username === "string" && typeof p.avatarId === "number" ? p : null;
+  } catch {
+    return null;
+  }
+}
 
 const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -140,7 +187,7 @@ class PageBoundary extends Component<{ pageKey: string; children: ReactNode }, {
     return (
       <div className="card p-4">
         <h2 className="text-[14px] font-semibold">This page hit an error</h2>
-        <p className="mt-1 text-[12.5px] text-[#8b8d96]">
+        <p className="mt-1 text-[12.5px] text-[var(--color-text-muted)]">
           {this.state.error.message || "Unknown error"} — your project data is untouched. Switch pages or reload.
         </p>
         <button className="btn-ghost mt-3" onClick={() => this.setState({ error: null })}>Try again</button>
@@ -150,24 +197,34 @@ class PageBoundary extends Component<{ pageKey: string; children: ReactNode }, {
 }
 
 export default function App() {
+  return (
+    <ThemeProvider>
+      <Shell />
+    </ThemeProvider>
+  );
+}
+
+function Shell() {
+  const { theme, toggleTheme } = useTheme();
   const [page, setPage] = useState<PageKey>("dashboard");
   const [connected, setConnected] = useState<boolean | null>(null);
-  const [collapsed, setCollapsed] = useState(typeof window !== "undefined" && window.innerWidth < 820);
   const [project, setProject] = useState<Project | null>(null);
   const [projectPath, setProjectPath] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [busy, setBusy] = useState(false);
   const [banner, setBanner] = useState<string | null>(null);
+
+  // v0.5.3 boot experience: splash (greeting) → first-run setup (optional) → app.
+  const [splashDone, setSplashDone] = useState(false);
+  const [profile, setProfile] = useState<StoredProfile | null>(() => readProfile());
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
   const linefieldRef = useRef<HTMLCanvasElement | null>(null);
+  useLineField(linefieldRef, theme);
 
-  useLineField(linefieldRef);
-
+  // Engine cold-start polling (v0.5.2 behavior kept verbatim).
   useEffect(() => {
     let alive = true;
-    // v0.5.2 — the self-contained engine can take several seconds to bind its
-    // port on first launch (self-contained extraction, JIT). Poll with backoff
-    // instead of a single 1.5s probe, which lost that race and left the shell
-    // stuck on "offline" even though every later request worked.
     let delay = 500;
     const tick = async () => {
       const ok = await engineHealth();
@@ -179,11 +236,6 @@ export default function App() {
     };
     void tick();
     return () => { alive = false; };
-  }, []);
-  useEffect(() => {
-    const onResize = () => setCollapsed(window.innerWidth < 820);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   // Phase E (E3): load the last project on boot so a multi-day MA resumes after restart.
@@ -211,9 +263,22 @@ export default function App() {
     if (saveTimer.current) clearTimeout(saveTimer.current);
   }, []);
 
+  // Ctrl+K opens the command palette.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      }
+      if (e.key === "Escape") setPaletteOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const cancelPendingSave = () => {
     if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
-    saveSeq.current++; // invalidate any in-flight save response
+    saveSeq.current++;
   };
 
   const onProjectChange = (p: Project) => {
@@ -225,8 +290,6 @@ export default function App() {
     saveTimer.current = setTimeout(async () => {
       try {
         const saved = await saveProject(projectPath, p);
-        // A newer edit (or a manual save) superseded this one — drop the result
-        // so a slow response can't flip the indicator back to "saved".
         if (!mounted.current || seq !== saveSeq.current) return;
         setProjectPath(saved); setSaveState("saved");
         store.set(LAST_PATH_KEY, saved);
@@ -277,8 +340,6 @@ export default function App() {
       setProject(normalizeProject(raw));
       setSaveState("idle"); setBanner(null);
     } catch (e) {
-      // v0.5.2 — surface the failure instead of only logging it; the user
-      // previously got no feedback at all when the demo asset failed to load.
       console.error(e);
       setSaveState("error");
       setBanner("Could not load the bundled demo project. Reinstall poolr or use Open with a saved project file.");
@@ -316,9 +377,6 @@ export default function App() {
   const saveLabel =
     saveState === "saving" ? "saving…" : saveState === "saved" ? "saved" : saveState === "error" ? "save error" : "unsaved";
 
-  // Stable placeholder while no project is loaded: calling emptyProject() inline
-  // in the render map minted a brand-new object (and a new `created` timestamp)
-  // on every render, which needlessly re-rendered every page.
   const blank = useMemo(() => emptyProject(), []);
   const current = project ?? blank;
 
@@ -333,70 +391,228 @@ export default function App() {
     prisma: () => <Prisma project={current} onChange={onProjectChange} />,
   };
 
+  /* Dock navigation — the sidebar's replacement. */
+  const dockItems: DockItem[] = useMemo(
+    () =>
+      NAV.map((n) => ({
+        title: n.label,
+        icon: <n.Icon className="h-[55%] w-[55%]" />,
+        onSelect: () => setPage(n.key),
+        active: n.key === page,
+      })),
+    [page]
+  );
+
+  /* Command palette actions (Ctrl+K). */
+  const paletteActions: CommandAction[] = useMemo(
+    () => [
+      ...NAV.map((n) => ({
+        id: `go-${n.key}`,
+        label: n.label,
+        description: n.key === page ? "current page" : undefined,
+        end: "Go to",
+        icon: <n.Icon className="h-4 w-4" />,
+        onSelect: () => setPage(n.key),
+      })),
+      { id: "file-open", label: "Open project…", end: "File", short: "", icon: <FolderOpen className="h-4 w-4" />, onSelect: () => void handleOpen() },
+      { id: "file-demo", label: "Load demo review", description: "BCG dataset", end: "File", icon: <Sparkles className="h-4 w-4" />, onSelect: () => void loadDemo() },
+      { id: "file-new", label: "New workspace", end: "File", icon: <FilePlus2 className="h-4 w-4" />, onSelect: () => void handleNew() },
+      { id: "file-save", label: "Save project", end: "File", icon: <Save className="h-4 w-4" />, onSelect: () => void handleSave() },
+      { id: "file-export", label: "Export report (DOCX)", end: "File", icon: <FileDown className="h-4 w-4" />, onSelect: () => void handleExport() },
+      { id: "app-theme", label: theme === "dark" ? "Switch to light theme" : "Switch to dark theme", end: "Appearance", icon: theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />, onSelect: toggleTheme },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [theme, page, project]
+  );
+
+  const connDot =
+    connected === null ? "bg-[var(--color-text-muted)]" : connected ? "bg-[var(--color-include)]" : "bg-[var(--color-exclude)]";
+  const connLabel = connected === null ? "connecting…" : connected ? "engine online" : "engine offline";
+
+  /* ── Boot splash: greeting cycles while services spin up ── */
+  const showSplash = !splashDone;
+
+  /* ── First-run personalization ── */
+  const showSetup = splashDone && !profile;
+
   return (
-    <div className="relative z-10 flex h-full w-full overflow-hidden text-[#e6e7ea]">
+    <div className="relative z-10 flex h-full w-full flex-col overflow-hidden text-[var(--color-text)]">
       <canvas ref={linefieldRef} className="linefield" aria-hidden="true" />
 
-      <aside className={`glass flex flex-col border-r border-white/[0.07] transition-[width] duration-150 ${collapsed ? "w-[56px]" : "w-52"}`}>
-        <div className={`flex items-center gap-2 py-3.5 ${collapsed ? "justify-center px-0" : "px-4"}`}>
-          <LogoMark size={20} />
-          {!collapsed && <span className="font-sans text-[15px] font-semibold tracking-tight">poolr</span>}
-        </div>
-        <nav className={`flex flex-1 flex-col gap-0.5 ${collapsed ? "px-1.5" : "px-2.5"} py-1`}>
-          {NAV.map((item) => {
-            const active = item.key === page;
-            return (
-              <button
-                key={item.key}
-                title={collapsed ? item.label : undefined}
-                onClick={() => setPage(item.key)}
-                className={`relative flex items-center gap-2.5 rounded-[3px] px-2.5 py-1.5 text-left text-[12.5px] transition-colors ${active ? "bg-white/[0.06] font-sans font-semibold text-[#e6e7ea]" : "text-[#8b8d96] hover:bg-white/[0.03] hover:text-[#e6e7ea]"} ${collapsed ? "justify-center" : ""}`}
-              >
-                {active && <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-full bg-[var(--color-accent)]" />}
-                <span className={`text-center text-[14px] ${collapsed ? "" : "w-4"}`}>{item.icon}</span>
-                {!collapsed && item.label}
-              </button>
-            );
-          })}
-        </nav>
-        <div className={`py-2.5 text-[10.5px] text-[#8b8d96] ${collapsed ? "text-center px-1" : "px-4"}`}>
-          {collapsed ? `v${APP_VERSION}` : `v${APP_VERSION} · ${connected === null ? "connecting…" : connected ? "online" : "offline"}`}
-        </div>
-      </aside>
-
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="glass flex items-center justify-between border-b border-white/[0.07] px-4 py-2">
+      {/* ── Header ── */}
+      <header className="glass z-20 flex items-center justify-between border-b px-4 py-2">
+        <div className="flex items-center gap-3">
+          <LogoMark size={22} />
           <div>
             <h1 className="text-[16px] font-semibold">{TITLES[page]}</h1>
-            <p className="text-[10.5px] text-[#8b8d96]">Systematic review &amp; meta-analysis</p>
+            <p className="hidden text-[10.5px] text-[var(--color-text-muted)] sm:block">Systematic review &amp; meta-analysis</p>
           </div>
-          <div className="flex gap-1.5">
-            <button className="btn-ghost" disabled={busy} onClick={handleOpen}>Open</button>
-            <button className="btn-ghost" disabled={busy} onClick={loadDemo}>Demo</button>
-            <button className="btn-ghost" onClick={handleNew}>New</button>
-            <button className="btn-ghost" disabled={!project} onClick={handleSave}>Save</button>
-            <button className="btn-primary" disabled={!project || busy} onClick={handleExport}>Export</button>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <button className="btn-ghost flex items-center gap-1.5" disabled={busy} onClick={handleOpen}>
+            <FolderOpen className="h-3.5 w-3.5" /> Open
+          </button>
+          <button className="btn-ghost flex items-center gap-1.5" disabled={busy} onClick={loadDemo}>
+            <Sparkles className="h-3.5 w-3.5" /> Demo
+          </button>
+          <button className="btn-ghost flex items-center gap-1.5" onClick={handleNew}>
+            <FilePlus2 className="h-3.5 w-3.5" /> New
+          </button>
+          <button className="btn-ghost flex items-center gap-1.5" disabled={!project} onClick={handleSave}>
+            <Save className="h-3.5 w-3.5" /> Save
+          </button>
+          <button className="btn-primary flex items-center gap-1.5" disabled={!project || busy} onClick={handleExport}>
+            <FileDown className="h-3.5 w-3.5" /> Export
+          </button>
+          <SwitchButton size="sm" showLabel={false} className="ml-1 !h-8 !rounded-lg !px-2" />
+        </div>
+      </header>
+
+      {/* ── Main ── */}
+      <main className="relative z-10 flex-1 overflow-auto p-4 pb-24">
+        {banner && (
+          <div className="mb-3 flex items-start gap-2 rounded-[3px] border border-[var(--color-exclude)]/30 bg-[var(--color-exclude)]/10 px-2.5 py-1.5 text-[12px] text-[var(--color-exclude)]">
+            <span className="flex-1">{banner}</span>
+            <button className="shrink-0 text-[var(--color-exclude)]/70 hover:text-[var(--color-exclude)]" onClick={() => setBanner(null)} aria-label="Dismiss">✕</button>
           </div>
-        </header>
+        )}
+        <AnimatePresence mode="wait">
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            initial={{ opacity: 0, y: 6 }}
+            key={page}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+          >
+            <PageBoundary pageKey={page}>{pages[page]()}</PageBoundary>
+          </motion.div>
+        </AnimatePresence>
+      </main>
 
-        <main className="flex-1 overflow-auto p-4">
-          {banner && (
-            <div className="mb-3 flex items-start gap-2 rounded-[3px] border border-[#f05252]/30 bg-[#f05252]/10 px-2.5 py-1.5 text-[12px] text-[#f05252]">
-              <span className="flex-1">{banner}</span>
-              <button className="shrink-0 text-[#f05252]/70 hover:text-[#f05252]" onClick={() => setBanner(null)} aria-label="Dismiss">✕</button>
-            </div>
-          )}
-          <PageBoundary pageKey={page}>{pages[page]()}</PageBoundary>
-        </main>
+      {/* ── Footer — quiet: connection + save state only (version lives in the profile menu) ── */}
+      <footer className="glass z-20 flex items-center justify-between border-t px-4 py-1 text-[10.5px] text-[var(--color-text-muted)]">
+        <span className="flex items-center gap-1.5">
+          <span className={`h-1.5 w-1.5 rounded-full ${connDot}`} />
+          {connLabel}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className={`h-1.5 w-1.5 rounded-full ${saveState === "error" ? "bg-[var(--color-exclude)]" : saveState === "saved" ? "bg-[var(--color-include)]" : "bg-[#8b8d96]"}`} />
+          {saveLabel}
+        </span>
+      </footer>
 
-        <footer className="glass flex items-center justify-between border-t border-white/[0.07] px-4 py-1 text-[10.5px] text-[#8b8d96]">
-          <span>poolr v{APP_VERSION} · systematic review &amp; meta-analysis · © M. Haris Awan</span>
-          <span className="flex items-center gap-1.5">
-            <span className={`h-1.5 w-1.5 rounded-full ${saveState === "error" ? "bg-[#f05252]" : saveState === "saved" ? "bg-[#3fb950]" : "bg-[#8b8d96]"}`} />
-            {saveLabel}
-          </span>
-        </footer>
+      {/* ── Floating dock (sidebar replacement) ── */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-3 z-30 flex justify-center">
+        <FloatingDock items={dockItems} className="pointer-events-auto" />
       </div>
+
+      {/* ── Workspace options + profile (bottom-right corner) ── */}
+      <div className="fixed bottom-3 right-3 z-30 flex items-end gap-2">
+        <OptionsDrawer
+          closeText="Close"
+          description="Load sample data, start fresh, or jump straight into analysis. Everything runs locally."
+          icon={Settings2}
+          title="Workspace options"
+          trigger={<button className="btn-ghost flex items-center gap-1.5 rounded-full shadow-lg"><Settings2 className="h-3.5 w-3.5" /> Options</button>}
+        >
+          <div className="space-y-2">
+            <button className="btn-ghost flex w-full items-center gap-2 py-2" onClick={() => { void loadDemo(); }}>
+              <Sparkles className="h-4 w-4" /> Load bundled demo review
+            </button>
+            <button className="btn-ghost flex w-full items-center gap-2 py-2" onClick={() => { void handleNew(); }}>
+              <FilePlus2 className="h-4 w-4" /> Start a new workspace
+            </button>
+            <button className="btn-ghost flex w-full items-center gap-2 py-2" onClick={() => { setPage("meta"); }}>
+              <Sigma className="h-4 w-4" /> Go to Meta-Analysis
+            </button>
+            <div className="mt-3 flex items-center justify-between rounded-xl border border-[var(--card-border)] px-3 py-2">
+              <span className="text-[12.5px]">Theme</span>
+              <SwitchButton size="sm" />
+            </div>
+          </div>
+        </OptionsDrawer>
+
+        <ProfileDropdown
+          appVersion={APP_VERSION}
+          className="[&_[data-radix-popper-content-wrapper]]:bottom-4"
+          data={{
+            name: profile?.username ?? "Reviewer",
+            email: "local workspace · your data stays here",
+          }}
+        />
+      </div>
+
+      {/* ── Command palette (Ctrl+K) ── */}
+      <AnimatePresence>
+        {paletteOpen && (
+          <motion.div
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-28 backdrop-blur-[2px]"
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            onClick={() => setPaletteOpen(false)}
+            transition={{ duration: 0.15 }}
+          >
+            <motion.div
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="w-full max-w-xl px-4"
+              exit={{ opacity: 0, scale: 0.98, y: -8 }}
+              initial={{ opacity: 0, scale: 0.98, y: -8 }}
+              onClick={(e) => e.stopPropagation()}
+              transition={{ duration: 0.16, ease: "easeOut" }}
+            >
+              <CommandSearch actions={paletteActions} hint="↑↓ navigate · Enter select · Ctrl+K toggle" placeholder="Jump to a page or run a command…" />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Boot splash ── */}
+      <AnimatePresence>
+        {showSplash && (
+          <motion.div
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-[60] flex flex-col items-center justify-center"
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 1 }}
+            style={{ background: "var(--color-bg)" }}
+            transition={{ duration: 0.35 }}
+          >
+            <motion.div
+              animate={{ opacity: 1, scale: 1 }}
+              className="mb-2"
+              initial={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            >
+              <LogoMark size={44} />
+            </motion.div>
+            <DynamicGreeting onFinish={() => setTimeout(() => setSplashDone(true), 450)} />
+            <p className="text-[11px] tracking-wide text-[var(--color-text-muted)]">starting local services…</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── First-run avatar/name setup ── */}
+      <AnimatePresence>
+        {showSetup && (
+          <motion.div
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-[55] flex items-center justify-center overflow-auto p-6"
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            style={{ background: "var(--color-bg)" }}
+            transition={{ duration: 0.25 }}
+          >
+            <ProfileSetup
+              onComplete={(data) => {
+                store.set(PROFILE_KEY, JSON.stringify(data));
+                setProfile(data);
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {showDisclaimer && <DisclaimerModal onClose={() => setShowDisclaimer(false)} />}
     </div>

@@ -3,6 +3,8 @@ import type { Project, ScreeningItem, ScreenDecision } from "../lib/project";
 import { CITATION_ACCEPT, importCitationText, mergeScreeningItems, dedupeRecords } from "../lib/project";
 import { readTextFiles } from "../lib/api";
 import { Card, Pill, Input, Textarea, EmptyState } from "../components/ui";
+import FunnelChart from "../components/charts/FunnelChart";
+import TeamSelector, { REVIEWER_MEMBERS } from "../components/kokonut/TeamSelector";
 
 const DECISIONS: ScreenDecision[] = ["include", "exclude", "unsure"];
 const DEC_LABEL: Record<ScreenDecision, string> = { include: "Include", exclude: "Exclude", unsure: "Unsure", unset: "Unset" };
@@ -31,7 +33,7 @@ function StageTabs({ stage, setStage }: { stage: "title_abstract" | "full_text";
   return (
     <div className="flex items-center gap-1">
       {(["title_abstract", "full_text"] as const).map((s) => (
-        <button key={s} className={`btn-ghost ${stage === s ? "!text-[#e6e7ea] !border-[var(--color-border-strong)]" : ""}`}
+        <button key={s} className={`btn-ghost ${stage === s ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
           onClick={() => setStage(s)}>{s === "title_abstract" ? "Title / Abstract" : "Full text"}</button>
       ))}
     </div>
@@ -48,6 +50,8 @@ export default function Screening({ project, onChange }: { project: Project; onC
   // index would silently point at a different record (editing the wrong one).
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  // v0.5.3 — number of independent reviewers screening (dual screening support).
+  const [reviewers, setReviewers] = useState(2);
   const viewportRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const noticeTimer = useRef<number | null>(null);
@@ -139,8 +143,31 @@ export default function Screening({ project, onChange }: { project: Project; onC
   const slice = visible.slice(start, end);
   const sel = selIndex >= 0 ? selIndex : null;
 
+  const funnelData = [
+    { label: "Identified", value: Math.max(items.length, counts.all) || 0 },
+    { label: "Screened", value: counts.all },
+    { label: "Included", value: counts.include },
+    { label: "Excluded", value: counts.exclude },
+  ];
+
   return (
     <div className="space-y-3">
+      {/* v0.5.3 — screening funnel + reviewer team, kokonutui-style */}
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+        <Card title="Screening funnel" className="lg:col-span-2">
+          <FunnelChart
+            color="var(--chart-1)"
+            data={funnelData}
+            layers={3}
+          />
+        </Card>
+        <Card title="Reviewers">
+          <TeamSelector defaultValue={reviewers} members={REVIEWER_MEMBERS} onChange={setReviewers} />
+          <p className="mt-2 text-center text-[11px] text-[var(--color-text-muted)]">
+            {reviewers > 1 ? "Dual screening — records should be agreed by both reviewers." : "Single reviewer screening."}
+          </p>
+        </Card>
+      </div>
       <Card title="Screening" right={
         <div className="flex items-center gap-2">
           <StageTabs stage={stage} setStage={(s) => { setStage(s); setSelectedId(null); }} />
@@ -161,13 +188,13 @@ export default function Screening({ project, onChange }: { project: Project; onC
           }}
         />
         {notice && (
-          <div className="mb-2 rounded-[3px] border border-[var(--color-border)] bg-white/[0.04] px-2.5 py-1.5 text-[12.5px] text-[#e6e7ea]">
+          <div className="mb-2 rounded-[3px] border border-[var(--color-border)] bg-white/[0.04] px-2.5 py-1.5 text-[12.5px] text-[var(--color-text)]">
             {notice}
           </div>
         )}
         <div className="mb-3 flex flex-wrap items-center gap-1.5">
           {(["all", "include", "exclude", "unsure", "unset"] as const).map((f) => (
-            <button key={f} className={`btn-ghost ${filter === f ? "!text-[#e6e7ea] !border-[var(--color-border-strong)]" : ""}`}
+            <button key={f} className={`btn-ghost ${filter === f ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
               onClick={() => setFilter(f)}>
               {f === "all" ? `All ${counts.all}` : `${DEC_LABEL[f]} ${counts[f]}`}
             </button>
@@ -177,15 +204,15 @@ export default function Screening({ project, onChange }: { project: Project; onC
 
         {total === 0 ? (
           <EmptyState>
-            No records at this stage. Use <span className="text-[#e6e7ea]">+ Add</span> to create screening items, or{" "}
-            <span className="text-[#e6e7ea]">Import</span> a PubMed MEDLINE / RIS / .nbib / CSV / EndNote export.
+            No records at this stage. Use <span className="text-[var(--color-text)]">+ Add</span> to create screening items, or{" "}
+            <span className="text-[var(--color-text)]">Import</span> a PubMed MEDLINE / RIS / .nbib / CSV / EndNote export.
           </EmptyState>
         ) : (
           <div className="flex gap-3" style={{ height: 520 }}>
             {/* Virtualized list */}
             <div ref={viewportRef}
               onScroll={(e) => setScrollTop((e.target as HTMLDivElement).scrollTop)}
-              className="w-[56%] overflow-y-auto rounded-[5px] border border-[var(--color-border)] bg-[#0c0d11]">
+              className="w-[56%] overflow-y-auto rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)]">
               <div style={{ height: total * ROW_H, position: "relative" }}>
                 <div style={{ transform: `translateY(${start * ROW_H}px)` }}>
                   {slice.map((it) => {
@@ -197,8 +224,8 @@ export default function Screening({ project, onChange }: { project: Project; onC
                         style={{ height: ROW_H }}>
                         <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${dotClass(it.decision)}`} />
                         <div className="min-w-0 flex-1">
-                          <div className="truncate text-[12.5px] text-[#e6e7ea]">{it.title}</div>
-                          <div className="truncate text-[11px] text-[#8b8d96]">{it.abstract}</div>
+                          <div className="truncate text-[12.5px] text-[var(--color-text)]">{it.title}</div>
+                          <div className="truncate text-[11px] text-[var(--color-text-muted)]">{it.abstract}</div>
                         </div>
                       </div>
                     );
@@ -208,7 +235,7 @@ export default function Screening({ project, onChange }: { project: Project; onC
             </div>
 
             {/* Detail + decisions */}
-            <div className="flex w-[44%] flex-col rounded-[5px] border border-[var(--color-border)] bg-[#0c0d11] p-3">
+            <div className="flex w-[44%] flex-col rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)] p-3">
               {sel == null ? (
                 <EmptyState>Select a record to screen.</EmptyState>
               ) : (
@@ -218,9 +245,9 @@ export default function Screening({ project, onChange }: { project: Project; onC
                     <>
                       <div className="mb-2 flex items-center justify-between">
                         <Pill tone={DEC_TONE[it.decision]}>{DEC_LABEL[it.decision]}</Pill>
-                        <span className="text-[10.5px] text-[#8b8d96]">{sel + 1} / {total}</span>
+                        <span className="text-[10.5px] text-[var(--color-text-muted)]">{sel + 1} / {total}</span>
                       </div>
-                      <div className="text-[13px] font-semibold text-[#e6e7ea]">{it.title}</div>
+                      <div className="text-[13px] font-semibold text-[var(--color-text)]">{it.title}</div>
                       <Textarea className="mt-2 flex-1" rows={8} value={it.abstract} onChange={(e) => {
                         const next = items.map((x) => (x.id === it.id ? { ...x, abstract: e.target.value } : x));
                         onChange({ ...project, screening: { ...project.screening, [stage]: next } });
@@ -228,7 +255,7 @@ export default function Screening({ project, onChange }: { project: Project; onC
                       <Input className="mt-2" placeholder="Note (optional)" value={it.note ?? ""} onChange={(e) => setNote(it.id, e.target.value)} />
                       {it.decision === "exclude" && (
                         <select
-                          className="mt-2 w-full rounded-[3px] border border-[var(--color-border)] bg-[#0c0d11] px-2 py-1.5 text-[12px] text-[#e6e7ea]"
+                          className="mt-2 w-full rounded-[3px] border border-[var(--color-border)] bg-[var(--input-bg)] px-2 py-1.5 text-[12px] text-[var(--color-text)]"
                           value={(it as ScreeningItem).exclusion_reason ?? ""}
                           onChange={(e) => {
                             const next = items.map((x) => (x.id === it.id ? { ...x, exclusion_reason: e.target.value } : x));
@@ -239,7 +266,7 @@ export default function Screening({ project, onChange }: { project: Project; onC
                         </select>
                       )}
                       {(it as ScreeningItem).exclusion_reason && (
-                        <div className="mt-1 text-[10.5px] text-[#8b8d96]">Reason: {(it as ScreeningItem).exclusion_reason}</div>
+                        <div className="mt-1 text-[10.5px] text-[var(--color-text-muted)]">Reason: {(it as ScreeningItem).exclusion_reason}</div>
                       )}
                       <div className="mt-3 grid grid-cols-3 gap-1.5">
                         {DECISIONS.map((d) => (
@@ -265,8 +292,8 @@ export default function Screening({ project, onChange }: { project: Project; onC
 }
 
 function dotClass(d: ScreenDecision) {
-  return d === "include" ? "bg-[#3fb950]" : d === "exclude" ? "bg-[#f05252]" : d === "unsure" ? "bg-[#f2b84b]" : "bg-[#5a5c63]";
+  return d === "include" ? "bg-[var(--color-include)]" : d === "exclude" ? "bg-[var(--color-exclude)]" : d === "unsure" ? "bg-[var(--color-unsure)]" : "bg-[#5a5c63]";
 }
 function decisionColor(d: ScreenDecision) {
-  return d === "include" ? "#3fb950" : d === "exclude" ? "#f05252" : d === "unsure" ? "#f2b84b" : "#e6e7ea";
+  return d === "include" ? "var(--color-include)" : d === "exclude" ? "var(--color-exclude)" : d === "unsure" ? "var(--color-unsure)" : "#e6e7ea";
 }

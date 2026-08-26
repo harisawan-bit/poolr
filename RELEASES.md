@@ -2,6 +2,47 @@
 
 ## Latest Release
 
+**poolr v0.5.3** — Interface overhaul
+Release date: 2026-08-26
+
+> The same rigorous SRMA engine behind a completely reworked interface: light and dark themes with a persisted toggle, a floating dock instead of a sidebar, a boot splash and first-run personalization, a Ctrl+K command palette, live computation states while the engine works, a screening funnel with reviewer-team selection, and a live PRISMA flow diagram.
+
+### What's New in v0.5.3
+
+**Theming**
+- Light and dark themes across every surface (pages, charts, canvas background field, native controls). One-click toggle in the header; choice persists between sessions. Dark remains poolr's signature monochrome look.
+- All UI primitives rebuilt on design tokens so components and charts follow the theme automatically.
+
+**Navigation & shell**
+- Floating dock navigation (magnifying icon dock with tooltips and an active indicator) replaces the fixed sidebar; more room for content on every page.
+- Boot splash greets you in multiple languages while local services start; optional first-run setup lets you pick an avatar and name (stored locally).
+- Command palette on Ctrl+K for jumping to any page or running file actions.
+- Profile menu (bottom-right): profile, appearance toggle, settings, and version/license information in one quiet place.
+- Workspace options drawer: demo data, new workspace, theme — contextual panels without leaving your page.
+
+**Working surfaces**
+- Screening: animated PRISMA screening funnel plus a reviewer-count selector for dual screening.
+- Meta-Analysis: shimmer state on the Run button while pooling computes, and a live stage panel showing exactly what the engine is doing (pooling, sensitivity, publication bias, figures).
+- PRISMA: live Sankey flow diagram driven by your recorded numbers, plus a checklist/flow options drawer.
+
+### Validation
+
+All CI gates pass: C# format verification, frontend lint/type/build/Vitest, the engine xUnit suite, Rust fmt + clippy (-D warnings), and the .NET vulnerability scan. Packaged install smoke-tested end-to-end on Windows x64.
+
+### Downloads (native installers)
+
+| Platform | File | Notes |
+|----------|------|-------|
+| Windows x64 | `poolr_0.5.3_x64_en-US.msi` | Recommended for most PCs. Also ships `poolr_0.5.3_x64-setup.exe` (NSIS) installer. |
+| Windows x86 | `poolr_0.5.3_x86_en-US.msi` | 32-bit Windows. |
+| Windows ARM64 | `poolr_0.5.3_arm64_en-US.msi` | Windows on ARM. |
+| macOS Apple Silicon | `poolr_0.5.3_aarch64.dmg` | Contains `poolr.app`. |
+| macOS Intel | `poolr_0.5.3_x64.dmg` | Contains `poolr.app`. |
+| Linux x86_64 | `poolr_0.5.3_amd64.deb` + `poolr-0.5.3-1.x86_64.rpm` | Debian or RPM package. |
+
+---
+
+
 **poolr v0.5.2** — Quality & correctness pass
 Release date: 2026-08-26
 

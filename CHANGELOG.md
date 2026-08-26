@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.3] - 2026-08-26
+
+### Added
+- **Theming**: full light + dark themes with a persisted toggle (SwitchButton in the header and workspace drawer). Every surface — pages, charts, canvas line-field, native controls — follows the theme; the dark palette is unchanged from v0.5.2.
+- **Navigation**: floating dock replaces the sidebar (magnifying icons with tooltips, active state).
+- **Boot experience**: multilingual greeting splash while local services start; optional first-run avatar + name setup stored locally.
+- **Command palette** (Ctrl+K): jump to any page or run file actions.
+- **Screening**: PRISMA screening funnel chart and a reviewer-count selector (dual-screening support).
+- **Meta-Analysis**: shimmer state on the Run button and a live computation panel while the engine works.
+- **PRISMA**: live Sankey flow diagram from the recorded numbers; checklist/flow options drawer.
+- **Profile menu**: account-style dropdown in the corner carrying profile, appearance, and the app's version/license line.
+
+### Changed
+- UI primitives (button/input/card/drawer/dropdown) now token-driven for theming.
+- Version constants unified at 0.5.3.
+
 ## [0.5.2] - 2026-08-26
 
 ### Fixed

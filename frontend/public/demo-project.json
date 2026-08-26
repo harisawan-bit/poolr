@@ -1,5 +1,5 @@
 {
-  "metadata": { "version": "0.5.2", "created": "2026-08-25T12:00:00Z", "title": "BCG vaccine for tuberculosis (demo)" },
+  "metadata": { "version": "0.5.3", "created": "2026-08-25T12:00:00Z", "title": "BCG vaccine for tuberculosis (demo)" },
   "pico": {
     "population": "People at risk of tuberculosis (all ages)",
     "intervention": "BCG vaccination",

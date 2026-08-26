@@ -1,6 +1,9 @@
 import { useMemo, useState } from "react";
 import type { Project, GradeRow, PrismaFlow } from "../lib/project";
 import { Card, Input, Pill, EmptyState } from "../components/ui";
+import SankeyChart from "../components/charts/SankeyChart";
+import OptionsDrawer from "../components/kokonut/OptionsDrawer";
+import { ListChecks } from "lucide-react";
 import { runGrade } from "../lib/project";
 import { exportProject } from "../lib/api";
 import DisclaimerModal from "../components/DisclaimerModal";
@@ -90,8 +93,48 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
 
   const gradeTable = useMemo(() => grade ?? [], [grade]);
 
+  // v0.5.3 — live PRISMA flow diagram (sankey) from the recorded numbers.
+  const sankeyData = {
+    nodes: [
+      { name: "Records identified", category: "source" as const, value: flow.identified ?? 0 },
+      { name: "Screened", category: "stage" as const, value: flow.screened ?? 0 },
+      { name: "Full-text assessed", category: "stage" as const, value: flow.fullText ?? 0 },
+      { name: "Studies included", category: "outcome" as const, value: flow.included ?? 0 },
+    ],
+    links: [
+      { source: 0, target: 1, value: Math.max(flow.screened ?? 0, 1) },
+      { source: 1, target: 2, value: Math.max(flow.fullText ?? 0, 1) },
+      { source: 2, target: 3, value: Math.max(flow.included ?? 0, 1) },
+    ],
+  };
+
   return (
     <div className="space-y-3">
+      {/* v0.5.3 — PRISMA flow diagram + options drawer */}
+      <Card title="PRISMA 2020 flow diagram">
+        <SankeyChart data={sankeyData} />
+      </Card>
+
+      <div className="flex justify-start">
+        <OptionsDrawer
+          closeText="Close"
+          description="Tick off the 27 checklist items and edit the flow numbers in a focused panel."
+          icon={ListChecks}
+          title="Checklist & flow tools"
+          trigger={<button className="btn-ghost rounded-full">Checklist options</button>}
+        >
+          <div className="space-y-1.5">
+            {FLOW_FIELDS.map((f) => (
+              <div key={f.key} className="flex items-center gap-3">
+                <span className="flex-1 text-[12px] text-[var(--color-text)]">{f.label}</span>
+                <Input type="number" className="w-24" value={flow[f.key] ?? ""} onChange={(e) => setFlow(f.key, e.target.value)} />
+              </div>
+            ))}
+            <p className="pt-2 text-[11px] text-[var(--color-text-muted)]">Checklist progress autosaves with the project.</p>
+          </div>
+        </OptionsDrawer>
+      </div>
+
       <Card title="PRISMA 2020 flow" right={
         <div className="flex items-center gap-2">
           <button className="btn-ghost" onClick={autoGrade} disabled={busy || !project.meta.results}>Auto-GRADE</button>
@@ -101,8 +144,8 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
         <div className="max-w-[460px] space-y-2">
           {FLOW_FIELDS.map((f) => (
             <div key={f.key} className="flex items-center gap-3">
-              <span className="flex-1 text-[12.5px] text-[#e6e7ea]">{f.label}</span>
-              <span className="w-32 text-right text-[10.5px] text-[#8b8d96]">{f.hint}</span>
+              <span className="flex-1 text-[12.5px] text-[var(--color-text)]">{f.label}</span>
+              <span className="w-32 text-right text-[10.5px] text-[var(--color-text-muted)]">{f.hint}</span>
               <Input type="number" className="w-24" value={flow[f.key] ?? ""} onChange={(e) => setFlow(f.key, e.target.value)} />
             </div>
           ))}
@@ -119,22 +162,22 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
                 checked={!!checklist[String(it.n)]}
                 onChange={(e) => setItem(it.n, e.target.checked)}
               />
-              <span className="w-10 shrink-0 font-mono text-[10px] text-[#8b8d96]">{it.section}</span>
-              <span className="w-6 shrink-0 text-right font-mono text-[10px] text-[#8b8d96]">{it.n}</span>
-              <span className={`text-[12px] ${checklist[String(it.n)] ? "text-[#8b8d96] line-through" : "text-[#e6e7ea]"}`}>{it.text}</span>
+              <span className="w-10 shrink-0 font-mono text-[10px] text-[var(--color-text-muted)]">{it.section}</span>
+              <span className="w-6 shrink-0 text-right font-mono text-[10px] text-[var(--color-text-muted)]">{it.n}</span>
+              <span className={`text-[12px] ${checklist[String(it.n)] ? "text-[var(--color-text-muted)] line-through" : "text-[var(--color-text)]"}`}>{it.text}</span>
             </label>
           ))}
         </div>
-        <div className="mt-1 text-[11px] text-[#8b8d96]">Tick items as your manuscript covers them — progress saves with the project.</div>
+        <div className="mt-1 text-[11px] text-[var(--color-text-muted)]">Tick items as your manuscript covers them — progress saves with the project.</div>
       </Card>
 
       <Card title="GRADE certainty of evidence">
         {gradeTable.length === 0 ? (
-          <EmptyState>Run a meta-analysis, then <span className="text-[#e6e7ea]">Auto-GRADE</span> to build the evidence profile from your results + RoB.</EmptyState>
+          <EmptyState>Run a meta-analysis, then <span className="text-[var(--color-text)]">Auto-GRADE</span> to build the evidence profile from your results + RoB.</EmptyState>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-[12px]">
-              <thead className="text-[#8b8d96]">
+              <thead className="text-[var(--color-text-muted)]">
                 <tr className="border-b border-[var(--color-border)]">
                   {["Outcome", "Studies", "RoB", "Incons.", "Indirect.", "Imprec.", "Pub bias", "Starting", "Final"].map((h) => (
                     <th key={h} className="px-2 py-1.5 text-left font-medium">{h}</th>
@@ -144,21 +187,21 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
               <tbody>
                 {gradeTable.map((r, i) => (
                   <tr key={i} className="border-b border-[var(--color-border)] last:border-0">
-                    <td className="px-2 py-1.5 text-[#e6e7ea]">{r.outcome}</td>
-                    <td className="px-2 py-1.5 font-mono text-[#8b8d96]">{r.studies}</td>
-                    <td className="px-2 py-1.5 text-[#8b8d96]">{r.risk_of_bias}</td>
-                    <td className="px-2 py-1.5 text-[#8b8d96]">{r.inconsistency}</td>
-                    <td className="px-2 py-1.5 text-[#8b8d96]">{r.indirectness}</td>
-                    <td className="px-2 py-1.5 text-[#8b8d96]">{r.imprecision}</td>
-                    <td className="px-2 py-1.5 text-[#8b8d96]">{r.publication_bias}</td>
-                    <td className="px-2 py-1.5 text-[#8b8d96]">{r.starting_certainty}</td>
+                    <td className="px-2 py-1.5 text-[var(--color-text)]">{r.outcome}</td>
+                    <td className="px-2 py-1.5 font-mono text-[var(--color-text-muted)]">{r.studies}</td>
+                    <td className="px-2 py-1.5 text-[var(--color-text-muted)]">{r.risk_of_bias}</td>
+                    <td className="px-2 py-1.5 text-[var(--color-text-muted)]">{r.inconsistency}</td>
+                    <td className="px-2 py-1.5 text-[var(--color-text-muted)]">{r.indirectness}</td>
+                    <td className="px-2 py-1.5 text-[var(--color-text-muted)]">{r.imprecision}</td>
+                    <td className="px-2 py-1.5 text-[var(--color-text-muted)]">{r.publication_bias}</td>
+                    <td className="px-2 py-1.5 text-[var(--color-text-muted)]">{r.starting_certainty}</td>
                     <td className="px-2 py-1.5"><Pill tone={certTone(r.final_certainty)}>{r.final_certainty}</Pill></td>
                   </tr>
                 ))}
               </tbody>
             </table>
             {gradeTable.some((r) => r.downgrade_reasons && r.downgrade_reasons !== "None") && (
-              <div className="mt-2 text-[11px] text-[#8b8d96]">
+              <div className="mt-2 text-[11px] text-[var(--color-text-muted)]">
                 Downgrades: {gradeTable.map((r) => `${r.outcome}: ${r.downgrade_reasons}`).join(" · ")}
               </div>
             )}

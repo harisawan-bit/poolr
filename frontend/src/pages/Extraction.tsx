@@ -53,7 +53,7 @@ export default function Extraction({ project, onChange }: { project: Project; on
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-[12px]">
-              <thead className="text-[#8b8d96]">
+              <thead className="text-[var(--color-text-muted)]">
                 <tr className="border-b border-[var(--color-border)]">
                   <th className="px-2 py-1.5 text-left font-medium">Study</th>
                   <th className="px-2 py-1.5 text-left font-medium">Type</th>
@@ -67,12 +67,12 @@ export default function Extraction({ project, onChange }: { project: Project; on
               <tbody>
                 {studies.map((s, i) => (
                   <tr key={i} className="border-b border-[var(--color-border)] last:border-0">
-                    <td className="px-2 py-1.5 text-[#e6e7ea]">{s.study}</td>
-                    <td className="px-2 py-1.5 text-[#8b8d96]">{s.type}</td>
-                    <td className="px-2 py-1.5 font-mono text-[#e6e7ea]">{s.int_events ?? "—"}/{s.int_n ?? "—"}</td>
-                    <td className="px-2 py-1.5 font-mono text-[#e6e7ea]">{s.ctrl_events ?? "—"}/{s.ctrl_n ?? "—"}</td>
-                    <td className="px-2 py-1.5 font-mono text-[#e6e7ea]">{s.hr ?? "—"}{s.hr != null ? ` (${s.hr_lower ?? "?"}-${s.hr_upper ?? "?"})` : ""}</td>
-                    <td className="px-2 py-1.5 text-[#8b8d96]">{s.subgroup || "—"}</td>
+                    <td className="px-2 py-1.5 text-[var(--color-text)]">{s.study}</td>
+                    <td className="px-2 py-1.5 text-[var(--color-text-muted)]">{s.type}</td>
+                    <td className="px-2 py-1.5 font-mono text-[var(--color-text)]">{s.int_events ?? "—"}/{s.int_n ?? "—"}</td>
+                    <td className="px-2 py-1.5 font-mono text-[var(--color-text)]">{s.ctrl_events ?? "—"}/{s.ctrl_n ?? "—"}</td>
+                    <td className="px-2 py-1.5 font-mono text-[var(--color-text)]">{s.hr ?? "—"}{s.hr != null ? ` (${s.hr_lower ?? "?"}-${s.hr_upper ?? "?"})` : ""}</td>
+                    <td className="px-2 py-1.5 text-[var(--color-text-muted)]">{s.subgroup || "—"}</td>
                     <td className="px-2 py-1.5"><button className="btn-ghost" onClick={() => remove(i)}>remove</button></td>
                   </tr>
                 ))}
@@ -83,7 +83,7 @@ export default function Extraction({ project, onChange }: { project: Project; on
       </Card>
 
       <Card title="Add study">
-        {err && <div className="mb-2 text-[12px] text-[#f05252]">{err}</div>}
+        {err && <div className="mb-2 text-[12px] text-[var(--color-exclude)]">{err}</div>}
         <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
           <Field label="Study name"><Input value={form.study} onChange={(e) => set({ study: e.target.value })} /></Field>
           <Field label="Type">
@@ -121,7 +121,7 @@ export default function Extraction({ project, onChange }: { project: Project; on
         </div>
         <div className="mt-3 flex items-center gap-2">
           <button className="btn-primary" onClick={add}>+ Add to table</button>
-          <span className="text-[11px] text-[#8b8d96]">Studies flow automatically into Meta-Analysis → Run.</span>
+          <span className="text-[11px] text-[var(--color-text-muted)]">Studies flow automatically into Meta-Analysis → Run.</span>
         </div>
       </Card>
     </div>
@@ -131,7 +131,7 @@ export default function Extraction({ project, onChange }: { project: Project; on
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[#8b8d96]">{label}</div>
+      <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{label}</div>
       {children}
     </div>
   );
