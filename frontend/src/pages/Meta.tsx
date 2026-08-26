@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { Project, ExtendedMetaRequest, ExtendedMetaResponse, Study, MetaResponse } from "../lib/project";
 import { Card, Select, Pill, EmptyState } from "../components/ui";
+import ShimmerText from "../components/kokonut/ShimmerText";
+import ActivityState from "../components/kokonut/ActivityState";
 import { runMetaExtended, getFigure } from "../lib/project";
 import { RingChart } from "../components/charts/ring-chart";
 import { Ring } from "../components/charts/ring";
@@ -90,36 +92,38 @@ export default function Meta({ project, onChange }: { project: Project; onChange
       <Card title="Meta-analysis settings" right={
         <div className="flex items-center gap-2">
           <Pill tone="neutral">{studies.length} studies</Pill>
-          <button className="btn-primary" onClick={run} disabled={busy}>{busy ? "Running…" : "Run"}</button>
+          <button className="btn-primary min-w-[120px]" onClick={run} disabled={busy}>
+            {busy ? <span className="flex h-6 items-center"><ShimmerText className="!p-0 !text-sm" text="Pooling…" /></span> : "Run"}
+          </button>
         </div>
       }>
         <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
           <div>
-            <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[#8b8d96]">Model</div>
+            <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Model</div>
             <Select value={settings.model} onChange={(e) => set({ model: e.target.value as ExtendedMetaRequest["model"] })}>
               {MODELS.map((m) => <option key={m} value={m}>{m}</option>)}
             </Select>
           </div>
           <div>
-            <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[#8b8d96]">Measure</div>
+            <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Measure</div>
             <Select value={settings.measure} onChange={(e) => set({ measure: e.target.value as ExtendedMetaRequest["measure"] })}>
               {MEASURES.map((m) => <option key={m} value={m}>{m}</option>)}
             </Select>
           </div>
           <div>
-            <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[#8b8d96]">Method</div>
+            <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Method</div>
             <Select value={settings.method} onChange={(e) => set({ method: e.target.value as ExtendedMetaRequest["method"] })}>
               {METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
             </Select>
           </div>
           <div>
-            <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[#8b8d96]">Pub. bias</div>
+            <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Pub. bias</div>
             <Select value={settings.bias_depth ?? "egger"} onChange={(e) => set({ bias_depth: e.target.value as ExtendedMetaRequest["bias_depth"] })}>
               {PUB.map((p) => <option key={p} value={p}>{p}</option>)}
             </Select>
           </div>
         </div>
-        <label className="mt-2.5 inline-flex cursor-pointer items-center gap-2 text-[12px] text-[#8b8d96]">
+        <label className="mt-2.5 inline-flex cursor-pointer items-center gap-2 text-[12px] text-[var(--color-text-muted)]">
           <input
             type="checkbox"
             className="h-3.5 w-3.5 accent-[#e6e7ea]"
@@ -128,11 +132,18 @@ export default function Meta({ project, onChange }: { project: Project; onChange
           />
           Knapp–Hartung adjustment <span className="text-[10.5px]">(recommended for random-effects; t-based CIs)</span>
         </label>
-        {err && <div className="mt-2 rounded-[3px] border border-[#f05252]/30 bg-[#f05252]/10 px-2.5 py-1.5 text-[12px] text-[#f05252]">{err}</div>}
+        {err && <div className="mt-2 rounded-[3px] border border-[var(--color-exclude)]/30 bg-[var(--color-exclude)]/10 px-2.5 py-1.5 text-[12px] text-[var(--color-exclude)]">{err}</div>}
       </Card>
 
       {!resp ? (
-        <EmptyState>Configure settings and Run. Results, forest, and funnel plots appear here.</EmptyState>
+        busy ? (
+          <Card title="Working">
+            {/* v0.5.3 — live computation state so the wait is never a dead screen */}
+            <ActivityState />
+          </Card>
+        ) : (
+          <EmptyState>Configure settings and Run. Results, forest, and funnel plots appear here.</EmptyState>
+        )
       ) : (
         <>
           <Card title="Pooled result">
@@ -149,13 +160,13 @@ export default function Meta({ project, onChange }: { project: Project; onChange
               {typeof het?.h2 === "number" && <Stat k="H²" v={fmtN(het.h2, 2)} />}
             </div>
             {pooled?.ci_method && (
-              <div className="mt-3 text-[12px] text-[#8b8d96]">
+              <div className="mt-3 text-[12px] text-[var(--color-text-muted)]">
                 CI method: {pooled.ci_method}
                 {resp.knapp_hartung ? " — wider, uncertainty-aware intervals" : ""}
               </div>
             )}
             {resp.publication_bias?.egger && (
-              <div className="mt-3 text-[12px] text-[#8b8d96]">Egger intercept {fmtN(resp.publication_bias.egger.intercept, 3)} (p {fmtN(resp.publication_bias.egger.p_value, 3)}) — {resp.publication_bias.egger.significant ? "significant asymmetry" : "no significant asymmetry"}</div>
+              <div className="mt-3 text-[12px] text-[var(--color-text-muted)]">Egger intercept {fmtN(resp.publication_bias.egger.intercept, 3)} (p {fmtN(resp.publication_bias.egger.p_value, 3)}) — {resp.publication_bias.egger.significant ? "significant asymmetry" : "no significant asymmetry"}</div>
             )}
             {/* v0.5.1 subgroup block: per-group heterogeneity + Q-between interaction test */}
             {(resp as { subgroups?: { groups?: { name: string; effect: number; ci_lower: number; ci_upper: number; k: number; i2_within?: number }[]; between?: { q: number; df: number; p: number } | null } | null }).subgroups?.groups?.length ? (
@@ -163,7 +174,7 @@ export default function Meta({ project, onChange }: { project: Project; onChange
                 const sg = (resp as { subgroups?: { groups?: { name: string; effect: number; ci_lower: number; ci_upper: number; k: number; i2_within?: number }[]; between?: { q: number; df: number; p: number } | null } }).subgroups!;
                 return (
                   <div className="mt-3">
-                    <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[#8b8d96]">Subgroups</div>
+                    <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Subgroups</div>
                     <div className="flex flex-wrap gap-2">
                       {sg.groups!.map((g, i) => (
                         <Pill key={`${g.name}-${i}`} tone="accent">
@@ -172,7 +183,7 @@ export default function Meta({ project, onChange }: { project: Project; onChange
                       ))}
                     </div>
                     {sg.between && (
-                      <div className="mt-1.5 text-[12px] text-[#8b8d96]">
+                      <div className="mt-1.5 text-[12px] text-[var(--color-text-muted)]">
                         Q-between = {fmtN(sg.between.q, 2)} (df {sg.between.df}), p = {fmtN(sg.between.p, 4)}
                         {sg.between.p < 0.05 ? " — subgroup difference significant" : " — no significant subgroup difference"}
                       </div>
@@ -184,15 +195,15 @@ export default function Meta({ project, onChange }: { project: Project; onChange
             {/* v0.5.1 sensitivity pack */}
             {resp.sensitivity?.leave_one_out?.length ? (
               <div className="mt-3">
-                <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[#8b8d96]">Sensitivity (leave-one-out)</div>
+                <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Sensitivity (leave-one-out)</div>
                 <div className="max-h-40 overflow-y-auto rounded-[3px] border border-[var(--color-border)]">
                   <table className="w-full text-left text-[11.5px]">
-                    <thead className="text-[10.5px] uppercase tracking-wide text-[#8b8d96]">
+                    <thead className="text-[10.5px] uppercase tracking-wide text-[var(--color-text-muted)]">
                       <tr><th className="px-2 py-1">Excluded</th><th className="px-2 py-1">Pooled</th><th className="px-2 py-1">95% CI</th><th className="px-2 py-1">I²</th></tr>
                     </thead>
                     <tbody>
                       {resp.sensitivity.leave_one_out.map((l, i) => (
-                        <tr key={i} className={`border-t border-[var(--color-border)] ${l.excluded === resp.sensitivity?.most_influential ? "text-[#f2b84b]" : ""}`}>
+                        <tr key={i} className={`border-t border-[var(--color-border)] ${l.excluded === resp.sensitivity?.most_influential ? "text-[var(--color-unsure)]" : ""}`}>
                           <td className="px-2 py-1">{l.excluded}</td>
                           <td className="px-2 py-1 font-mono">{fmtE(l.effect)}</td>
                           <td className="px-2 py-1 font-mono">{fmtE(l.ci_lower)}, {fmtE(l.ci_upper)}</td>
@@ -203,7 +214,7 @@ export default function Meta({ project, onChange }: { project: Project; onChange
                   </table>
                 </div>
                 {resp.sensitivity.most_influential && (
-                  <div className="mt-1 text-[11px] text-[#8b8d96]">
+                  <div className="mt-1 text-[11px] text-[var(--color-text-muted)]">
                     Most influential: {resp.sensitivity.most_influential} (removing it moves the pooled estimate by {fmtN(resp.sensitivity.influence_max_change_pct, 1)}%)
                   </div>
                 )}
@@ -224,7 +235,7 @@ export default function Meta({ project, onChange }: { project: Project; onChange
           {diag["funnel_contour"] && (
             <Card title="Contour-enhanced funnel">
               <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: diag["funnel_contour"] }} />
-              <div className="mt-1 text-[11px] text-[#8b8d96]">Shaded regions show statistical significance of imputed studies — points in white regions were significant even before publication bias.</div>
+              <div className="mt-1 text-[11px] text-[var(--color-text-muted)]">Shaded regions show statistical significance of imputed studies — points in white regions were significant even before publication bias.</div>
             </Card>
           )}
         </>
@@ -241,8 +252,8 @@ function msg(e: unknown): string {
 function Stat({ k, v, accent }: { k: string; v: string; accent?: boolean }) {
   return (
     <div className="card p-2.5">
-      <div className={`text-[18px] font-semibold tabular-nums ${accent ? "text-[#e6e7ea]" : "text-[#e6e7ea]"}`}>{v}</div>
-      <div className="text-[10.5px] text-[#8b8d96]">{k}</div>
+      <div className={`text-[18px] font-semibold tabular-nums ${accent ? "text-[var(--color-text)]" : "text-[var(--color-text)]"}`}>{v}</div>
+      <div className="text-[10.5px] text-[var(--color-text-muted)]">{k}</div>
     </div>
   );
 }
@@ -271,11 +282,11 @@ function WeightRings({ resp }: { resp: MetaResponse }) {
       <div className="min-w-[180px] flex-1 space-y-1">
         {data.slice(0, 8).map((d, i) => (
           <div key={i} className="flex items-center justify-between gap-3 text-[11.5px]">
-            <span className="truncate text-[#8b8d96]">{d.label}</span>
-            <span className="font-mono text-[#e6e7ea]">{d.value}%</span>
+            <span className="truncate text-[var(--color-text-muted)]">{d.label}</span>
+            <span className="font-mono text-[var(--color-text)]">{d.value}%</span>
           </div>
         ))}
-        {data.length > 8 && <div className="text-[10.5px] text-[#8b8d96]">+{data.length - 8} more (hover rings)</div>}
+        {data.length > 8 && <div className="text-[10.5px] text-[var(--color-text-muted)]">+{data.length - 8} more (hover rings)</div>}
       </div>
     </div>
   );

@@ -54,7 +54,7 @@ export default function Search({ project, onChange }: { project: Project; onChan
           <button className="btn-primary" onClick={exportTxt}>Export .txt</button>
         </div>
       }>
-        <p className="mb-3 text-[12.5px] text-[#8b8d96]">
+        <p className="mb-3 text-[12.5px] text-[var(--color-text-muted)]">
           Queries are derived from the Protocol PICO. Edit per-database, then export the full strategy.
         </p>
 
@@ -63,7 +63,7 @@ export default function Search({ project, onChange }: { project: Project; onChan
         ) : (
           <div className="space-y-3">
             {dbs.map((d, i) => (
-              <div key={i} className="rounded-[5px] border border-[var(--color-border)] bg-[#0c0d11] p-3">
+              <div key={i} className="rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)] p-3">
                 <div className="mb-2 flex items-center gap-2">
                   <Input className="max-w-[220px]" value={d.name} onChange={(e) => update(i, { name: e.target.value })} />
                   <div className="ml-auto flex items-center gap-2">
@@ -91,8 +91,8 @@ export default function Search({ project, onChange }: { project: Project; onChan
         )}
 
         {dbs.length > 0 && (
-          <div className="mt-3 border-t border-[var(--color-border)] pt-3 text-[12.5px] text-[#8b8d96]">
-            Total retrieved across databases: <span className="font-mono text-[#e6e7ea]">{totalResults.toLocaleString()}</span>
+          <div className="mt-3 border-t border-[var(--color-border)] pt-3 text-[12.5px] text-[var(--color-text-muted)]">
+            Total retrieved across databases: <span className="font-mono text-[var(--color-text)]">{totalResults.toLocaleString()}</span>
           </div>
         )}
       </Card>

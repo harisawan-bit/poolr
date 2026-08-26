@@ -32,17 +32,17 @@ export default function Dashboard({ project }: { project: Project; onChange: (p:
   // Bklit RingChart data — one ring per decision class, progress vs decided total.
   const ringTotal = Math.max(decided, 1);
   const ringData = [
-    { label: "Include", value: included, maxValue: ringTotal, color: "#3fb950" },
-    { label: "Exclude", value: excluded, maxValue: ringTotal, color: "#f05252" },
-    { label: "Unsure", value: unsure, maxValue: ringTotal, color: "#f2b84b" },
+    { label: "Include", value: included, maxValue: ringTotal, color: "var(--color-include)" },
+    { label: "Exclude", value: excluded, maxValue: ringTotal, color: "var(--color-exclude)" },
+    { label: "Unsure", value: unsure, maxValue: ringTotal, color: "var(--color-unsure)" },
   ];
 
   return (
     <div className="space-y-3">
       <Card title={project.metadata.title || "Untitled review"} right={<Pill tone="accent">poolr v{project.metadata.version}</Pill>}>
-        <p className="text-[12.5px] leading-relaxed text-[#8b8d96]">
+        <p className="text-[12.5px] leading-relaxed text-[var(--color-text-muted)]">
           {project.protocol.objective || "No objective defined yet — set one in Protocol."} PICO:{" "}
-          <span className="text-[#e6e7ea]">{project.pico.population || "—"} / {project.pico.intervention || "—"} / {project.pico.comparator || "—"} / {project.pico.outcomes || "—"}.</span>
+          <span className="text-[var(--color-text)]">{project.pico.population || "—"} / {project.pico.intervention || "—"} / {project.pico.comparator || "—"} / {project.pico.outcomes || "—"}.</span>
         </p>
       </Card>
 
@@ -50,7 +50,7 @@ export default function Dashboard({ project }: { project: Project; onChange: (p:
         {kpis.map((kpi) => (
           <div key={kpi.k} className="card p-3">
             <div className="text-[20px] font-semibold tabular-nums">{kpi.v}</div>
-            <div className="mt-0.5 text-[10.5px] text-[#8b8d96]">{kpi.k}</div>
+            <div className="mt-0.5 text-[10.5px] text-[var(--color-text-muted)]">{kpi.k}</div>
           </div>
         ))}
       </div>
@@ -65,10 +65,10 @@ export default function Dashboard({ project }: { project: Project; onChange: (p:
               <RingCenter defaultLabel="decided" />
             </RingChart>
             <div className="space-y-1.5 text-[12.5px]">
-              <Legend color="#3fb950" label="Include" n={included} />
-              <Legend color="#f05252" label="Exclude" n={excluded} />
-              <Legend color="#f2b84b" label="Unsure" n={unsure} />
-              <div className="pt-1 text-[10.5px] text-[#8b8d96]">{decided} of {screeningItems.length} records screened</div>
+              <Legend color="var(--color-include)" label="Include" n={included} />
+              <Legend color="var(--color-exclude)" label="Exclude" n={excluded} />
+              <Legend color="var(--color-unsure)" label="Unsure" n={unsure} />
+              <div className="pt-1 text-[10.5px] text-[var(--color-text-muted)]">{decided} of {screeningItems.length} records screened</div>
             </div>
           </div>
         </Card>
@@ -85,7 +85,7 @@ export default function Dashboard({ project }: { project: Project; onChange: (p:
                 defaultLabel="I²"
                 width={150}
                 height={110}
-                activeFill={meta.heterogeneity.i2 > 75 ? "#f05252" : meta.heterogeneity.i2 > 50 ? "#f2b84b" : "#3fb950"}
+                activeFill={meta.heterogeneity.i2 > 75 ? "var(--color-exclude)" : meta.heterogeneity.i2 > 50 ? "var(--color-unsure)" : "var(--color-include)"}
                 useGradient={false}
               />
               <div className="flex-1 space-y-1 text-[12.5px]">
@@ -96,7 +96,7 @@ export default function Dashboard({ project }: { project: Project; onChange: (p:
               </div>
             </div>
           ) : (
-            <p className="text-[12.5px] text-[#8b8d96]">Run a meta-analysis from the Meta-Analysis page to see heterogeneity.</p>
+            <p className="text-[12.5px] text-[var(--color-text-muted)]">Run a meta-analysis from the Meta-Analysis page to see heterogeneity.</p>
           )}
         </Card>
       </div>
@@ -112,8 +112,8 @@ function fmt(v: number, measure: string) {
 function Row({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex items-center justify-between border-b border-[var(--color-border)] py-0.5 last:border-0">
-      <span className="text-[#8b8d96]">{k}</span>
-      <span className="font-mono text-[#e6e7ea]">{v}</span>
+      <span className="text-[var(--color-text-muted)]">{k}</span>
+      <span className="font-mono text-[var(--color-text)]">{v}</span>
     </div>
   );
 }
@@ -122,8 +122,8 @@ function Legend({ color, label, n }: { color: string; label: string; n: number }
   return (
     <div className="flex items-center gap-2">
       <span className="h-2.5 w-2.5 rounded-full" style={{ background: color }} />
-      <span className="text-[#8b8d96]">{label}</span>
-      <span className="ml-auto font-mono text-[#e6e7ea]">{n}</span>
+      <span className="text-[var(--color-text-muted)]">{label}</span>
+      <span className="ml-auto font-mono text-[var(--color-text)]">{n}</span>
     </div>
   );
 }

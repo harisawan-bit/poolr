@@ -24,7 +24,7 @@ export default function DisclaimerModal({ onClose }: { onClose: () => void }) {
           <h3 className="text-[15px] font-semibold">Research-use disclaimer</h3>
         </div>
         <p className="text-[12.5px] leading-relaxed text-[#b9bbc2]">{DISCLAIMER}</p>
-        <div className="mt-3 text-[10.5px] text-[#8b8d96]">
+        <div className="mt-3 text-[10.5px] text-[var(--color-text-muted)]">
           Developed by M. Haris Awan · © 2026 M. Haris Awan. All rights reserved.
         </div>
         <div className="mt-1 text-[10px] text-[#6f7178]">

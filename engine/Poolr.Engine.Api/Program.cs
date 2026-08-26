@@ -26,8 +26,8 @@ app.Use(async (ctx, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.5.2", engine = "csharp" }));
-app.MapGet("/version", () => Results.Ok(new { version = "0.5.2" }));
+app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.5.3", engine = "csharp" }));
+app.MapGet("/version", () => Results.Ok(new { version = "0.5.3" }));
 
 // Phase B — C# meta-analysis engine (numerics covered by engine/Poolr.Engine.Tests xUnit).
 app.MapPost("/api/meta", ([FromBody] MetaRequest req) =>
