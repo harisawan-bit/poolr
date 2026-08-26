@@ -1,8 +1,39 @@
-1|# poolr Releases
-2|
-3|## Latest Release
-4|
-5|**poolr v0.5.1** — Complete classical meta-analysis
+# poolr Releases
+
+## Latest Release
+
+**poolr v0.5.2** — Quality & correctness pass
+Release date: 2026-08-26
+
+> A focused maintenance release on top of v0.5.1's complete classical meta-analysis toolset: no more console-window flash on Windows launch, a truthful version string and connection indicator in the shell, and visible errors when the bundled demo project fails to load.
+
+### What's New in v0.5.2
+
+**Fixed**
+- Launching poolr on Windows no longer opens (or flashes) a terminal window alongside the app. The bundled C# engine sidecar is spawned windowless (`CREATE_NO_WINDOW`, stdio detached) while keeping its crash-safe JobObject cleanup.
+- The sidebar footer and copyright line now show the real app version from a single shared constant — they no longer display a stale hardcoded "v0.4.0".
+- The connection indicator no longer sticks on "offline" right after launch: the shell polls the engine with backoff during cold start instead of giving up after one 1.5-second probe.
+- Loading the bundled demo project surfaces an explicit error banner if it fails, instead of failing silently.
+
+### Validation
+
+All CI gates pass: C# format verification, frontend lint/type/build/Vitest, the engine xUnit suite, Rust fmt + clippy (-D warnings), and the .NET vulnerability scan. The packaged install was smoke-tested end-to-end: silent launch with no console window, engine health reporting 0.5.2, and demo-project load working.
+
+### Downloads (native installers)
+
+| Platform | File | Notes |
+|----------|------|-------|
+| Windows x64 | `poolr_0.5.2_x64_en-US.msi` | Recommended for most PCs. Also ships `poolr_0.5.2_x64-setup.exe` (NSIS) installer. |
+| Windows x86 | `poolr_0.5.2_x86_en-US.msi` | 32-bit Windows. |
+| Windows ARM64 | `poolr_0.5.2_arm64_en-US.msi` | Windows on ARM. |
+| macOS Apple Silicon | `poolr_0.5.2_aarch64.dmg` | Contains `poolr.app`. |
+| macOS Intel | `poolr_0.5.2_x64.dmg` | Contains `poolr.app`. |
+| Linux x86_64 | `poolr_0.5.2_amd64.deb` + `poolr-0.5.2-1.x86_64.rpm` | Debian or RPM package. |
+
+---
+
+
+**poolr v0.5.1** — Complete classical meta-analysis
 6|Release date: 2026-08-25
 7|
 8|> Everything a standard pairwise systematic review needs: Knapp-Hartung CIs, Mantel-Haenszel and Peto poolers validated against metafor's published outputs, leave-one-out/cumulative sensitivity, real trim-and-fill, PET/PEESE/p-curve/selection models/Henmi-Copas, proportions/rates/correlations/generic-IV outcomes, robvis-style RoB figures for six tools (now including ROBINS-I, QUADAS-2, AMSTAR-2), a GRADE Summary-of-Findings generator with OIS-based imprecision, R/metafor replication scripts, BibTeX/RIS citation export, structured exclusion reasons with automatic import de-duplication, a PRISMA 27-item checklist tracker, and a bundled demo project.
