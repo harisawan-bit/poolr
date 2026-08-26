@@ -76,7 +76,27 @@ fn spawn_engine_sidecar(app: &tauri::AppHandle) {
         }
     };
 
-    match std::process::Command::new(&exe).spawn() {
+    // v0.5.2 — build the command once; Windows-only hardening (no console
+    // window, no stdio pipes) is applied to `cmd` below.
+    //
+    // The engine exe is a console-subsystem executable: spawned plainly from
+    // this GUI app it made Windows allocate (and flash) a black console window
+    // on every launch. CREATE_NO_WINDOW suppresses it, and stdio is explicitly
+    // nulled: piping stdout without draining it would stall the engine once its
+    // log buffer filled, and inheriting our (windowless) console would
+    // recreate the bug.
+    let mut cmd = std::process::Command::new(&exe);
+
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x0800_0000); // CREATE_NO_WINDOW
+        cmd.stdin(std::process::Stdio::null());
+        cmd.stdout(std::process::Stdio::null());
+        cmd.stderr(std::process::Stdio::null());
+    }
+
+    match cmd.spawn() {
         Ok(child) => {
             // Attach to a KillOnJobClose job so a crash/force-kill can't orphan it.
             job_object::assign(child.id());

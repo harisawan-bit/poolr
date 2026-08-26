@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.2] - 2026-08-26
+
+### Fixed
+- **Windows**: launching poolr no longer flashes a black console window. The engine sidecar (a console-subsystem executable) is now spawned with `CREATE_NO_WINDOW` and its stdio explicitly nulled, so no console is allocated at all.
+- **UI**: the sidebar footer showed a hardcoded "v0.4.0" on v0.5.x builds. The version now comes from a single `APP_VERSION` constant shared by the footer and copyright line.
+- **UI**: the connection indicator could stay stuck on "offline" after launch — the single 1.5 s health probe lost the race against the self-contained engine's cold start. The shell now polls with backoff until the engine answers.
+- **Frontend**: failing to load the bundled demo project now shows an error banner instead of failing silently.
+
+### Changed
+- Version constants unified at 0.5.2 (engine /health, /version, tauri.conf.json, package.json, Cargo.toml); generated R-replication scripts and methods paragraphs cite 0.5.2.
+
 ## [0.5.1] - 2026-08-25
 
 ### Added

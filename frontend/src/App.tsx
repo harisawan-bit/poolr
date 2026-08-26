@@ -7,6 +7,7 @@ import {
   getProject,
 } from "./lib/api";
 import { emptyProject, normalizeProject, type Project } from "./lib/project";
+import { APP_VERSION } from "./lib/version";
 import Dashboard from "./pages/Dashboard";
 import Protocol from "./pages/Protocol";
 import Search from "./pages/Search";
@@ -163,7 +164,20 @@ export default function App() {
 
   useEffect(() => {
     let alive = true;
-    engineHealth().then((ok) => alive && setConnected(ok));
+    // v0.5.2 — the self-contained engine can take several seconds to bind its
+    // port on first launch (self-contained extraction, JIT). Poll with backoff
+    // instead of a single 1.5s probe, which lost that race and left the shell
+    // stuck on "offline" even though every later request worked.
+    let delay = 500;
+    const tick = async () => {
+      const ok = await engineHealth();
+      if (!alive) return;
+      setConnected(ok);
+      if (!ok && delay < 15000) {
+        setTimeout(() => { if (alive) { delay = Math.min(delay * 1.5, 15000); tick(); } }, delay);
+      }
+    };
+    void tick();
     return () => { alive = false; };
   }, []);
   useEffect(() => {
@@ -258,12 +272,16 @@ export default function App() {
     cancelPendingSave();
     try {
       const r = await fetch("demo-project.json", { signal: AbortSignal.timeout(10000) });
+      if (!r.ok) throw new Error(`demo asset missing (HTTP ${r.status})`);
       const raw = await r.json();
       setProject(normalizeProject(raw));
       setSaveState("idle"); setBanner(null);
     } catch (e) {
+      // v0.5.2 — surface the failure instead of only logging it; the user
+      // previously got no feedback at all when the demo asset failed to load.
       console.error(e);
       setSaveState("error");
+      setBanner("Could not load the bundled demo project. Reinstall poolr or use Open with a saved project file.");
     }
   };
 
@@ -342,7 +360,7 @@ export default function App() {
           })}
         </nav>
         <div className={`py-2.5 text-[10.5px] text-[#8b8d96] ${collapsed ? "text-center px-1" : "px-4"}`}>
-          {collapsed ? "v0.4.0" : `v0.4.0 · ${connected === null ? "connecting…" : connected ? "online" : "offline"}`}
+          {collapsed ? `v${APP_VERSION}` : `v${APP_VERSION} · ${connected === null ? "connecting…" : connected ? "online" : "offline"}`}
         </div>
       </aside>
 
@@ -372,7 +390,7 @@ export default function App() {
         </main>
 
         <footer className="glass flex items-center justify-between border-t border-white/[0.07] px-4 py-1 text-[10.5px] text-[#8b8d96]">
-          <span>poolr v0.4.0 · systematic review &amp; meta-analysis · © M. Haris Awan</span>
+          <span>poolr v{APP_VERSION} · systematic review &amp; meta-analysis · © M. Haris Awan</span>
           <span className="flex items-center gap-1.5">
             <span className={`h-1.5 w-1.5 rounded-full ${saveState === "error" ? "bg-[#f05252]" : saveState === "saved" ? "bg-[#3fb950]" : "bg-[#8b8d96]"}`} />
             {saveLabel}

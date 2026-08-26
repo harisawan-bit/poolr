@@ -19,7 +19,7 @@ public static class ExportSuite
     public static string RReplication(ExtendedMetaResponse r, List<Study> data)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("# poolr v0.5.1 replication script — run with library(metafor)");
+        sb.AppendLine("# poolr v0.5.2 replication script — run with library(metafor)");
         sb.AppendLine("# Regenerates every analysis shown in the app from the raw data.");
         var measureMap = new Dictionary<string, string>
         {
@@ -179,7 +179,7 @@ public static class ExportSuite
         sb.Append($"Heterogeneity was quantified with Cochran's Q (Q = {F(r.heterogeneity.q, "0.0")}, df = {r.heterogeneity.df}, p = {F(r.heterogeneity.q_p, "0.000")}), I-squared = {F(r.heterogeneity.i2, "0.0")}%, and tau-squared = {F(r.heterogeneity.tau2, "0.000")}. ");
         if (r.subgroups?.between != null)
             sb.Append($"Subgroup differences were tested with the Q-between statistic ({F(r.subgroups.between.q, "0.0")}, df = {r.subgroups.between.df}, p = {F(r.subgroups.between.p, "0.000")}). ");
-        sb.Append("Analyses were conducted in poolr v0.5.1; an R/metafor replication script accompanies this report.");
+        sb.Append("Analyses were conducted in poolr v0.5.2; an R/metafor replication script accompanies this report.");
         return sb.ToString();
     }
 
