@@ -191,6 +191,11 @@ export interface ScreeningItem {
   exclusion_reason?: string;
   doi?: string;
   pmid?: string;
+  // v0.5.5 — dual screening workflow fields
+  reviewerDecisions?: { reviewerId: string; reviewerName: string; decision: ScreenDecision; note?: string; exclusion_reason?: string; timestamp: string }[];
+  finalDecision?: ScreenDecision;
+  conflictStatus?: "pending" | "resolved" | "ai_adjudicated" | "discuss";
+  aiDecision?: { decision: ScreenDecision; reason: string; confidence: number; timestamp: string };
 }
 export interface ProtocolData {
   databases: string;
@@ -350,19 +355,36 @@ export function normalizeProject(raw: unknown): Project {
     v === "include" || v === "exclude" || v === "unsure" ? v : "unset";
 
   const items = (v: unknown, stage: ScreeningItem["stage"]): ScreeningItem[] =>
-    arr<Record<string, any>>(v)
-      .filter((i) => i && typeof i === "object")
-      .map((i, idx) => ({
-        id: str(i.id) || `x${idx}_${Math.random().toString(36).slice(2, 8)}`,
-        title: str(i.title),
-        abstract: str(i.abstract),
-        decision: validDecision(i.decision),
-        stage: i.stage === "full_text" || i.stage === "title_abstract" ? i.stage : stage,
-        ...(typeof i.note === "string" ? { note: i.note } : {}),
-        ...(typeof i.exclusion_reason === "string" ? { exclusion_reason: i.exclusion_reason } : {}),
-        ...(typeof i.doi === "string" ? { doi: i.doi } : {}),
-        ...(typeof i.pmid === "string" ? { pmid: i.pmid } : {}),
-      }));
+      arr<Record<string, any>>(v)
+        .filter((i) => i && typeof i === "object")
+        .map((i, idx) => ({
+          id: str(i.id) || `x${idx}_${Math.random().toString(36).slice(2, 8)}`,
+          title: str(i.title),
+          abstract: str(i.abstract),
+          decision: validDecision(i.decision),
+          stage: i.stage === "full_text" || i.stage === "title_abstract" ? i.stage : stage,
+          ...(typeof i.note === "string" ? { note: i.note } : {}),
+          ...(typeof i.exclusion_reason === "string" ? { exclusion_reason: i.exclusion_reason } : {}),
+          ...(typeof i.doi === "string" ? { doi: i.doi } : {}),
+          ...(typeof i.pmid === "string" ? { pmid: i.pmid } : {}),
+          // v0.5.5 — dual screening fields
+          ...(Array.isArray(i.reviewerDecisions) ? { reviewerDecisions: i.reviewerDecisions.map((rd: any) => ({
+            reviewerId: str(rd.reviewerId),
+            reviewerName: str(rd.reviewerName),
+            decision: validDecision(rd.decision),
+            ...(typeof rd.note === "string" ? { note: rd.note } : {}),
+            ...(typeof rd.exclusion_reason === "string" ? { exclusion_reason: rd.exclusion_reason } : {}),
+            timestamp: str(rd.timestamp),
+          })).filter((rd: any) => rd.reviewerId && rd.reviewerName) } : {}),
+          ...(i.finalDecision ? { finalDecision: validDecision(i.finalDecision) } : {}),
+          ...(i.conflictStatus === "pending" || i.conflictStatus === "resolved" || i.conflictStatus === "ai_adjudicated" || i.conflictStatus === "discuss" ? { conflictStatus: i.conflictStatus } : {}),
+          ...(i.aiDecision && typeof i.aiDecision === "object" ? { aiDecision: {
+            decision: validDecision(i.aiDecision.decision),
+            reason: str(i.aiDecision.reason),
+            confidence: typeof i.aiDecision.confidence === "number" ? i.aiDecision.confidence : 0.5,
+            timestamp: str(i.aiDecision.timestamp),
+          } } : {}),
+        }));
 
   const validTool = (v: unknown): RobAssessment["tool"] =>
     v === "NOS" || v === "PROBAST" || v === "ROBINS-I" || v === "QUADAS-2" || v === "AMSTAR-2" ? v : "RoB2";

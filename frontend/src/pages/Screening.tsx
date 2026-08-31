@@ -6,6 +6,7 @@ import { Card, Pill, Input, Textarea, EmptyState } from "../components/ui";
 import FunnelChart from "../components/charts/FunnelChart";
 import TeamSelector, { REVIEWER_MEMBERS } from "../components/kokonut/TeamSelector";
 import AIScreeningPanel from "../components/ai/AIScreeningPanel";
+import ConflictDashboard from "../components/ConflictDashboard";
 
 const DECISIONS: ScreenDecision[] = ["include", "exclude", "unsure"];
 const DEC_LABEL: Record<ScreenDecision, string> = { include: "Include", exclude: "Exclude", unsure: "Unsure", unset: "Unset" };
@@ -46,13 +47,16 @@ export default function Screening({ project, onChange }: { project: Project; onC
   const [filter, setFilter] = useState<"all" | ScreenDecision>("all");
   const [query, setQuery] = useState("");
   const [scrollTop, setScrollTop] = useState(0);
-  // Selection is tracked by record id, not by position: a filter change, an
-  // import, a decision update or a delete all reshuffle the visible list, and an
-  // index would silently point at a different record (editing the wrong one).
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   // v0.5.3 — number of independent reviewers screening (dual screening support).
   const [reviewers, setReviewers] = useState(2);
+  // v0.5.5 — active screening tab: single screening, dual screening entry, or conflict dashboard
+  const [tab, setTab] = useState<"screening" | "dual_entry" | "conflicts">("screening");
+  // v0.5.5 — which reviewer is entering decisions in dual-entry mode
+  const [activeReviewerIdx, setActiveReviewerIdx] = useState(0);
+  // v0.5.5 — reviewer assignment for each screening item
+  const [itemReviewers, setItemReviewers] = useState<Record<string, string[]>>({});
   const viewportRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const noticeTimer = useRef<number | null>(null);
@@ -91,6 +95,47 @@ export default function Screening({ project, onChange }: { project: Project; onC
   const setNote = (id: string, note: string) => {
     const next = items.map((it) => (it.id === id ? { ...it, note } : it));
     onChange({ ...project, screening: { ...project.screening, [stage]: next } });
+  };
+
+  // v0.5.5 — dual screening: record a reviewer's decision independently
+  const setReviewerDecision = (id: string, reviewerIdx: number, decision: ScreenDecision, note?: string, exclusion_reason?: string) => {
+    const member = REVIEWER_MEMBERS[reviewerIdx];
+    if (!member) return;
+    const next = items.map((it) => {
+      if (it.id !== id) return it;
+      const existing = it.reviewerDecisions ?? [];
+      const others = existing.filter((d) => d.reviewerId !== member.id);
+      const newDecision = {
+        reviewerId: member.id,
+        reviewerName: member.name,
+        decision,
+        note,
+        exclusion_reason,
+        timestamp: new Date().toISOString(),
+      };
+      const reviewerDecisions = [...others, newDecision];
+      // Determine conflict status
+      const settled = reviewerDecisions.filter((d) => d.decision !== "unset");
+      let conflictStatus: "pending" | "resolved" | "discuss" | undefined;
+      if (settled.length >= 2) {
+        const first = settled[0].decision;
+        const hasConflict = settled.some((d) => d.decision !== first);
+        conflictStatus = hasConflict ? "pending" : "resolved";
+      }
+      return {
+        ...it,
+        reviewerDecisions,
+        conflictStatus,
+        // Auto-set decision when reviewers agree
+        ...(conflictStatus === "resolved" ? { decision } : {}),
+      };
+    });
+    onChange({ ...project, screening: { ...project.screening, [stage]: next } });
+  };
+
+  // v0.5.5 — assign reviewers to an item
+  const assignReviewersToItem = (id: string, reviewerIds: string[]) => {
+    setItemReviewers((prev) => ({ ...prev, [id]: reviewerIds }));
   };
 
   const addSample = () => {
@@ -186,125 +231,236 @@ export default function Screening({ project, onChange }: { project: Project; onC
         }}
       />
 
-      <Card title="Screening" right={
-        <div className="flex items-center gap-2">
-          <StageTabs stage={stage} setStage={(s) => { setStage(s); setSelectedId(null); }} />
-          <button className="btn-ghost" onClick={() => fileRef.current?.click()}>Import</button>
-          <button className="btn-primary" onClick={addSample}>+ Add</button>
-        </div>
-      }>
-        <input
-          ref={fileRef}
-          type="file"
-          className="hidden"
-          accept={CITATION_ACCEPT}
-          multiple
-          onChange={(e) => {
-            const fl = e.target.files;
-            void onImportFiles(fl);
-            e.target.value = "";
-          }}
-        />
-        {notice && (
-          <div className="mb-2 rounded-[3px] border border-[var(--color-border)] bg-white/[0.04] px-2.5 py-1.5 text-[12.5px] text-[var(--color-text)]">
-            {notice}
-          </div>
-        )}
-        <div className="mb-3 flex flex-wrap items-center gap-1.5">
-          {(["all", "include", "exclude", "unsure", "unset"] as const).map((f) => (
-            <button key={f} className={`btn-ghost ${filter === f ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
-              onClick={() => setFilter(f)}>
-              {f === "all" ? `All ${counts.all}` : `${DEC_LABEL[f]} ${counts[f]}`}
-            </button>
-          ))}
-          <Input className="ml-auto w-44" placeholder="Filter titles…" value={query} onChange={(e) => setQuery(e.target.value)} />
-        </div>
+      {/* v0.5.5 — Screening workflow tabs */}
+      <div className="flex items-center gap-1 border-b border-[var(--color-border)] pb-2">
+        <button
+          className={`btn-ghost ${tab === "screening" ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
+          onClick={() => setTab("screening")}
+        >
+          Single Screening
+        </button>
+        <button
+          className={`btn-ghost ${tab === "dual_entry" ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
+          onClick={() => setTab("dual_entry")}
+        >
+          Dual Entry
+        </button>
+        <button
+          className={`btn-ghost ${tab === "conflicts" ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
+          onClick={() => setTab("conflicts")}
+        >
+          Conflicts
+        </button>
+      </div>
 
-        {total === 0 ? (
-          <EmptyState>
-            No records at this stage. Use <span className="text-[var(--color-text)]">+ Add</span> to create screening items, or{" "}
-            <span className="text-[var(--color-text)]">Import</span> a PubMed MEDLINE / RIS / .nbib / CSV / EndNote export.
-          </EmptyState>
-        ) : (
-          <div className="flex gap-3" style={{ height: 520 }}>
-            {/* Virtualized list */}
-            <div ref={viewportRef}
-              onScroll={(e) => setScrollTop((e.target as HTMLDivElement).scrollTop)}
-              className="w-[56%] overflow-y-auto rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)]">
-              <div style={{ height: total * ROW_H, position: "relative" }}>
-                <div style={{ transform: `translateY(${start * ROW_H}px)` }}>
-                  {slice.map((it) => {
-                    const idx = visible.indexOf(it);
-                    return (
-                      <div key={it.id}
-                        onClick={() => setSelectedId(it.id)}
-                        className={`flex cursor-pointer items-start gap-2 border-b border-[var(--color-border)] px-3 py-2 transition-colors ${sel === idx ? "bg-white/[0.06]" : "hover:bg-white/[0.03]"}`}
-                        style={{ height: ROW_H }}>
-                        <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${dotClass(it.decision)}`} />
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-[12.5px] text-[var(--color-text)]">{it.title}</div>
-                          <div className="truncate text-[11px] text-[var(--color-text-muted)]">{it.abstract}</div>
-                        </div>
+      {/* v0.5.5 — Conflict Dashboard */}
+      {tab === "conflicts" && (
+        <ConflictDashboard
+          project={project}
+          onChange={onChange}
+          stage={stage}
+          reviewers={reviewers}
+        />
+      )}
+
+      {/* v0.5.5 — Dual Entry Mode */}
+      {tab === "dual_entry" && (
+        <Card title="Dual Screening Entry" right={
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-[var(--color-text-muted)]">Active reviewer:</span>
+            <select
+              className="rounded-[3px] border border-[var(--color-border)] bg-[var(--input-bg)] px-2 py-1 text-[12px] text-[var(--color-text)]"
+              value={activeReviewerIdx}
+              onChange={(e) => setActiveReviewerIdx(Number(e.target.value))}
+            >
+              {REVIEWER_MEMBERS.slice(0, reviewers).map((m, i) => (
+                <option key={m.id} value={i}>{m.name}</option>
+              ))}
+            </select>
+          </div>
+        }>
+          <div className="mb-3 text-[12px] text-[var(--color-text-muted)]">
+            Record decisions independently for each reviewer. Conflicts will be flagged automatically.
+          </div>
+          <div className="max-h-[400px] space-y-2 overflow-y-auto">
+            {items.length === 0 ? (
+              <EmptyState>No records to screen.</EmptyState>
+            ) : (
+              items.map((it) => {
+                const rDecs = it.reviewerDecisions ?? [];
+                const myDec = rDecs.find((d) => d.reviewerId === REVIEWER_MEMBERS[activeReviewerIdx]?.id);
+                return (
+                  <div key={it.id} className="rounded-lg border border-[var(--color-border)] bg-[var(--input-bg)] p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[12.5px] font-medium text-[var(--color-text)]">{it.title}</div>
+                        <div className="truncate text-[11px] text-[var(--color-text-muted)]">{it.abstract}</div>
                       </div>
-                    );
-                  })}
+                      {it.conflictStatus && (
+                        <Pill tone={it.conflictStatus === "resolved" ? "include" : it.conflictStatus === "pending" ? "unsure" : "neutral"}>
+                          {it.conflictStatus}
+                        </Pill>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {DECISIONS.map((d) => (
+                        <button
+                          key={d}
+                          className={`btn-ghost ${myDec?.decision === d ? "!border-[var(--color-border-strong)]" : ""}`}
+                          style={myDec?.decision === d ? { color: decisionColor(d) } : undefined}
+                          onClick={() => setReviewerDecision(it.id, activeReviewerIdx, d)}
+                        >
+                          {DEC_LABEL[d]}
+                        </button>
+                      ))}
+                    </div>
+                    {myDec?.decision === "exclude" && (
+                      <select
+                        className="mt-2 w-full rounded-[3px] border border-[var(--color-border)] bg-[var(--input-bg)] px-2 py-1.5 text-[12px] text-[var(--color-text)]"
+                        value={myDec.exclusion_reason ?? ""}
+                        onChange={(e) => setReviewerDecision(it.id, activeReviewerIdx, myDec!.decision, myDec!.note, e.target.value)}
+                      >
+                        <option value="">Exclusion reason…</option>
+                        {EXCLUSION_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                    )}
+                    <Textarea
+                      className="mt-2"
+                      rows={2}
+                      placeholder="Note (optional)"
+                      value={myDec?.note ?? ""}
+                      onChange={(e) => setReviewerDecision(it.id, activeReviewerIdx, myDec?.decision ?? "unset", e.target.value, myDec?.exclusion_reason)}
+                    />
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </Card>
+      )}
+
+      {/* v0.5.5 — Single Screening (original) */}
+      {tab === "screening" && (
+        <Card title="Screening" right={
+          <div className="flex items-center gap-2">
+            <StageTabs stage={stage} setStage={(s) => { setStage(s); setSelectedId(null); }} />
+            <button className="btn-ghost" onClick={() => fileRef.current?.click()}>Import</button>
+            <button className="btn-primary" onClick={addSample}>+ Add</button>
+          </div>
+        }>
+          <input
+            ref={fileRef}
+            type="file"
+            className="hidden"
+            accept={CITATION_ACCEPT}
+            multiple
+            onChange={(e) => {
+              const fl = e.target.files;
+              void onImportFiles(fl);
+              e.target.value = "";
+            }}
+          />
+          {notice && (
+            <div className="mb-2 rounded-[3px] border border-[var(--color-border)] bg-white/[0.04] px-2.5 py-1.5 text-[12.5px] text-[var(--color-text)]">
+              {notice}
+            </div>
+          )}
+          <div className="mb-3 flex flex-wrap items-center gap-1.5">
+            {(["all", "include", "exclude", "unsure", "unset"] as const).map((f) => (
+              <button key={f} className={`btn-ghost ${filter === f ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
+                onClick={() => setFilter(f)}>
+                {f === "all" ? `All ${counts.all}` : `${DEC_LABEL[f]} ${counts[f]}`}
+              </button>
+            ))}
+            <Input className="ml-auto w-44" placeholder="Filter titles…" value={query} onChange={(e) => setQuery(e.target.value)} />
+          </div>
+
+          {total === 0 ? (
+            <EmptyState>
+              No records at this stage. Use <span className="text-[var(--color-text)]">+ Add</span> to create screening items, or{" "}
+              <span className="text-[var(--color-text)]">Import</span> a PubMed MEDLINE / RIS / .nbib / CSV / EndNote export.
+            </EmptyState>
+          ) : (
+            <div className="flex gap-3" style={{ height: 520 }}>
+              {/* Virtualized list */}
+              <div ref={viewportRef}
+                onScroll={(e) => setScrollTop((e.target as HTMLDivElement).scrollTop)}
+                className="w-[56%] overflow-y-auto rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)]">
+                <div style={{ height: total * ROW_H, position: "relative" }}>
+                  <div style={{ transform: `translateY(${start * ROW_H}px)` }}>
+                    {slice.map((it) => {
+                      const idx = visible.indexOf(it);
+                      return (
+                        <div key={it.id}
+                          onClick={() => setSelectedId(it.id)}
+                          className={`flex cursor-pointer items-start gap-2 border-b border-[var(--color-border)] px-3 py-2 transition-colors ${sel === idx ? "bg-white/[0.06]" : "hover:bg-white/[0.03]"}`}
+                          style={{ height: ROW_H }}>
+                          <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${dotClass(it.decision)}`} />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-[12.5px] text-[var(--color-text)]">{it.title}</div>
+                            <div className="truncate text-[11px] text-[var(--color-text-muted)]">{it.abstract}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Detail + decisions */}
-            <div className="flex w-[44%] flex-col rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)] p-3">
-              {sel == null ? (
-                <EmptyState>Select a record to screen.</EmptyState>
-              ) : (
-                (() => {
-                  const it = visible[sel];
-                  return (
-                    <>
-                      <div className="mb-2 flex items-center justify-between">
-                        <Pill tone={DEC_TONE[it.decision]}>{DEC_LABEL[it.decision]}</Pill>
-                        <span className="text-[10.5px] text-[var(--color-text-muted)]">{sel + 1} / {total}</span>
-                      </div>
-                      <div className="text-[13px] font-semibold text-[var(--color-text)]">{it.title}</div>
-                      <Textarea className="mt-2 flex-1" rows={8} value={it.abstract} onChange={(e) => {
-                        const next = items.map((x) => (x.id === it.id ? { ...x, abstract: e.target.value } : x));
-                        onChange({ ...project, screening: { ...project.screening, [stage]: next } });
-                      }} />
-                      <Input className="mt-2" placeholder="Note (optional)" value={it.note ?? ""} onChange={(e) => setNote(it.id, e.target.value)} />
-                      {it.decision === "exclude" && (
-                        <select
-                          className="mt-2 w-full rounded-[3px] border border-[var(--color-border)] bg-[var(--input-bg)] px-2 py-1.5 text-[12px] text-[var(--color-text)]"
-                          value={(it as ScreeningItem).exclusion_reason ?? ""}
-                          onChange={(e) => {
-                            const next = items.map((x) => (x.id === it.id ? { ...x, exclusion_reason: e.target.value } : x));
-                            onChange({ ...project, screening: { ...project.screening, [stage]: next } });
-                          }}>
-                          <option value="">Exclusion reason…</option>
-                          {EXCLUSION_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
-                        </select>
-                      )}
-                      {(it as ScreeningItem).exclusion_reason && (
-                        <div className="mt-1 text-[10.5px] text-[var(--color-text-muted)]">Reason: {(it as ScreeningItem).exclusion_reason}</div>
-                      )}
-                      <div className="mt-3 grid grid-cols-3 gap-1.5">
-                        {DECISIONS.map((d) => (
-                          <button key={d} className={`btn-ghost ${it.decision === d ? "!border-[var(--color-border-strong)]" : ""}`}
-                            style={it.decision === d ? { color: decisionColor(d) } : undefined}
-                            onClick={() => setDecision(it.id, d)}>{DEC_LABEL[d]}</button>
-                        ))}
-                      </div>
-                      <div className="mt-2 flex gap-1.5">
-                        <button className="btn-ghost" disabled={sel <= 0} onClick={() => setSelectedId(visible[sel - 1].id)}>↑ Prev</button>
-                        <button className="btn-ghost" disabled={sel >= total - 1} onClick={() => setSelectedId(visible[sel + 1].id)}>Next ↓</button>
-                      </div>
-                    </>
-                  );
-                })()
-              )}
+              {/* Detail + decisions */}
+              <div className="flex w-[44%] flex-col rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)] p-3">
+                {sel == null ? (
+                  <EmptyState>Select a record to screen.</EmptyState>
+                ) : (
+                  (() => {
+                    const it = visible[sel];
+                    return (
+                      <>
+                        <div className="mb-2 flex items-center justify-between">
+                          <Pill tone={DEC_TONE[it.decision]}>{DEC_LABEL[it.decision]}</Pill>
+                          <span className="text-[10.5px] text-[var(--color-text-muted)]">{sel + 1} / {total}</span>
+                        </div>
+                        <div className="text-[13px] font-semibold text-[var(--color-text)]">{it.title}</div>
+                        <Textarea className="mt-2 flex-1" rows={8} value={it.abstract} onChange={(e) => {
+                          const next = items.map((x) => (x.id === it.id ? { ...x, abstract: e.target.value } : x));
+                          onChange({ ...project, screening: { ...project.screening, [stage]: next } });
+                        }} />
+                        <Input className="mt-2" placeholder="Note (optional)" value={it.note ?? ""} onChange={(e) => setNote(it.id, e.target.value)} />
+                        {it.decision === "exclude" && (
+                          <select
+                            className="mt-2 w-full rounded-[3px] border border-[var(--color-border)] bg-[var(--input-bg)] px-2 py-1.5 text-[12px] text-[var(--color-text)]"
+                            value={(it as ScreeningItem).exclusion_reason ?? ""}
+                            onChange={(e) => {
+                              const next = items.map((x) => (x.id === it.id ? { ...x, exclusion_reason: e.target.value } : x));
+                              onChange({ ...project, screening: { ...project.screening, [stage]: next } });
+                            }}>
+                            <option value="">Exclusion reason…</option>
+                            {EXCLUSION_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                          </select>
+                        )}
+                        {(it as ScreeningItem).exclusion_reason && (
+                          <div className="mt-1 text-[10.5px] text-[var(--color-text-muted)]">Reason: {(it as ScreeningItem).exclusion_reason}</div>
+                        )}
+                        <div className="mt-3 grid grid-cols-3 gap-1.5">
+                          {DECISIONS.map((d) => (
+                            <button key={d} className={`btn-ghost ${it.decision === d ? "!border-[var(--color-border-strong)]" : ""}`}
+                              style={it.decision === d ? { color: decisionColor(d) } : undefined}
+                              onClick={() => setDecision(it.id, d)}>{DEC_LABEL[d]}</button>
+                          ))}
+                        </div>
+                        <div className="mt-2 flex gap-1.5">
+                          <button className="btn-ghost" disabled={sel <= 0} onClick={() => setSelectedId(visible[sel - 1].id)}>↑ Prev</button>
+                          <button className="btn-ghost" disabled={sel >= total - 1} onClick={() => setSelectedId(visible[sel + 1].id)}>Next ↓</button>
+                        </div>
+                      </>
+                    );
+                  })()
+                )}
+              </div>
             </div>
-          </div>
-        )}
-      </Card>
+          )}
+        </Card>
+      )}
     </div>
   );
 }
