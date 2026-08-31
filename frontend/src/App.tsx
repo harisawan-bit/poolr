@@ -425,8 +425,6 @@ function Shell() {
     [theme, page, project]
   );
 
-  const connDot =
-    connected === null ? "bg-[var(--color-text-muted)]" : connected ? "bg-[var(--color-include)]" : "bg-[var(--color-exclude)]";
   const connLabel = connected === null ? "connecting…" : connected ? "engine online" : "engine offline";
 
   /* ── Boot splash: greeting cycles while services spin up ── */
@@ -466,6 +464,14 @@ function Shell() {
             <FileDown className="h-3.5 w-3.5" /> Export
           </button>
           <SwitchButton size="sm" showLabel={false} className="ml-1 !h-8 !rounded-lg !px-2" />
+          <ProfileDropdown
+            appVersion={APP_VERSION}
+            className="ml-1"
+            data={{
+              name: profile?.username ?? "Reviewer",
+              email: "local workspace · your data stays here",
+            }}
+          />
         </div>
       </header>
 
@@ -490,56 +496,40 @@ function Shell() {
         </AnimatePresence>
       </main>
 
-      {/* ── Footer — quiet: connection + save state only (version lives in the profile menu) ── */}
-      <footer className="glass z-20 flex items-center justify-between border-t px-4 py-1 text-[10.5px] text-[var(--color-text-muted)]">
-        <span className="flex items-center gap-1.5">
-          <span className={`h-1.5 w-1.5 rounded-full ${connDot}`} />
-          {connLabel}
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className={`h-1.5 w-1.5 rounded-full ${saveState === "error" ? "bg-[var(--color-exclude)]" : saveState === "saved" ? "bg-[var(--color-include)]" : "bg-[#8b8d96]"}`} />
-          {saveLabel}
-        </span>
-      </footer>
-
-      {/* ── Floating dock (sidebar replacement) ── */}
+      {/* ── Floating dock (bottom-center) with status integrated ── */}
       <div className="pointer-events-none fixed inset-x-0 bottom-3 z-30 flex justify-center">
-        <FloatingDock items={dockItems} className="pointer-events-auto" />
-      </div>
-
-      {/* ── Workspace options + profile (bottom-right corner) ── */}
-      <div className="fixed bottom-3 right-3 z-30 flex items-end gap-2">
-        <OptionsDrawer
-          closeText="Close"
-          description="Load sample data, start fresh, or jump straight into analysis. Everything runs locally."
-          icon={Settings2}
-          title="Workspace options"
-          trigger={<button className="btn-ghost flex items-center gap-1.5 rounded-full shadow-lg"><Settings2 className="h-3.5 w-3.5" /> Options</button>}
-        >
-          <div className="space-y-2">
-            <button className="btn-ghost flex w-full items-center gap-2 py-2" onClick={() => { void loadDemo(); }}>
-              <Sparkles className="h-4 w-4" /> Load bundled demo review
-            </button>
-            <button className="btn-ghost flex w-full items-center gap-2 py-2" onClick={() => { void handleNew(); }}>
-              <FilePlus2 className="h-4 w-4" /> Start a new workspace
-            </button>
-            <button className="btn-ghost flex w-full items-center gap-2 py-2" onClick={() => { setPage("meta"); }}>
-              <Sigma className="h-4 w-4" /> Go to Meta-Analysis
-            </button>
-            <div className="mt-3 flex items-center justify-between rounded-xl border border-[var(--card-border)] px-3 py-2">
-              <span className="text-[12.5px]">Theme</span>
-              <SwitchButton size="sm" />
-            </div>
-          </div>
-        </OptionsDrawer>
-
-        <ProfileDropdown
-          appVersion={APP_VERSION}
-          className="[&_[data-radix-popper-content-wrapper]]:bottom-4"
-          data={{
-            name: profile?.username ?? "Reviewer",
-            email: "local workspace · your data stays here",
-          }}
+        <FloatingDock
+          items={dockItems}
+          className="pointer-events-auto"
+          connected={connected}
+          connLabel={connLabel}
+          saveState={saveState}
+          saveLabel={saveLabel}
+          optionsTrigger={
+            <OptionsDrawer
+              closeText="Close"
+              description="Load sample data, start fresh, or jump straight into analysis. Everything runs locally."
+              icon={Settings2}
+              title="Workspace options"
+              trigger={<button className="btn-ghost flex items-center gap-1.5 rounded-full shadow-lg"><Settings2 className="h-3.5 w-3.5" /> Options</button>}
+            >
+              <div className="space-y-2">
+                <button className="btn-ghost flex w-full items-center gap-2 py-2" onClick={() => { void loadDemo(); }}>
+                  <Sparkles className="h-4 w-4" /> Load bundled demo review
+                </button>
+                <button className="btn-ghost flex w-full items-center gap-2 py-2" onClick={() => { void handleNew(); }}>
+                  <FilePlus2 className="h-4 w-4" /> Start a new workspace
+                </button>
+                <button className="btn-ghost flex w-full items-center gap-2 py-2" onClick={() => { setPage("meta"); }}>
+                  <Sigma className="h-4 w-4" /> Go to Meta-Analysis
+                </button>
+                <div className="mt-3 flex items-center justify-between rounded-xl border border-[var(--card-border)] px-3 py-2">
+                  <span className="text-[12.5px]">Theme</span>
+                  <SwitchButton size="sm" />
+                </div>
+              </div>
+            </OptionsDrawer>
+          }
         />
       </div>
 

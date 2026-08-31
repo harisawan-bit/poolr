@@ -4,6 +4,9 @@
  * Adapted from kokonutui SmoothDrawer (@dorianbaffier, MIT) — the spring
  * staggered drawer content animation is preserved; shell is vaul via our
  * ui primitives. In poolr: contextual option panels (PRISMA tools, etc.).
+ *
+ * v0.5.4: replaced zinc-* hardcodes in the icon container with poolr
+ * CSS tokens so the drawer respects the active theme.
  */
 
 import type { LucideIcon } from "lucide-react";
@@ -89,7 +92,7 @@ export default function OptionsDrawer({
               <DrawerTitle className="flex items-center gap-2.5 font-semibold text-xl tracking-tighter">
                 {Icon && (
                   <motion.div variants={itemVariants}>
-                    <div className="rounded-xl bg-gradient-to-br from-zinc-100 to-zinc-200 p-1.5 shadow-inner dark:from-zinc-800 dark:to-zinc-900">
+                    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] p-1.5 shadow-inner">
                       <Icon className="h-5 w-5 text-[var(--color-text)]" />
                     </div>
                   </motion.div>

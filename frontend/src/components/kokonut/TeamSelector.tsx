@@ -5,6 +5,10 @@
  * Ported off next/image + dicebear remote URLs: avatars are poolr's local
  * inline SVG set (same visual family), so the desktop app works offline.
  * In poolr this selects how many reviewers are screening.
+ *
+ * v0.5.4: replaced all zinc-* hardcodes with poolr CSS tokens so the
+ * component respects the active theme. Reduced counter proportion and
+ * tightened spacing for a more professional footprint.
  */
 
 import { Minus, Plus } from "lucide-react";
@@ -134,7 +138,7 @@ export default function TeamSelector({
 
   return (
     <div className={cn("flex w-full flex-col items-center justify-center", className)}>
-      <div className="w-full max-w-xs rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] p-5 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
+      <div className="w-full max-w-xs rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] p-5 shadow-sm">
         <fieldset>
           <legend className="mb-5 w-full font-medium text-[11px] text-[var(--color-text-muted)] uppercase tracking-[0.14em]">
             {label}
@@ -156,7 +160,7 @@ export default function TeamSelector({
                 >
                   <div
                     title={member.name}
-                    className="size-11 overflow-hidden rounded-full border-2 border-white bg-zinc-100 shadow-[0_2px_8px_rgba(0,0,0,0.08)] ring-1 ring-black/5 dark:border-zinc-900 dark:bg-zinc-800 dark:ring-white/5"
+                    className="size-11 overflow-hidden rounded-full border-2 border-[var(--color-surface)] bg-[var(--color-surface-2)] shadow-sm ring-1 ring-[var(--color-border)]"
                   >
                     {member.svg}
                   </div>
@@ -173,7 +177,14 @@ export default function TeamSelector({
           >
             <button
               aria-label="Decrease team size"
-              className="flex size-9 items-center justify-center rounded-xl border border-zinc-200/80 bg-white text-zinc-500 transition-all duration-150 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2 active:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white dark:border-white/8 dark:bg-zinc-900 dark:text-zinc-400 dark:active:bg-zinc-800/80 dark:focus-visible:ring-zinc-500/40 dark:focus-visible:ring-offset-zinc-900 dark:hover:border-white/16 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 dark:disabled:hover:bg-zinc-900"
+              className={cn(
+                "flex size-9 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)]",
+                "transition-all duration-150",
+                "hover:border-[var(--color-border-strong)] hover:bg-[var(--hover-surface)] hover:text-[var(--color-text)]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]/40 focus-visible:ring-offset-2",
+                "active:bg-[var(--color-surface-2)]",
+                "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[var(--color-surface)]"
+              )}
               disabled={peopleCount <= 1}
               onClick={handleDecrement}
               onKeyDown={(e) => handleKeyDown(e, "decrement")}
@@ -188,7 +199,7 @@ export default function TeamSelector({
                   <motion.output
                     animate={{ opacity: 1, y: 0 }}
                     aria-live="polite"
-                    className="block select-none font-semibold text-3xl text-zinc-900 tabular-nums dark:text-zinc-100"
+                    className="block select-none font-semibold text-2xl text-[var(--color-text)] tabular-nums"
                     exit={{
                       opacity: 0,
                       y: directionRef.current * -counterDistance,
@@ -202,14 +213,21 @@ export default function TeamSelector({
                   </motion.output>
                 </AnimatePresence>
               </div>
-              <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
+              <span className="text-[11px] text-[var(--color-text-muted)]">
                 {peopleCount === 1 ? "reviewer" : "reviewers"}
               </span>
             </div>
 
             <button
               aria-label="Increase team size"
-              className="flex size-9 items-center justify-center rounded-xl border border-zinc-200/80 bg-white text-zinc-500 transition-all duration-150 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2 active:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white dark:border-white/8 dark:bg-zinc-900 dark:text-zinc-400 dark:active:bg-zinc-800/80 dark:focus-visible:ring-zinc-500/40 dark:focus-visible:ring-offset-zinc-900 dark:hover:border-white/16 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 dark:disabled:hover:bg-zinc-900"
+              className={cn(
+                "flex size-9 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)]",
+                "transition-all duration-150",
+                "hover:border-[var(--color-border-strong)] hover:bg-[var(--hover-surface)] hover:text-[var(--color-text)]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]/40 focus-visible:ring-offset-2",
+                "active:bg-[var(--color-surface-2)]",
+                "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[var(--color-surface)]"
+              )}
               disabled={peopleCount >= maxTeamSize}
               onClick={handleIncrement}
               onKeyDown={(e) => handleKeyDown(e, "increment")}
