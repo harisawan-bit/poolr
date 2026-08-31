@@ -243,8 +243,52 @@ export interface PrismaFlow {
   included: number | null;
 }
 
+// v0.5.5 — advanced mode data shapes
+export interface NetworkData {
+  treatments: string[];
+  comparisons: { treatmentA: string; treatmentB: string; studies: Study[] }[];
+  results: any | null;
+}
+
+export interface IPDData {
+  datasets: { name: string; rows: Record<string, any>[] }[];
+  results: any | null;
+}
+
+export interface MultilevelData {
+  effectSizes: { study: string; outcome: string; effect: number; variance: number }[];
+  results: any | null;
+}
+
+export interface DiagnosticData {
+  studies: { study: string; tp: number; fp: number; fn: number; tn: number }[];
+  results: any | null;
+}
+
+export interface ProportionsData {
+  studies: { study: string; events: number; n: number }[];
+  results: any | null;
+}
+
+export interface QualitativeData {
+  codes: { id: string; name: string; description: string }[];
+  themes: { id: string; name: string; codes: string[] }[];
+  memos: { id: string; content: string; timestamp: string }[];
+}
+
+// v0.5.5 — AI screening result
+export interface AIScreeningResult {
+  recordId: string;
+  providerId: string;
+  providerName: string;
+  model: string;
+  decision: 'include' | 'exclude' | 'unsure';
+  reason: string;
+  confidence: number;
+}
+
 export interface Project {
-  metadata: { version: string; created: string; title?: string };
+  metadata: { version: string; created: string; title?: string; studyType?: string };
   pico: Pico;
   protocol: ProtocolData;
   screening: { title_abstract: ScreeningItem[]; full_text: ScreeningItem[] };
@@ -253,6 +297,13 @@ export interface Project {
   meta: { results: MetaResponse | null; settings: MetaRequest };
   prisma: { flow: PrismaFlow; grade: GradeOutcomeInput[] };
   search?: { databases: SearchDb[] };
+  // v0.5.5 — advanced modes
+  network?: NetworkData;
+  ipd?: IPDData;
+  multilevel?: MultilevelData;
+  diagnostic?: DiagnosticData;
+  proportions?: ProportionsData;
+  qualitative?: QualitativeData;
 }
 
 export function emptyProject(): Project {

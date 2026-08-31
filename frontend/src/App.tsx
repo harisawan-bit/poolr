@@ -36,6 +36,14 @@ import Extraction from "./pages/Extraction";
 import Rob from "./pages/Rob";
 import Meta from "./pages/Meta";
 import Prisma from "./pages/Prisma";
+import Settings from "./pages/Settings";
+import NetworkMeta from "./pages/NetworkMeta";
+import IPDMeta from "./pages/IPDMeta";
+import MultilevelMeta from "./pages/MultilevelMeta";
+import DiagnosticMeta from "./pages/DiagnosticMeta";
+import ProportionsMeta from "./pages/ProportionsMeta";
+import QualitativeMeta from "./pages/QualitativeMeta";
+import ManualMode from "./pages/ManualMode";
 import DisclaimerModal from "./components/DisclaimerModal";
 
 // v0.5.3 kokonutui component family (adapted, MIT — see file headers)
@@ -59,11 +67,12 @@ const NAV = [
   { key: "rob", label: "Risk of Bias", Icon: ShieldAlert },
   { key: "meta", label: "Meta-Analysis", Icon: Sigma },
   { key: "prisma", label: "PRISMA", Icon: Workflow },
+  { key: "settings", label: "Settings", Icon: Settings2 },
 ] as const;
 
 type PageKey = (typeof NAV)[number]["key"];
 
-const TITLES: Record<PageKey, string> = {
+const TITLES: Record<string, string> = {
   dashboard: "Dashboard",
   protocol: "Protocol / PICO Definition",
   search: "Search Strategy Builder",
@@ -72,6 +81,7 @@ const TITLES: Record<PageKey, string> = {
   rob: "Risk of Bias Assessment",
   meta: "Meta-Analysis",
   prisma: "PRISMA 2020",
+  settings: "Settings",
 };
 
 function LogoMark({ size = 20 }: { size?: number }) {
@@ -380,7 +390,7 @@ function Shell() {
   const blank = useMemo(() => emptyProject(), []);
   const current = project ?? blank;
 
-  const pages: Record<PageKey, () => React.ReactElement> = {
+  const pages: Record<string, () => React.ReactElement> = {
     dashboard: () => <Dashboard project={current} onChange={onProjectChange} />,
     protocol: () => <Protocol project={current} onChange={onProjectChange} />,
     search: () => <Search project={current} onChange={onProjectChange} />,
@@ -389,18 +399,40 @@ function Shell() {
     rob: () => <Rob project={current} onChange={onProjectChange} />,
     meta: () => <Meta project={current} onChange={onProjectChange} />,
     prisma: () => <Prisma project={current} onChange={onProjectChange} />,
+    settings: () => <Settings />,
+    network: () => <NetworkMeta project={current} onChange={onProjectChange} />,
+    ipd: () => <IPDMeta project={current} onChange={onProjectChange} />,
+    multilevel: () => <MultilevelMeta project={current} onChange={onProjectChange} />,
+    diagnostic: () => <DiagnosticMeta project={current} onChange={onProjectChange} />,
+    proportions: () => <ProportionsMeta project={current} onChange={onProjectChange} />,
+    qualitative: () => <QualitativeMeta project={current} onChange={onProjectChange} />,
+    manual: () => <ManualMode project={current} onChange={onProjectChange} />,
   };
+
+  // Dynamic nav based on study type
+  const studyType = current.metadata.studyType || 'standard';
+  const advancedNavItems: Record<string, typeof NAV> = {
+    standard: NAV,
+    network: [...NAV.filter(n => n.key !== 'meta'), { key: 'network', label: 'Network MA', Icon: Sigma }] as any,
+    ipd: [...NAV.filter(n => n.key !== 'meta'), { key: 'ipd', label: 'IPD Meta', Icon: Sigma }] as any,
+    multilevel: [...NAV.filter(n => n.key !== 'meta'), { key: 'multilevel', label: 'Multilevel', Icon: Sigma }] as any,
+    diagnostic: [...NAV.filter(n => n.key !== 'meta'), { key: 'diagnostic', label: 'Diagnostic', Icon: Sigma }] as any,
+    proportions: [...NAV.filter(n => n.key !== 'meta'), { key: 'proportions', label: 'Proportions', Icon: Sigma }] as any,
+    qualitative: [...NAV.filter(n => n.key !== 'meta'), { key: 'qualitative', label: 'Qualitative', Icon: Sigma }] as any,
+    manual: NAV,
+  };
+  const activeNav = advancedNavItems[studyType] || NAV;
 
   /* Dock navigation — the sidebar's replacement. */
   const dockItems: DockItem[] = useMemo(
     () =>
-      NAV.map((n) => ({
+      activeNav.map((n) => ({
         title: n.label,
         icon: <n.Icon className="h-[55%] w-[55%]" />,
         onSelect: () => setPage(n.key),
         active: n.key === page,
       })),
-    [page]
+    [page, activeNav]
   );
 
   /* Command palette actions (Ctrl+K). */

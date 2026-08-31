@@ -5,6 +5,7 @@ import { readTextFiles } from "../lib/api";
 import { Card, Pill, Input, Textarea, EmptyState } from "../components/ui";
 import FunnelChart from "../components/charts/FunnelChart";
 import TeamSelector, { REVIEWER_MEMBERS } from "../components/kokonut/TeamSelector";
+import AIScreeningPanel from "../components/ai/AIScreeningPanel";
 
 const DECISIONS: ScreenDecision[] = ["include", "exclude", "unsure"];
 const DEC_LABEL: Record<ScreenDecision, string> = { include: "Include", exclude: "Exclude", unsure: "Unsure", unset: "Unset" };
@@ -168,6 +169,23 @@ export default function Screening({ project, onChange }: { project: Project; onC
           </p>
         </Card>
       </div>
+
+      {/* v0.5.5 — AI Screening Assistant */}
+      <AIScreeningPanel
+        items={items}
+        pico={project.pico}
+        inclusionCriteria={project.protocol.objective || ""}
+        exclusionCriteria=""
+        onDecisions={(decisions) => {
+          const next = items.map(item => {
+            const d = decisions.find(x => x.id === item.id);
+            if (d) return { ...item, decision: d.decision };
+            return item;
+          });
+          onChange({ ...project, screening: { ...project.screening, [stage]: next } });
+        }}
+      />
+
       <Card title="Screening" right={
         <div className="flex items-center gap-2">
           <StageTabs stage={stage} setStage={(s) => { setStage(s); setSelectedId(null); }} />
