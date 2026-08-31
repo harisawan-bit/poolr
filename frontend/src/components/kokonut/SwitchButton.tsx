@@ -4,6 +4,10 @@
  * Adapted from kokonutui SwitchButton (@dorianbaffier, MIT).
  * Ported off next-themes → poolr's own ThemeProvider; Button from our
  * shadcn-lite primitives; style preserved (gradients, sheen, sun spin).
+ *
+ * v0.5.4: replaced all zinc-* hardcodes with poolr CSS tokens so the
+ * toggle respects the active theme. Reduced animation complexity —
+ * removed the sweep sheen and radial glow (excessive for a toggle).
  */
 
 import { Moon, Sun } from "lucide-react";
@@ -31,18 +35,14 @@ export default function SwitchButton({
   const variants = {
     minimal: [
       "rounded-lg",
-      "bg-gradient-to-b from-zinc-50/95 to-zinc-100/95 dark:from-zinc-800/95 dark:to-zinc-900/95",
-      "hover:from-zinc-100/95 hover:to-zinc-200/95 dark:hover:from-zinc-700/95 dark:hover:to-zinc-800/95",
-      "border border-zinc-200 dark:border-zinc-700/80",
-      "hover:border-zinc-300 dark:hover:border-zinc-600",
-      "shadow-[0_1px_2px_-1px_rgb(0_0_0/0.1),0_1px_3px_-2px_rgb(0_0_0/0.1)] dark:shadow-[0_1px_2px_-1px_rgb(0_0_0/0.3),0_1px_3px_-2px_rgb(0_0_0/0.3)]",
-      "hover:shadow-[0_2px_4px_-2px_rgb(0_0_0/0.15),0_2px_6px_-3px_rgb(0_0_0/0.15)] dark:hover:shadow-[0_2px_4px_-2px_rgb(0_0_0/0.4),0_2px_6px_-3px_rgb(0_0_0/0.4)]",
-      "active:shadow-[0_0px_1px_0_rgb(0_0_0/0.1)] dark:active:shadow-[0_0px_1px_0_rgb(0_0_0/0.2)]",
+      "bg-[var(--color-surface)]",
+      "hover:bg-[var(--color-surface-2)]",
+      "border border-[var(--color-border)]",
+      "hover:border-[var(--color-border-strong)]",
+      "shadow-sm",
+      "hover:shadow-md",
       "transition-all duration-200 ease-out",
-      "backdrop-blur-sm",
       "relative",
-      "after:absolute after:inset-0 after:rounded-lg after:bg-gradient-to-t after:from-white/10 after:to-transparent after:opacity-0 hover:after:opacity-100 after:transition-opacity",
-      "before:absolute before:inset-[1px] before:rounded-[7px] before:bg-gradient-to-b before:from-white/20 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity dark:before:from-white/5",
     ],
   };
 
@@ -58,8 +58,8 @@ export default function SwitchButton({
       className={cn(
         "group relative",
         "transition-all duration-300 ease-out",
-        "text-zinc-600 dark:text-zinc-300",
-        "hover:text-zinc-800 dark:hover:text-zinc-100",
+        "text-[var(--color-text-muted)]",
+        "hover:text-[var(--color-text)]",
         variants[variant],
         sizes[size],
         className
@@ -81,7 +81,7 @@ export default function SwitchButton({
                 size === "default" && "h-4 w-4",
                 size === "lg" && "h-5 w-5",
                 "group-hover:scale-110",
-                "transform-gpu text-zinc-300 group-hover:text-zinc-100",
+                "transform-gpu text-[var(--color-text-muted)] group-hover:text-[var(--color-text)]",
                 "group-active:scale-95"
               )}
             />
@@ -94,7 +94,7 @@ export default function SwitchButton({
                 "group-hover:rotate-[360deg] group-hover:scale-110",
                 "transform-gpu",
                 "drop-shadow-[0_0_12px_rgba(252,211,77,0.3)]",
-                "text-amber-500 group-hover:text-amber-600",
+                "text-[var(--color-unsure)] group-hover:text-[var(--color-unsure)]",
                 "group-active:scale-95"
               )}
             />
@@ -104,50 +104,15 @@ export default function SwitchButton({
           <span className={cn("relative font-medium capitalize", "transition-opacity duration-300 ease-out")}>
             <span className={cn("absolute inset-0", theme === "dark" ? "opacity-100" : "opacity-0", "transition-opacity duration-300 ease-out")}>
               Dark
-              <span className={cn(
-                "absolute -bottom-px left-0 h-px w-full",
-                "bg-linear-to-r from-zinc-400/0 via-zinc-400/50 to-zinc-400/0",
-                "dark:from-zinc-600/0 dark:via-zinc-600/50 dark:to-zinc-600/0",
-                "opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-              )} />
             </span>
             <span className={cn("absolute inset-0", theme === "dark" ? "opacity-0" : "opacity-100", "transition-opacity duration-300 ease-out")}>
               Light
-              <span className={cn(
-                "absolute -bottom-px left-0 h-px w-full",
-                "bg-linear-to-r from-zinc-400/0 via-zinc-400/50 to-zinc-400/0",
-                "dark:from-zinc-600/0 dark:via-zinc-600/50 dark:to-zinc-600/0",
-                "opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-              )} />
             </span>
             {/* keeps layout width stable while the two labels cross-fade */}
             <span className="opacity-0">Light</span>
           </span>
         )}
       </div>
-      {/* sweep sheen on hover */}
-      <span
-        className={cn(
-          "absolute inset-0 overflow-hidden rounded-lg pointer-events-none z-[1]",
-        )}
-      >
-        <span
-          className={cn(
-            "absolute inset-y-0 -left-full w-full bg-gradient-to-r from-zinc-500/0 via-zinc-500/[0.12] to-zinc-500/0 dark:from-white/0 dark:via-white/[0.05]",
-            "group-hover:translate-x-[200%] translate-x-[-100%]",
-            "transition-transform duration-500 ease-in-out"
-          )}
-        />
-      </span>
-      <span
-        className={cn(
-          "absolute inset-0 opacity-0 group-hover:opacity-100",
-          "bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.12),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.07),transparent_70%)]",
-          "transition-opacity duration-500",
-          "pointer-events-none",
-          "z-[2]"
-        )}
-      />
     </Button>
   );
 }

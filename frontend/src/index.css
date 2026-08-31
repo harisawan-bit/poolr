@@ -6,7 +6,7 @@
 @import "@fontsource/inter/700.css";
 
 /* ── poolr design tokens ──────────────────────────────────────────────
-   v0.5.3: full light + dark theming. Every surface reads a CSS variable;
+   v0.5.4: full light + dark theming. Every surface reads a CSS variable;
    `html.dark` flips the set. Dark palette is byte-identical to v0.5.2's
    premium monochrome dark, so the default look is unchanged.
    Tailwind v4: class-based dark variants keyed off `.dark` on <html>. */

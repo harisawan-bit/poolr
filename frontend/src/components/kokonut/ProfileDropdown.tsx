@@ -5,6 +5,11 @@
  * Ported off next/image + next/link + custom Gemini icon. The "bending
  * line" indicator and gradient-ring avatar are preserved.
  *
+ * v0.5.4: replaced all zinc-* hardcodes with poolr CSS tokens so the
+ * component respects the active theme instead of hardcoding a light-gray
+ * palette that clashed with the dark theme. Removed the gradient avatar
+ * ring in favor of a flat monochrome ring consistent with poolr's brand.
+ *
  * In poolr this is the account drawer in the dock: profile, appearance
  * (theme), version & license live HERE — not screamed across the shell.
  */
@@ -74,20 +79,24 @@ export default function ProfileDropdown({
         <div className="group relative">
           <DropdownMenuTrigger asChild>
             <button
-              className="flex items-center gap-3 rounded-2xl border border-zinc-200/60 bg-white p-2 transition-all duration-200 hover:border-zinc-300 hover:bg-zinc-50/80 hover:shadow-sm focus:outline-none dark:border-zinc-800/60 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-800/40"
+              className={cn(
+                "flex items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-2 transition-all duration-200",
+                "hover:border-[var(--color-border-strong)] hover:bg-[var(--hover-surface)] hover:shadow-sm",
+                "focus:outline-none"
+              )}
               type="button"
             >
               <div className="flex-1 text-left">
-                <div className="font-medium text-sm text-zinc-900 leading-tight tracking-tight dark:text-zinc-100">
+                <div className="font-medium text-sm text-[var(--color-text)] leading-tight tracking-tight">
                   {data.name}
                 </div>
-                <div className="text-xs text-zinc-500 leading-tight tracking-tight dark:text-zinc-400">
+                <div className="text-xs text-[var(--color-text-muted)] leading-tight tracking-tight">
                   {data.email}
                 </div>
               </div>
               <div className="relative">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 p-0.5">
-                  <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white dark:bg-zinc-900">
+                <div className="h-10 w-10 rounded-full border border-[var(--color-border-strong)] bg-[var(--color-surface-2)] p-0.5">
+                  <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[var(--color-surface)]">
                     {data.avatarSvg ?? (
                       <User className="h-5 w-5 text-[var(--color-text-muted)]" />
                     )}
@@ -109,8 +118,8 @@ export default function ProfileDropdown({
               className={cn(
                 "transition-all duration-200",
                 isOpen
-                  ? "scale-110 text-blue-500 dark:text-blue-400"
-                  : "text-zinc-400 group-hover:text-zinc-600 dark:text-zinc-500 dark:group-hover:text-zinc-300"
+                  ? "scale-110 text-[var(--color-accent)]"
+                  : "text-[var(--color-text-muted)] group-hover:text-[var(--color-text)]"
               )}
               fill="none"
               height="24"
@@ -128,19 +137,22 @@ export default function ProfileDropdown({
             <div className="space-y-1">
               {menuItems.map((item) => (
                 <DropdownMenuItem
-                  className="group cursor-pointer rounded-xl border border-transparent p-3 transition-all duration-200 hover:border-zinc-200/50 hover:bg-zinc-100/80 hover:shadow-sm dark:hover:border-zinc-700/50 dark:hover:bg-zinc-800/60"
+                  className={cn(
+                    "group cursor-pointer rounded-xl border border-transparent p-3 transition-all duration-200",
+                    "hover:border-[var(--color-border)] hover:bg-[var(--hover-surface)] hover:shadow-sm"
+                  )}
                   key={item.label}
                   onSelect={() => item.onSelect?.()}
                 >
                   <div className="flex flex-1 items-center gap-2">
                     {item.icon}
-                    <span className="whitespace-nowrap font-medium text-sm text-zinc-900 leading-tight tracking-tight transition-colors group-hover:text-zinc-950 dark:text-zinc-100 dark:group-hover:text-zinc-50">
+                    <span className="whitespace-nowrap font-medium text-sm text-[var(--color-text)] leading-tight tracking-tight transition-colors group-hover:text-[var(--color-text)]">
                       {item.label}
                     </span>
                   </div>
                   <div className="ml-auto flex-shrink-0">
                     {item.value && (
-                      <span className="rounded-md border border-blue-500/10 bg-blue-50 px-2 py-1 font-medium text-xs tracking-tight text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+                      <span className="rounded-md border border-[var(--color-accent)]/10 bg-[var(--color-accent)]/10 px-2 py-1 font-medium text-xs tracking-tight text-[var(--color-accent)]">
                         {item.value}
                       </span>
                     )}
@@ -149,10 +161,10 @@ export default function ProfileDropdown({
               ))}
             </div>
 
-            <DropdownMenuSeparator className="bg-gradient-to-r from-transparent via-zinc-200 to-transparent dark:via-zinc-800" />
+            <DropdownMenuSeparator className="bg-[var(--color-border)]" />
 
             {/* Version + license — quiet, exactly where they belong */}
-            <div className="flex items-center justify-between px-3 py-1.5 text-[11px] text-zinc-400 dark:text-zinc-500">
+            <div className="flex items-center justify-between px-3 py-1.5 text-[11px] text-[var(--color-text-muted)]">
               <span>poolr v{appVersion} · MIT License</span>
               {theme === "dark" ? (
                 <Moon className="h-3.5 w-3.5" aria-hidden="true" />
@@ -163,11 +175,14 @@ export default function ProfileDropdown({
 
             <DropdownMenuItem asChild>
               <button
-                className="group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-transparent bg-red-500/10 p-3 transition-all duration-200 hover:border-red-500/30 hover:bg-red-500/20 hover:shadow-sm"
+                className={cn(
+                  "group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-transparent p-3 transition-all duration-200",
+                  "border-[var(--color-exclude)]/20 bg-[var(--color-exclude)]/10 hover:border-[var(--color-exclude)]/30 hover:bg-[var(--color-exclude)]/20 hover:shadow-sm"
+                )}
                 type="button"
               >
-                <LogOut className="h-4 w-4 text-red-500 group-hover:text-red-600" />
-                <span className="font-medium text-red-500 text-sm group-hover:text-red-600">Close Workspace</span>
+                <LogOut className="h-4 w-4 text-[var(--color-exclude)] group-hover:text-[var(--color-exclude)]" />
+                <span className="font-medium text-[var(--color-exclude)] text-sm group-hover:text-[var(--color-exclude)]">Close Workspace</span>
               </button>
             </DropdownMenuItem>
           </DropdownMenuContent>
