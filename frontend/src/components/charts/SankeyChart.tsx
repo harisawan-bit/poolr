@@ -4,6 +4,10 @@
  * SankeyChart — poolr-local PRISMA 2020 flow diagram, inspired by Bklit's
  * sankey (node/link/tooltip composition). Pure SVG + motion, house tokens.
  * Stages: Identification → Screening → Included, with exclusions.
+ *
+ * v0.5.4: tightened column spacing, balanced node heights, and a compact
+ * viewBox that scales proportionally within its card instead of stretching
+ * to fill the full width.
  */
 
 import { useId } from "react";
@@ -32,8 +36,8 @@ interface SankeyChartProps {
   className?: string;
 }
 
-const NODE_W = 12;
-const NODE_GAP_Y = 8;
+const NODE_W = 14;
+const NODE_GAP_Y = 10;
 
 export function SankeyChart({ data, className }: SankeyChartProps) {
   const reduced = useReducedMotion();
@@ -48,9 +52,10 @@ export function SankeyChart({ data, className }: SankeyChartProps) {
     columns.get(c)!.push(n);
   });
 
-  const W = 560;
-  const H = 300;
-  const colX = [40, 260, 480];
+  // Compact viewBox — proportional to a card, not full-bleed
+  const W = 420;
+  const H = 200;
+  const colX = [30, 165, 290];
 
   // Node geometry: heights proportional to value
   interface Geom {
@@ -65,10 +70,10 @@ export function SankeyChart({ data, className }: SankeyChartProps) {
   columns.forEach((nodesInCol, col) => {
     const total = nodesInCol.reduce((s, n) => s + (n.value ?? 1), 0);
     const usableH = H - NODE_GAP_Y * (nodesInCol.length - 1);
-    let y = 20;
+    let y = 16;
     nodesInCol.forEach((n) => {
-      const h = Math.max(14, ((n.value ?? 1) / Math.max(total, 1)) * usableH * 0.55);
-      geoms.push({ node: n, index: data.nodes.indexOf(n), x: colX[col] ?? 40, y, h, col });
+      const h = Math.max(18, ((n.value ?? 1) / Math.max(total, 1)) * usableH * 0.7);
+      geoms.push({ node: n, index: data.nodes.indexOf(n), x: colX[col] ?? 30, y, h, col });
       y += h + NODE_GAP_Y;
     });
   });
@@ -82,7 +87,7 @@ export function SankeyChart({ data, className }: SankeyChartProps) {
         : "var(--chart-1)";
 
   return (
-    <div className={cn("relative w-full", className)}>
+    <div className={cn("relative w-full max-w-[460px]", className)}>
       <svg aria-label="PRISMA flow diagram" role="img" viewBox={`0 0 ${W} ${H}`} className="h-auto w-full">
         <defs>
           {data.links.map((l, i) => (
@@ -106,10 +111,10 @@ export function SankeyChart({ data, className }: SankeyChartProps) {
           const s = geomOf(l.source);
           const t = geomOf(l.target);
           const maxV = Math.max(...data.links.map((x) => x.value), 1);
-          const th = Math.max(3, (l.value / maxV) * 60);
+          const th = Math.max(4, (l.value / maxV) * 40);
           const sy = s.y + s.h / 2;
           const ty = t.y + t.h / 2;
-          const d = `M${s.x + NODE_W},${sy - th / 2} C${s.x + NODE_W + 80},${sy - th / 2} ${t.x - 80},${ty - th / 2} ${t.x},${ty - th / 2} L${t.x},${ty + th / 2} C${t.x - 80},${ty + th / 2} ${s.x + NODE_W + 80},${sy + th / 2} ${s.x + NODE_W},${sy + th / 2} Z`;
+          const d = `M${s.x + NODE_W},${sy - th / 2} C${s.x + NODE_W + 50},${sy - th / 2} ${t.x - 50},${ty - th / 2} ${t.x},${ty - th / 2} L${t.x},${ty + th / 2} C${t.x - 50},${ty + th / 2} ${s.x + NODE_W + 50},${sy + th / 2} ${s.x + NODE_W},${sy + th / 2} Z`;
           return (
             <motion.path
               d={d}
@@ -157,7 +162,6 @@ export function SankeyChart({ data, className }: SankeyChartProps) {
           </motion.g>
         ))}
       </svg>
-
     </div>
   );
 }
