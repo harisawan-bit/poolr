@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Card, Input, Button, Pill } from '../components/ui';
-import { Search, Download, Upload } from 'lucide-react';
+import { Card, Button, Input } from '../components/ui';
+import { Search } from 'lucide-react';
 
 export default function GreyLiterature() {
   const [query, setQuery] = useState('');

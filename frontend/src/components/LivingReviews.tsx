@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Card, Button, Input, Pill } from '../components/ui';
-import { RefreshCw, Clock, CheckCircle2, AlertCircle, Settings2 } from 'lucide-react';
+import { Card, Button } from '../components/ui';
+import { RefreshCw, Clock, CheckCircle2 } from 'lucide-react';
 
 interface LivingReviewConfig {
   enabled: boolean;

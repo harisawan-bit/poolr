@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, Select, Pill, EmptyState } from '../components/ui';
+import { Card, Input, Select } from '../components/ui';
 
 const JBI_QUAL_ITEMS = [
   { id: 'q1', text: 'Is there congruity between the stated philosophical perspective and the research methodology?' },

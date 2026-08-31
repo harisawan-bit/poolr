@@ -29,9 +29,18 @@ interface Props {
   reviewers: number;
 }
 
+interface ReviewerDecision {
+  reviewerId: string;
+  reviewerName: string;
+  decision: ScreenDecision;
+  note?: string;
+  exclusion_reason?: string;
+  timestamp: string;
+}
+
 interface ConflictRecord {
   item: ScreeningItem;
-  decisions: { reviewerId: string; reviewerName: string; decision: ScreenDecision; note?: string; exclusion_reason?: string; timestamp: string }[];
+  decisions: ReviewerDecision[];
   hasConflict: boolean;
   aiSuggestion?: { decision: ScreenDecision; reason: string; confidence: number } | null;
 }
@@ -87,7 +96,8 @@ function detectConflicts(items: ScreeningItem[]): ConflictRecord[] {
 
 /* ── component ── */
 
-export default function ConflictDashboard({ project, onChange, stage, reviewers }: Props) {
+export default function ConflictDashboard(props: Props) {
+  const { project, onChange, stage } = props;
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [processing, setProcessing] = useState(false);
@@ -113,14 +123,14 @@ export default function ConflictDashboard({ project, onChange, stage, reviewers 
   }, [conflictRecords]);
 
   const updateItem = useCallback(
-      (id: string, patch: Partial<ScreeningItem>) => {
-        const next = items.map((it) => (it.id === id ? { ...it, ...patch } : it));
-        const newScreening = { ...project.screening };
-        newScreening[stage] = next;
-        onChange({ ...project, screening: newScreening });
-      },
-      [items, onChange, project, stage]
-    );
+    (id: string, patch: Partial<ScreeningItem>) => {
+      const next = items.map((it) => (it.id === id ? { ...it, ...patch } : it));
+      const newScreening = { ...project.screening };
+      newScreening[stage] = next;
+      onChange({ ...project, screening: newScreening });
+    },
+    [items, onChange, project, stage]
+  );
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -166,15 +176,13 @@ export default function ConflictDashboard({ project, onChange, stage, reviewers 
       const rec = records[i];
       setProgress({ current: i + 1, total: records.length });
 
-      const prompt = `You are a systematic review adjudicator. Two reviewers DISAGREED on this record. Act as the third reviewer to break the tie.
-
-Record: ${rec.item.title}
-Abstract: ${rec.item.abstract}
-
-Reviewer 1 (${rec.decisions[0]?.reviewerName}): ${rec.decisions[0]?.decision}${rec.decisions[0]?.note ? ` — "${rec.decisions[0].note}"` : ""}
-Reviewer 2 (${rec.decisions[1]?.reviewerName}): ${rec.decisions[1]?.decision}${rec.decisions[1]?.note ? ` — "${rec.decisions[1].note}"` : ""}
-
-Pick a final decision. Respond with ONLY JSON: {"decision": "include|exclude|unsure", "reason": "brief", "confidence": 0.0-1.0}`;
+      const r1Name = rec.decisions[0]?.reviewerName || "R1";
+      const r1Dec = rec.decisions[0]?.decision || "unset";
+      const r1Note = rec.decisions[0]?.note ? ' — "' + rec.decisions[0].note + '"' : "";
+      const r2Name = rec.decisions[1]?.reviewerName || "R2";
+      const r2Dec = rec.decisions[1]?.decision || "unset";
+      const r2Note = rec.decisions[1]?.note ? ' — "' + rec.decisions[1].note + '"' : "";
+      const prompt = 'You are a systematic review adjudicator. Two reviewers DISAGREED on this record. Act as the third reviewer to break the tie.\n\nRecord: ' + rec.item.title + '\nAbstract: ' + rec.item.abstract + '\n\nReviewer 1 (' + r1Name + '): ' + r1Dec + r1Note + '\nReviewer 2 (' + r2Name + '): ' + r2Dec + r2Note + '\n\nPick a final decision. Respond with ONLY JSON: {"decision": "include|exclude|unsure", "reason": "brief", "confidence": 0.0-1.0}';
 
       try {
         const responses = await callAIMultiProvider(providers, [
@@ -196,7 +204,7 @@ Pick a final decision. Respond with ONLY JSON: {"decision": "include|exclude|uns
             decision,
           });
         }
-      } catch {
+      } catch (_e) {
         // skip on failure — non-fatal
       }
     }
@@ -246,7 +254,8 @@ Pick a final decision. Respond with ONLY JSON: {"decision": "include|exclude|uns
     }));
 
     const csv = toCsv(rows);
-    downloadText(`conflict-report-${stage}-${new Date().toISOString().slice(0, 10)}.csv`, csv, "text/csv");
+    const dateStr = new Date().toISOString().slice(0, 10);
+    downloadText("conflict-report-" + stage + "-" + dateStr + ".csv", csv, "text/csv");
   };
 
   /* ── render ── */
@@ -299,28 +308,31 @@ Pick a final decision. Respond with ONLY JSON: {"decision": "include|exclude|uns
       >
         {/* Filter tabs */}
         <div className="mb-3 flex flex-wrap items-center gap-1.5">
-          {(["all", "pending", "resolved", "ai_adjudicated", "discuss"] as const).map((f) => (
-            <button
-              key={f}
-              className={`btn-ghost ${filter === f ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
-              onClick={() => setFilter(f)}
-            >
-              {f === "all"
-                ? "All"
-                : f === "ai_adjudicated"
-                ? "AI Adj."
-                : f.charAt(0).toUpperCase() + f.slice(1)}{" "}
-              {f === "all"
-                ? stats.total
-                : f === "pending"
-                ? stats.pending
-                : f === "resolved"
-                ? stats.resolved
-                : f === "ai_adjudicated"
-                ? stats.aiAdj
-                : stats.discuss}
-            </button>
-          ))}
+          {(["all", "pending", "resolved", "ai_adjudicated", "discuss"] as const).map((f) => {
+            const activeCls = filter === f ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : "";
+            return (
+              <button
+                key={f}
+                className={"btn-ghost " + activeCls}
+                onClick={() => setFilter(f)}
+              >
+                {f === "all"
+                  ? "All"
+                  : f === "ai_adjudicated"
+                  ? "AI Adj."
+                  : f.charAt(0).toUpperCase() + f.slice(1)}{" "}
+                {f === "all"
+                  ? stats.total
+                  : f === "pending"
+                  ? stats.pending
+                  : f === "resolved"
+                  ? stats.resolved
+                  : f === "ai_adjudicated"
+                  ? stats.aiAdj
+                  : stats.discuss}
+              </button>
+            );
+          })}
           <div className="ml-auto flex items-center gap-2">
             <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-[var(--color-text-muted)]">
               <input type="checkbox" checked={selectedIds.size === filtered.length && filtered.length > 0} onChange={selectAll} />
@@ -359,7 +371,7 @@ Pick a final decision. Respond with ONLY JSON: {"decision": "include|exclude|uns
             <div className="h-2 rounded-full bg-[var(--color-border)]">
               <div
                 className="h-full rounded-full bg-[var(--color-accent)] transition-all"
-                style={{ width: `${(progress.current / progress.total) * 100}%` }}
+                style={{ width: ((progress.current / progress.total) * 100) + "%" }}
               />
             </div>
           </div>
@@ -410,10 +422,12 @@ function ConflictCard({ record, expanded, selected, onToggleExpand, onToggleSele
   const status = item.conflictStatus ?? "pending";
 
   const statusTone = status === "resolved" ? "include" : status === "ai_adjudicated" ? "accent" : status === "discuss" ? "exclude" : "unsure";
-
   const cardCls = selected
     ? "rounded-lg border border-[var(--color-accent)] bg-[var(--color-surface-2)]"
     : "rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)]";
+  const chevronCls = expanded
+    ? "h-3.5 w-3.5 shrink-0 text-[var(--color-text-muted)] transition-transform rotate-180"
+    : "h-3.5 w-3.5 shrink-0 text-[var(--color-text-muted)] transition-transform";
 
   return (
     <div className={cardCls}>
@@ -433,9 +447,7 @@ function ConflictCard({ record, expanded, selected, onToggleExpand, onToggleSele
 
         <Pill tone={statusTone}>{status === "ai_adjudicated" ? "AI Adj." : status}</Pill>
 
-        <ChevronDown
-          className={`h-3.5 w-3.5 shrink-0 text-[var(--color-text-muted)] transition-transform ${expanded ? "rotate-180" : ""}`}
-        />
+        <ChevronDown className={chevronCls} />
       </div>
 
       {/* Expanded detail */}
@@ -452,6 +464,7 @@ function ConflictCard({ record, expanded, selected, onToggleExpand, onToggleSele
               <div className="grid grid-cols-2 gap-3">
                 {decisions.slice(0, 2).map((d, idx) => {
                   const Icon = DECISION_ICON[d.decision];
+                  const color = DECISION_COLOR[d.decision];
                   return (
                     <div key={idx} className="rounded-lg border border-[var(--color-border)] bg-[var(--input-bg)] p-2.5">
                       <div className="mb-1.5 flex items-center gap-1.5">
@@ -459,8 +472,8 @@ function ConflictCard({ record, expanded, selected, onToggleExpand, onToggleSele
                         <span className="text-[11px] font-medium text-[var(--color-text)]">{d.reviewerName}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <Icon className="h-4 w-4" style={{ color: DECISION_COLOR[d.decision] }} />
-                        <span className="text-[12px] font-semibold" style={{ color: DECISION_COLOR[d.decision] }}>
+                        <Icon className="h-4 w-4" style={{ color }} />
+                        <span className="text-[12px] font-semibold" style={{ color }}>
                           {DECISION_LABEL[d.decision]}
                         </span>
                       </div>

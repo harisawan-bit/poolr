@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, Input, Button } from '../components/ui';
+import { Card, Button, Input } from '../../components/ui';
 import { Search } from 'lucide-react';
 
 interface MeSHResult {

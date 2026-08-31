@@ -55,8 +55,6 @@ export default function Screening({ project, onChange }: { project: Project; onC
   const [tab, setTab] = useState<"screening" | "dual_entry" | "conflicts">("screening");
   // v0.5.5 — which reviewer is entering decisions in dual-entry mode
   const [activeReviewerIdx, setActiveReviewerIdx] = useState(0);
-  // v0.5.5 — reviewer assignment for each screening item
-  const [itemReviewers, setItemReviewers] = useState<Record<string, string[]>>({});
   const viewportRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const noticeTimer = useRef<number | null>(null);
@@ -131,11 +129,6 @@ export default function Screening({ project, onChange }: { project: Project; onC
       };
     });
     onChange({ ...project, screening: { ...project.screening, [stage]: next } });
-  };
-
-  // v0.5.5 — assign reviewers to an item
-  const assignReviewersToItem = (id: string, reviewerIds: string[]) => {
-    setItemReviewers((prev) => ({ ...prev, [id]: reviewerIds }));
   };
 
   const addSample = () => {
@@ -289,6 +282,7 @@ export default function Screening({ project, onChange }: { project: Project; onC
               items.map((it) => {
                 const rDecs = it.reviewerDecisions ?? [];
                 const myDec = rDecs.find((d) => d.reviewerId === REVIEWER_MEMBERS[activeReviewerIdx]?.id);
+                const statusTone = it.conflictStatus === "resolved" ? "include" : it.conflictStatus === "pending" ? "unsure" : "neutral";
                 return (
                   <div key={it.id} className="rounded-lg border border-[var(--color-border)] bg-[var(--input-bg)] p-3">
                     <div className="mb-2 flex items-center justify-between">
@@ -297,7 +291,7 @@ export default function Screening({ project, onChange }: { project: Project; onC
                         <div className="truncate text-[11px] text-[var(--color-text-muted)]">{it.abstract}</div>
                       </div>
                       {it.conflictStatus && (
-                        <Pill tone={it.conflictStatus === "resolved" ? "include" : it.conflictStatus === "pending" ? "unsure" : "neutral"}>
+                        <Pill tone={statusTone}>
                           {it.conflictStatus}
                         </Pill>
                       )}

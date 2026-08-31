@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, Button, Input, Pill } from '../components/ui';
+import { Card, Button, Pill } from '../components/ui';
 import { FileText, Upload, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { getActiveProviders, callAI } from '../lib/ai';
 
