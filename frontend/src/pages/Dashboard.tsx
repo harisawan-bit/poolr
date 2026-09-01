@@ -47,13 +47,23 @@ export default function Dashboard({ project }: { project: Project; onChange: (p:
       </Card>
 
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-        {kpis.map((kpi) => (
-          <div key={kpi.k} className="card p-3">
-            <div className="text-[20px] font-semibold tabular-nums">{kpi.v}</div>
-            <div className="mt-0.5 text-[10.5px] text-[var(--color-text-muted)]">{kpi.k}</div>
-          </div>
-        ))}
-      </div>
+              {kpis.map((kpi) => {
+                const isGood = kpi.k === "Screening incl." || kpi.k === "RoB done" || kpi.k === "PICO";
+                const isBad = kpi.k === "Screening excl.";
+                const isNeutral = !isGood && !isBad;
+                const valueColor = isGood && kpi.v !== "0" && kpi.v !== "empty" 
+                  ? "text-[var(--color-include)]" 
+                  : isBad && kpi.v !== "0" 
+                    ? "text-[var(--color-exclude)]" 
+                    : "text-[var(--color-text)]";
+                return (
+                  <div key={kpi.k} className="card p-3">
+                    <div className={`text-[20px] font-semibold tabular-nums ${valueColor}`}>{kpi.v}</div>
+                    <div className="mt-0.5 text-[10.5px] text-[var(--color-text-muted)]">{kpi.k}</div>
+                  </div>
+                );
+              })}
+            </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <Card title="Screening progress">
