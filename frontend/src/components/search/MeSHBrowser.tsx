@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Card, Button, Input } from '../../components/ui';
-import { Search } from 'lucide-react';
+import { Card, Button, Input } from '../ui';
+import { Search, Loader2 } from 'lucide-react';
 
 interface MeSHResult {
   term: string;
@@ -12,19 +12,45 @@ export default function MeSHBrowser({ onSelect }: { onSelect: (term: string) => 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<MeSHResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const search = async () => {
     if (!query.trim()) return;
     setLoading(true);
+    setError(null);
     try {
-      // In production, this would call the engine's MeSH endpoint
-      // For now, show mock results
-      setResults([
-        { term: query, tree: 'C23.888.852', description: `Diseases related to ${query}` },
-        { term: `${query} therapy`, tree: 'E02.319', description: `Therapeutic approaches for ${query}` },
-        { term: `${query} diagnosis`, tree: 'E01.371', description: `Diagnostic methods for ${query}` },
-        { term: `${query} epidemiology`, tree: 'N06.850', description: `Epidemiological data on ${query}` },
-      ]);
+      // Search MeSH via NCBI E-utilities API
+      const searchRes = await fetch(
+        `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=mesh&term=${encodeURIComponent(query)}&retmode=json&retmax=10`
+      );
+      const searchData = await searchRes.json();
+      const ids = searchData.esearchresult?.idlist || [];
+
+      if (ids.length === 0) {
+        setResults([]);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch details for each ID
+      const detailsRes = await fetch(
+        `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=mesh&id=${ids.join(',')}&retmode=json`
+      );
+      const detailsData = await detailsRes.json();
+
+      const meshResults: MeSHResult[] = ids.map((id: string) => {
+        const summary = detailsData.result?.[id];
+        return {
+          term: summary?.name || summary?.term || query,
+          tree: summary?.treeNumber?.[0] || summary?.tree?.[0] || 'N/A',
+          description: summary?.summary || summary?.ds_meshterms?.[0] || '',
+        };
+      });
+
+      setResults(meshResults);
+    } catch (err) {
+      setError('Failed to search MeSH. Please check your internet connection.');
+      setResults([]);
     } finally {
       setLoading(false);
     }
@@ -41,9 +67,15 @@ export default function MeSHBrowser({ onSelect }: { onSelect: (term: string) => 
             onKeyDown={e => e.key === 'Enter' && search()}
           />
           <Button variant="outline" onClick={search} disabled={loading}>
-            <Search className="h-3.5 w-3.5" />
+            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
           </Button>
         </div>
+
+        {error && (
+          <div className="rounded-[3px] border border-[var(--color-exclude)]/30 bg-[var(--color-exclude)]/10 px-2.5 py-1.5 text-[12px] text-[var(--color-exclude)]">
+            {error}
+          </div>
+        )}
 
         {results.length > 0 && (
           <div className="space-y-1">
