@@ -322,8 +322,9 @@ export function emptyProject(): Project {
     meta: { results: null, settings: { model: "random", measure: "OR", method: "DL", subgroup: "none", pub_bias: "none", data: [] } },
     prisma: { flow: { identified: null, duplicates: null, screened: null, excludedTa: null, fullText: null, excludedFt: null, included: null }, grade: [] },
     search: { databases: [] },
-  };
-}
+        qualitative: { codes: [], themes: [], memos: [] },
+      };
+    }
 
 /**
  * Coerce anything that came off disk / the engine / a user-picked .json into a
