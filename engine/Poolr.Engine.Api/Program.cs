@@ -199,6 +199,20 @@ app.MapPost("/api/grade", ([FromBody] GradeRequest req) =>
     }
 });
 
+// v0.5.7 — Prediction interval
+app.MapPost("/api/prediction", ([FromBody] PredictionEngine.PredictionRequest req) =>
+{
+    try { return Results.Ok(PredictionEngine.ComputePredictionInterval(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.5.7 — Model averaging
+app.MapPost("/api/modelaverage", ([FromBody] PredictionEngine.ModelAverageRequest req) =>
+{
+    try { return Results.Ok(PredictionEngine.RunModelAveraging(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
 // v0.5.7 — Dose-Response Meta-Analysis
 app.MapPost("/api/dose", ([FromBody] DoseResponseEngine.DoseRequest req) =>
 {
