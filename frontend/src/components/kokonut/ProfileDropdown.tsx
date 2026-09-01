@@ -1,20 +1,6 @@
 "use client";
 
-/**
- * Adapted from kokonutui ProfileDropdown (@kokonutui, MIT).
- * Ported off next/image + next/link + custom Gemini icon. The "bending
- * line" indicator and gradient-ring avatar are preserved.
- *
- * v0.5.4: replaced all zinc-* hardcodes with poolr CSS tokens so the
- * component respects the active theme instead of hardcoding a light-gray
- * palette that clashed with the dark theme. Removed the gradient avatar
- * ring in favor of a flat monochrome ring consistent with poolr's brand.
- *
- * In poolr this is the account drawer in the dock: profile, appearance
- * (theme), version & license live HERE — not screamed across the shell.
- */
-
-import { FileText, LogOut, Moon, Palette, Settings, Sun, User } from "lucide-react";
+import { FileText, LogOut, Moon, Palette, Settings, User } from "lucide-react";
 import * as React from "react";
 import {
   DropdownMenu,
@@ -44,10 +30,21 @@ const SAMPLE_PROFILE_DATA: PoolrProfile = {
   email: "local workspace",
 };
 
+interface ProfileDropdownProps extends React.HTMLAttributes<HTMLDivElement> {
+  data?: PoolrProfile;
+  appVersion: string;
+  onOpenSettings?: () => void;
+  onOpenProfile?: () => void;
+  onCloseWorkspace?: () => void;
+}
+
 export default function ProfileDropdown({
   data = SAMPLE_PROFILE_DATA,
   appVersion,
   className,
+  onOpenSettings,
+  onOpenProfile,
+  onCloseWorkspace,
 }: ProfileDropdownProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const { theme, toggleTheme } = useTheme();
@@ -56,6 +53,7 @@ export default function ProfileDropdown({
     {
       label: "Profile",
       icon: <User className="h-4 w-4" />,
+      onSelect: onOpenProfile,
     },
     {
       label: "Appearance",
@@ -66,6 +64,7 @@ export default function ProfileDropdown({
     {
       label: "Settings",
       icon: <Settings className="h-4 w-4" />,
+      onSelect: onOpenSettings,
     },
     {
       label: "Terms & Policies",
@@ -106,7 +105,6 @@ export default function ProfileDropdown({
             </button>
           </DropdownMenuTrigger>
 
-          {/* Bending line indicator */}
           <div
             className={cn(
               "pointer-events-none absolute top-1/2 -right-3 -translate-y-1/2 transition-all duration-200",
@@ -142,7 +140,7 @@ export default function ProfileDropdown({
                     "hover:border-[var(--color-border)] hover:bg-[var(--hover-surface)] hover:shadow-sm"
                   )}
                   key={item.label}
-                  onSelect={() => item.onSelect?.()}
+                  onSelect={item.onSelect}
                 >
                   <div className="flex flex-1 items-center gap-2">
                     {item.icon}
@@ -163,7 +161,6 @@ export default function ProfileDropdown({
 
             <DropdownMenuSeparator className="bg-[var(--color-border)]" />
 
-            {/* Version + license — quiet, exactly where they belong */}
             <div className="flex items-center justify-between px-3 py-1.5 text-[11px] text-[var(--color-text-muted)]">
               <span>poolr v{appVersion} · MIT License</span>
               {theme === "dark" ? (
@@ -180,6 +177,7 @@ export default function ProfileDropdown({
                   "border-[var(--color-exclude)]/20 bg-[var(--color-exclude)]/10 hover:border-[var(--color-exclude)]/30 hover:bg-[var(--color-exclude)]/20 hover:shadow-sm"
                 )}
                 type="button"
+                onClick={onCloseWorkspace}
               >
                 <LogOut className="h-4 w-4 text-[var(--color-exclude)] group-hover:text-[var(--color-exclude)]" />
                 <span className="font-medium text-[var(--color-exclude)] text-sm group-hover:text-[var(--color-exclude)]">Close Workspace</span>
@@ -190,9 +188,4 @@ export default function ProfileDropdown({
       </DropdownMenu>
     </div>
   );
-}
-
-interface ProfileDropdownProps extends React.HTMLAttributes<HTMLDivElement> {
-  data?: PoolrProfile;
-  appVersion: string;
 }

@@ -49,7 +49,7 @@ import NewProjectWizard from "./components/NewProjectWizard";
 
 // v0.5.3 kokonutui component family (adapted, MIT — see file headers)
 import FloatingDock, { type DockItem } from "./components/kokonut/FloatingDock";
-import DynamicGreeting from "./components/kokonut/DynamicGreeting";
+import BootScreen from "./components/BootScreen";
 import ProfileSetup, { type ProfileData } from "./components/kokonut/ProfileSetup";
 import ProfileDropdown from "./components/kokonut/ProfileDropdown";
 import SwitchButton from "./components/kokonut/SwitchButton";
@@ -229,6 +229,7 @@ function Shell() {
   const [splashDone, setSplashDone] = useState(false);
   const [profile, setProfile] = useState<StoredProfile | null>(() => readProfile());
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   const linefieldRef = useRef<HTMLCanvasElement | null>(null);
   useLineField(linefieldRef, theme);
@@ -515,6 +516,14 @@ function Shell() {
               name: profile?.username ?? "Reviewer",
               email: "local workspace · your data stays here",
             }}
+            onOpenSettings={() => setPage("settings")}
+            onOpenProfile={() => setShowProfile(true)}
+            onCloseWorkspace={() => {
+              setProject(null);
+              setProjectPath(null);
+              setSaveState("idle");
+              store.set(LAST_PATH_KEY, "");
+            }}
           />
         </div>
       </header>
@@ -602,7 +611,7 @@ function Shell() {
         )}
       </AnimatePresence>
 
-      {/* ── Boot splash ── */}
+      {/* ── Boot splash (system check) ── */}
       <AnimatePresence>
         {showSplash && (
           <motion.div
@@ -613,16 +622,7 @@ function Shell() {
             style={{ background: "var(--color-bg)" }}
             transition={{ duration: 0.35 }}
           >
-            <motion.div
-              animate={{ opacity: 1, scale: 1 }}
-              className="mb-2"
-              initial={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-            >
-              <LogoMark size={44} />
-            </motion.div>
-            <DynamicGreeting onFinish={() => setTimeout(() => setSplashDone(true), 450)} />
-            <p className="text-[11px] tracking-wide text-[var(--color-text-muted)]">starting local services…</p>
+            <BootScreen onFinish={() => setSplashDone(true)} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -650,6 +650,17 @@ function Shell() {
 
       {showDisclaimer && <DisclaimerModal onClose={() => setShowDisclaimer(false)} />}
             {showWizard && <NewProjectWizard onComplete={handleWizardComplete} onCancel={() => setShowWizard(false)} />}
+            {showProfile && (
+              <ProfileModal
+                profile={profile}
+                onClose={() => setShowProfile(false)}
+                onSave={(data) => {
+                  store.set(PROFILE_KEY, JSON.stringify(data));
+                  setProfile(data);
+                  setShowProfile(false);
+                }}
+              />
+            )}
           </div>
         );
       }
