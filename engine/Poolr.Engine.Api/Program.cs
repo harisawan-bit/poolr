@@ -26,8 +26,8 @@ app.Use(async (ctx, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.5.3", engine = "csharp" }));
-app.MapGet("/version", () => Results.Ok(new { version = "0.5.3" }));
+app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.5.7", engine = "csharp" }));
+app.MapGet("/version", () => Results.Ok(new { version = "0.5.7" }));
 
 // Phase B — C# meta-analysis engine (numerics covered by engine/Poolr.Engine.Tests xUnit).
 app.MapPost("/api/meta", ([FromBody] MetaRequest req) =>
@@ -192,6 +192,76 @@ app.MapPost("/api/grade", ([FromBody] GradeRequest req) =>
     {
         var rows = GradeEngine.Evaluate(req);
         return Results.Ok(rows);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.5.7 — Dose-Response Meta-Analysis
+app.MapPost("/api/dose", ([FromBody] DoseResponseEngine.DoseRequest req) =>
+{
+    try
+    {
+        var result = DoseResponseEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.5.7 — IPD Meta-Analysis
+app.MapPost("/api/ipd", ([FromBody] IpdEngine.IpdRequest req) =>
+{
+    try
+    {
+        var result = IpdEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.5.7 — Diagnostic Test Accuracy Meta-Analysis
+app.MapPost("/api/dta", ([FromBody] DtaEngine.DtaRequest req) =>
+{
+    try
+    {
+        var result = DtaEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.5.7 — Multilevel / Multivariate / RVE
+app.MapPost("/api/multilevel", ([FromBody] MultilevelEngine.MultilevelRequest req) =>
+{
+    try
+    {
+        var result = MultilevelEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.5.7 — Network Meta-Analysis
+app.MapPost("/api/nma", ([FromBody] NmaEngine.NmaRequest req) =>
+{
+    try
+    {
+        var result = NmaEngine.Run(req);
+        return Results.Ok(result);
     }
     catch (Exception ex)
     {

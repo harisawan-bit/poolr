@@ -1,13 +1,16 @@
 import { Component, useEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
 import {
+  Activity,
   ClipboardList,
   FileDown,
   FilePlus2,
   FolderOpen,
   LayoutDashboard,
+  Layers,
   ListChecks,
   Moon,
   Settings2,
+  Share2,
   Sigma,
   Sparkles,
   Sun,
@@ -35,6 +38,9 @@ import Screening from "./pages/Screening";
 import Extraction from "./pages/Extraction";
 import Rob from "./pages/Rob";
 import Meta from "./pages/Meta";
+import Nma from "./pages/Nma";
+import Dta from "./pages/Dta";
+import Multilevel from "./pages/Multilevel";
 import Prisma from "./pages/Prisma";
 import DisclaimerModal from "./components/DisclaimerModal";
 
@@ -58,6 +64,9 @@ const NAV = [
   { key: "extraction", label: "Extraction", Icon: Table2 },
   { key: "rob", label: "Risk of Bias", Icon: ShieldAlert },
   { key: "meta", label: "Meta-Analysis", Icon: Sigma },
+  { key: "nma", label: "Network MA", Icon: Share2 },
+  { key: "multilevel", label: "Multilevel", Icon: Layers },
+  { key: "dta", label: "DTA", Icon: Activity },
   { key: "prisma", label: "PRISMA", Icon: Workflow },
 ] as const;
 
@@ -71,15 +80,22 @@ const TITLES: Record<PageKey, string> = {
   extraction: "Data Extraction",
   rob: "Risk of Bias Assessment",
   meta: "Meta-Analysis",
+  nma: "Network Meta-Analysis",
+  multilevel: "Multilevel / Multivariate MA",
+  dta: "Diagnostic Test Accuracy",
   prisma: "PRISMA 2020",
 };
 
 function LogoMark({ size = 20 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-label="poolr">
-      <circle cx="10" cy="9" r="5.2" stroke="var(--color-accent)" strokeWidth="2.4" />
-      <path d="M10 14.2V22" stroke="var(--color-accent)" strokeWidth="2.4" strokeLinecap="round" />
-    </svg>
+    <img
+      src="/poolr-logo.png"
+      alt="poolr"
+      width={size}
+      height={size}
+      className="rounded-md"
+      draggable={false}
+    />
   );
 }
 
@@ -388,6 +404,9 @@ function Shell() {
     extraction: () => <Extraction project={current} onChange={onProjectChange} />,
     rob: () => <Rob project={current} onChange={onProjectChange} />,
     meta: () => <Meta project={current} onChange={onProjectChange} />,
+    nma: () => <Nma project={current} onChange={onProjectChange} />,
+    multilevel: () => <Multilevel project={current} onChange={onProjectChange} />,
+    dta: () => <Dta project={current} onChange={onProjectChange} />,
     prisma: () => <Prisma project={current} onChange={onProjectChange} />,
   };
 

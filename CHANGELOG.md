@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.7] - 2026-09-01
+
+### Added
+- **Network Meta-Analysis** (NMA): frequentist WLS (Rücker 2012) + Bayesian MCMC with P-score/SUCRA ranking, node-split inconsistency, league matrix, comparison-adjusted funnel.
+- **Multilevel / Multivariate / RVE**: three-level meta-analysis (Cheung 2014) with REML variance components, multivariate Gleser-Olkin, cluster-robust RVE with Satterthwaite df.
+- **Diagnostic Test Accuracy** (DTA): bivariate Reitsma (2005) model + HSROC, pooled sens/spec with CIs, DOR, AUC, SROC plane.
+- **Logo**: actual app icon rendered everywhere (header, splash, dashboard, installer, dock icon) instead of SVG placeholder.
+
+### Tests
+- Engine suite now 38 tests (was 22): +6 NMA, +5 multilevel, +5 DTA benchmarks.
+
 ## [0.5.3] - 2026-08-26
 
 ### Added
