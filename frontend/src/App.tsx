@@ -1,6 +1,7 @@
 import { Component, useEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
 import {
   Activity,
+  Clock,
   ClipboardList,
   FileDown,
   FilePlus2,
@@ -39,6 +40,7 @@ import Extraction from "./pages/Extraction";
 import Rob from "./pages/Rob";
 import Meta from "./pages/Meta";
 import Nma from "./pages/Nma";
+import Survival from "./pages/Survival";
 import Dta from "./pages/Dta";
 import Multilevel from "./pages/Multilevel";
 import Prisma from "./pages/Prisma";
@@ -67,6 +69,7 @@ const NAV = [
   { key: "nma", label: "Network MA", Icon: Share2 },
   { key: "multilevel", label: "Multilevel", Icon: Layers },
   { key: "dta", label: "DTA", Icon: Activity },
+  { key: "survival", label: "Survival", Icon: Clock },
   { key: "prisma", label: "PRISMA", Icon: Workflow },
 ] as const;
 
@@ -83,6 +86,7 @@ const TITLES: Record<PageKey, string> = {
   nma: "Network Meta-Analysis",
   multilevel: "Multilevel / Multivariate MA",
   dta: "Diagnostic Test Accuracy",
+  survival: "Survival Extensions",
   prisma: "PRISMA 2020",
 };
 
@@ -407,6 +411,7 @@ function Shell() {
     nma: () => <Nma project={current} onChange={onProjectChange} />,
     multilevel: () => <Multilevel project={current} onChange={onProjectChange} />,
     dta: () => <Dta project={current} onChange={onProjectChange} />,
+    survival: () => <Survival project={current} onChange={onProjectChange} />,
     prisma: () => <Prisma project={current} onChange={onProjectChange} />,
   };
 

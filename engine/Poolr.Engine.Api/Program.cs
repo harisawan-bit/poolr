@@ -199,6 +199,63 @@ app.MapPost("/api/grade", ([FromBody] GradeRequest req) =>
     }
 });
 
+// v0.5.7 — Living Systematic Review
+app.MapPost("/api/living/cumulative", ([FromBody] LivingReviewEngine.CumulativeRequest req) =>
+{
+    try { return Results.Ok(LivingReviewEngine.RunCumulative(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+app.MapPost("/api/living/priority", ([FromBody] LivingReviewEngine.PriorityScreeningRequest req) =>
+{
+    try { return Results.Ok(LivingReviewEngine.RunPriorityScreening(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.5.7 — AI-assisted screening / extraction / RoB / GRADE
+app.MapPost("/api/ai/screening", async (HttpRequest req) =>
+{
+    try
+    {
+        using var sr = new StreamReader(req.Body);
+        var raw = await sr.ReadToEndAsync();
+        return Results.Ok(new { message = "AI screening endpoint - configure LLM in settings" });
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.5.7 — Survival extensions (RMST, IPD reconstruction)
+app.MapPost("/api/survival", async (HttpRequest req) =>
+{
+    try
+    {
+        using var sr = new StreamReader(req.Body);
+        var raw = await sr.ReadToEndAsync();
+        var doc = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(raw);
+        var type = doc.GetProperty("type").GetString();
+
+        if (type == "rmst")
+        {
+            var rmstReq = doc.GetProperty("request").Deserialize<SurvivalEngine.RmstRequest>();
+            return Results.Ok(SurvivalEngine.RunRmst(rmstReq));
+        }
+        else if (type == "kmreconstruct")
+        {
+            var kmReq = doc.GetProperty("request").Deserialize<SurvivalEngine.KmReconstructionRequest>();
+            return Results.Ok(SurvivalEngine.ReconstructIPD(kmReq));
+        }
+
+        return Results.BadRequest(new { error = "Unknown survival analysis type" });
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
 // v0.5.7 — Proportion Meta-Analysis (extended)
 app.MapPost("/api/proportion", ([FromBody] ProportionEngine.ProportionRequest req) =>
 {
