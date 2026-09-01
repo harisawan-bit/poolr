@@ -32,6 +32,7 @@ import {
 import { emptyProject, normalizeProject, type Project } from "./lib/project";
 import { APP_VERSION } from "./lib/version";
 import { ThemeProvider, useTheme } from "./lib/theme";
+import { useWindowState } from "./lib/windowState";
 import Dashboard from "./pages/Dashboard";
 import Protocol from "./pages/Protocol";
 import Search from "./pages/Search";
@@ -482,7 +483,24 @@ function Shell() {
     }
   }, []);
 
+  // 4.1 Wizard access after first run
+  const [showWizard, setShowWizard] = useState(false);
+  const [wizardEditMode, setWizardEditMode] = useState(false);
   /* ── Window size memory (1.8) ── */
+  useWindowState();
+
+  const handleWizardComplete = (config: Partial<Project>) => {
+    if (wizardEditMode && project) {
+      const confirmed = window.confirm("This will update your project settings. Continue?");
+      if (!confirmed) return;
+      onProjectChange({ ...project, ...config });
+    } else {
+      const p = emptyProject();
+      onProjectChange({ ...p, ...config });
+    }
+    setShowWizard(false);
+    setWizardEditMode(false);
+  };
   const showSplash = !splashDone;
 
   /* ── First-run personalization ── */
@@ -511,6 +529,9 @@ function Shell() {
           </button>
           <button className="btn-ghost flex items-center gap-1.5" onClick={handleNew}>
             <FilePlus2 className="h-3.5 w-3.5" /> New
+          </button>
+          <button className="btn-ghost flex items-center gap-1.5" onClick={() => setShowWizard(true)}>
+            <Settings2 className="h-3.5 w-3.5" /> Project settings
           </button>
           <button className="btn-ghost flex items-center gap-1.5" disabled={!project} onClick={handleSave}>
             <Save className="h-3.5 w-3.5" /> Save
@@ -669,6 +690,38 @@ function Shell() {
 
       {showDisclaimer && <DisclaimerModal onClose={() => setShowDisclaimer(false)} />}
       <WhatsNewModal show={showWhatsNew} version={whatsNewVersion} items={whatsNewItems} onDismiss={dismissWhatsNew} />
+      {/* 4.1 Wizard modal */}
+      {showWizard && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-6">
+            <h2 className="mb-4 text-lg font-semibold">{wizardEditMode ? "Project Settings" : "New Project"}</h2>
+            <p className="mb-4 text-[12px] text-[var(--color-text-muted)]">
+              {wizardEditMode ? "Update your project configuration." : "Configure your systematic review."}
+            </p>
+            <div className="space-y-3">
+              <div>
+                <div className="mb-1 text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">Title</div>
+                <input className="w-full rounded border border-[var(--color-border)] bg-transparent px-2 py-1.5 text-[12px]" defaultValue={project?.metadata?.title || ""} id="wizard-title" />
+              </div>
+              <div>
+                <div className="mb-1 text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">Objective</div>
+                <textarea className="w-full rounded border border-[var(--color-border)] bg-transparent px-2 py-1.5 text-[12px]" rows={3} defaultValue={project?.protocol?.objective || ""} id="wizard-objective" />
+              </div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button className="btn-ghost" onClick={() => setShowWizard(false)}>Cancel</button>
+              <button className="btn-primary flex-1" onClick={() => {
+                const title = (document.getElementById("wizard-title") as HTMLInputElement)?.value || "Untitled review";
+                const objective = (document.getElementById("wizard-objective") as HTMLTextAreaElement)?.value || "";
+                handleWizardComplete({
+                  metadata: { ...project?.metadata!, title },
+                  protocol: { databases: project?.protocol?.databases ?? "", registration: project?.protocol?.registration ?? "", objective },
+                });
+              }}>{wizardEditMode ? "Update" : "Create"}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState, useMemo } from "react";
 import type { Project, GradeRow, PrismaFlow } from "../lib/project";
 import { Card, Input, Pill, EmptyState } from "../components/ui";
 import SankeyChart from "../components/charts/SankeyChart";
@@ -7,6 +7,7 @@ import { ListChecks } from "lucide-react";
 import { runGrade } from "../lib/project";
 import { exportProject } from "../lib/api";
 import DisclaimerModal from "../components/DisclaimerModal";
+import { ExportPreviewModal } from "../components/ExportPreview";
 
 // v0.5.1 — PRISMA 2020 27-item checklist tracker (item numbers per the official checklist)
 const PRISMA_ITEMS: { n: number; section: string; text: string }[] = [
@@ -63,6 +64,8 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
   const [grade, setGrade] = useState<GradeRow[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
+  // 1.7 Export Preview Modal state
+  const [showExportPreview, setShowExportPreview] = useState(false);
   // v0.5.1 — checklist state lives on the project (auto-saved): prisma.checklist[itemNumber]=true
   type Checklist = Record<string, boolean>;
   const checklist = ((project.prisma as unknown as { checklist?: Checklist }).checklist ?? {}) as Checklist;
@@ -138,7 +141,7 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
       <Card title="PRISMA 2020 flow" right={
         <div className="flex items-center gap-2">
           <button className="btn-ghost" onClick={autoGrade} disabled={busy || !project.meta.results}>Auto-GRADE</button>
-          <button className="btn-primary" onClick={() => tryExport(project, () => setShowDisclaimer(true))}>Export report</button>
+          <button className="btn-primary" onClick={() => setShowExportPreview(true)}>Export report</button>
         </div>
       }>
         <div className="max-w-[460px] space-y-2">
@@ -210,6 +213,14 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
       </Card>
 
       {showDisclaimer && <DisclaimerModal onClose={() => setShowDisclaimer(false)} />}
+      <ExportPreviewModal
+        open={showExportPreview}
+        onClose={() => setShowExportPreview(false)}
+        onGenerate={async (_format, _includeFigures, _includeRawData) => {
+          setShowExportPreview(false);
+          await tryExport(project, () => setShowDisclaimer(true));
+        }}
+      />
     </div>
   );
 }

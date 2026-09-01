@@ -76,7 +76,12 @@ public static class IpdEngine
             pooledHr = Math.Exp(pooledLogHr),
             ciLower = Math.Exp(pooledLogHr - crit * se),
             ciUpper = Math.Exp(pooledLogHr + crit * se),
-            se = se, p = p, i2 = i2, tau2 = tau2, q = q, nStudies = validStudies.Count
+            se = se,
+            p = p,
+            i2 = i2,
+            tau2 = tau2,
+            q = q,
+            nStudies = validStudies.Count
         };
     }
 
@@ -107,9 +112,12 @@ public static class IpdEngine
             pooledHr = Math.Exp(pooledLogHr),
             ciLower = Math.Exp(pooledLogHr - crit * se),
             ciUpper = Math.Exp(pooledLogHr + crit * se),
-            se = se, p = p,
+            se = se,
+            p = p,
             i2 = frailtyVar / (frailtyVar + vars.Average()) * 100,
-            tau2 = frailtyVar, q = 0, nStudies = validStudies.Count,
+            tau2 = frailtyVar,
+            q = 0,
+            nStudies = validStudies.Count,
             phTestP = phTestP,
             warnings = new List<string> { "One-stage IPD: approximate frailty model. Full IPD data recommended for publication." }
         };

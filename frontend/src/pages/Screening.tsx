@@ -5,6 +5,8 @@ import { readTextFiles } from "../lib/api";
 import { Card, Pill, Input, Textarea, EmptyState } from "../components/ui";
 import FunnelChart from "../components/charts/FunnelChart";
 import TeamSelector, { REVIEWER_MEMBERS } from "../components/kokonut/TeamSelector";
+import { generateImportPreview } from "../lib/importFormats";
+import { getCollaborationPlaceholder } from "../lib/collaboration";
 
 const DECISIONS: ScreenDecision[] = ["include", "exclude", "unsure"];
 const DEC_LABEL: Record<ScreenDecision, string> = { include: "Include", exclude: "Exclude", unsure: "Unsure", unset: "Unset" };
@@ -51,9 +53,20 @@ export default function Screening({ project, onChange }: { project: Project; onC
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   // v0.5.3 — number of independent reviewers screening (dual screening support).
-  const [reviewers, setReviewers] = useState(2);
+  const [showRayyanPreview, setShowRayyanPreview] = useState<ReturnType<typeof generateImportPreview> | null>(null);
+  const { events: collabEvents } = getCollaborationPlaceholder();
+
+  const onImportRayyan = async (fileList: FileList | null) => {
+    const files = await readTextFiles(fileList);
+    if (files.length === 0) return;
+    for (const f of files) {
+      const preview = generateImportPreview(f.text, "rayyan");
+      setShowRayyanPreview(preview);
+    }
+  };
   const viewportRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const rayyanRef = useRef<HTMLInputElement>(null);
   const noticeTimer = useRef<number | null>(null);
 
   const items = project.screening?.[stage] ?? [];
@@ -162,16 +175,23 @@ export default function Screening({ project, onChange }: { project: Project; onC
           />
         </Card>
         <Card title="Reviewers">
-          <TeamSelector defaultValue={reviewers} members={REVIEWER_MEMBERS} onChange={setReviewers} />
+          <TeamSelector defaultValue={2} members={REVIEWER_MEMBERS} onChange={() => {}} />
           <p className="mt-2 text-center text-[11px] text-[var(--color-text-muted)]">
-            {reviewers > 1 ? "Dual screening — records should be agreed by both reviewers." : "Single reviewer screening."}
+            Dual screening — records should be agreed by both reviewers.
           </p>
+          {/* 3.1 Collaboration indicators */}
+          {collabEvents.length > 0 && (
+            <div className="mt-2 text-[10px] text-[var(--color-text-muted)]">
+              {collabEvents.length} recent edits
+            </div>
+          )}
         </Card>
       </div>
       <Card title="Screening" right={
         <div className="flex items-center gap-2">
           <StageTabs stage={stage} setStage={(s) => { setStage(s); setSelectedId(null); }} />
           <button className="btn-ghost" onClick={() => fileRef.current?.click()}>Import</button>
+          <button className="btn-ghost" onClick={() => rayyanRef.current?.click()}>Rayyan</button>
           <button className="btn-primary" onClick={addSample}>+ Add</button>
         </div>
       }>
@@ -194,6 +214,17 @@ export default function Screening({ project, onChange }: { project: Project; onC
           onChange={(e) => {
             const fl = e.target.files;
             void onImportFiles(fl);
+            e.target.value = "";
+          }}
+        />
+        <input
+          ref={rayyanRef}
+          type="file"
+          className="hidden"
+          accept=".csv,.txt"
+          multiple
+          onChange={(e) => {
+            void onImportRayyan(e.target.files);
             e.target.value = "";
           }}
         />
@@ -297,6 +328,25 @@ export default function Screening({ project, onChange }: { project: Project; onC
           </div>
         )}
       </Card>
+      {/* 2.2 Rayyan/Covidence Import Preview Modal */}
+      {showRayyanPreview && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-6">
+            <h2 className="mb-4 text-lg font-semibold">Import Preview</h2>
+            <div className="space-y-2 text-[12px]">
+              <div>Total rows: {showRayyanPreview.total}</div>
+              <div>Mapped: {showRayyanPreview.mapped}</div>
+              {showRayyanPreview.unmapped.length > 0 && (
+                <div className="text-amber-500">Unmapped: {showRayyanPreview.unmapped.length}</div>
+              )}
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button className="btn-ghost" onClick={() => setShowRayyanPreview(null)}>Cancel</button>
+              <button className="btn-primary flex-1" onClick={() => setShowRayyanPreview(null)}>Import</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

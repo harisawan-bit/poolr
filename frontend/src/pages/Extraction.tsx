@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import type { Project, ExtractedStudy } from "../lib/project";
 import { Card, Input, Select, Pill, EmptyState } from "../components/ui";
 import { toCsv, downloadText } from "../lib/project";
+import { usePdfQueue } from "../lib/pdfQueue";
 
 const TYPES: ExtractedStudy["type"][] = ["binary", "continuous", "survival"];
 
@@ -13,6 +14,9 @@ export default function Extraction({ project, onChange }: { project: Project; on
   const studies = project.extraction.studies;
   const [form, setForm] = useState<ExtractedStudy>(blank());
   const [err, setErr] = useState<string | null>(null);
+  // 2.3 Bulk PDF upload
+  const { jobs, processing, addFiles, processQueue, clearDone } = usePdfQueue();
+  const pdfRef = useRef<HTMLInputElement>(null);
 
   const set = (patch: Partial<ExtractedStudy>) => setForm({ ...form, ...patch });
   const num = (v: string) => (v === "" ? null : Number(v));
@@ -122,6 +126,38 @@ export default function Extraction({ project, onChange }: { project: Project; on
         <div className="mt-3 flex items-center gap-2">
           <button className="btn-primary" onClick={add}>+ Add to table</button>
           <span className="text-[11px] text-[var(--color-text-muted)]">Studies flow automatically into Meta-Analysis → Run.</span>
+        </div>
+      </Card>
+
+      {/* 2.3 Bulk PDF Upload */}
+      <Card title="Bulk PDF Upload">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <button className="btn-ghost" onClick={() => pdfRef.current?.click()}>Upload PDFs</button>
+            {jobs.length > 0 && (
+              <button className="btn-ghost" onClick={() => processQueue(async (job, text) => {
+                console.log(`Processed ${job.filename}: ${text.slice(0, 100)}...`);
+              })} disabled={processing}>
+                {processing ? "Processing..." : "Process Queue"}
+              </button>
+            )}
+            {jobs.some(j => j.status === "done") && (
+              <button className="btn-ghost" onClick={clearDone}>Clear completed</button>
+            )}
+          </div>
+          <input ref={pdfRef} type="file" className="hidden" accept=".pdf" multiple onChange={(e) => addFiles(e.target.files!)} />
+          {jobs.length > 0 && (
+            <div className="max-h-32 overflow-y-auto rounded border border-[var(--color-border)] p-2 space-y-1">
+              {jobs.map((job) => (
+                <div key={job.id} className="flex items-center justify-between text-[11px]">
+                  <span className="truncate">{job.filename}</span>
+                  <span className={`text-[10px] ${job.status === "done" ? "text-[var(--color-include)]" : job.status === "error" ? "text-[var(--color-exclude)]" : "text-[var(--color-text-muted)]"}`}>
+                    {job.status === "processing" ? `${job.progress}%` : job.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </Card>
     </div>

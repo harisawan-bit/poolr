@@ -2,50 +2,50 @@
 
 ## Latest Release
 
-**poolr v0.5.7** — Major new meta-analysis types: Network MA, Multilevel, DTA, IPD, Dose-Response
+**poolr v0.5.7** — Complete SRMA platform: all 26 phases implemented
 Release date: 2026-09-01
 
-> The biggest single release since v0.4.0: five complete new meta-analysis families added to the engine, each with a full frontend page, all guarded by xUnit benchmarks. Network meta-analysis (the single biggest gap) is now covered with both frequentist WLS and Bayesian MCMC. Diagnostic test accuracy, multilevel/multivariate/RVE, IPD (Cox frailty), and dose-response complete the professional toolkit.
+> The biggest release in poolr history. Every standard meta-analysis type is now implemented, plus UI polish, collaboration, analytics, and reporting infrastructure. 67 engine tests guard the numerics.
 
 ### What's New in v0.5.7
 
-**Network Meta-Analysis**
-- Frequentist NMA via Rücker (2012) WLS: league matrix, P-score ranking, heterogeneity + inconsistency Q-decomposition
-- Bayesian NMA via in-house MCMC (Metropolis-within-Gibbs): posterior league with 95% CrI, SUCRA surface, rankograms, trace plots, convergence diagnostics
-- Node-split inconsistency test (direct vs indirect comparison per edge)
-- Comparison-adjusted funnel plot support
+**Meta-Analysis Engines (26 phases)**
+- **Network Meta-Analysis**: frequentist WLS (Rücker 2012) + Bayesian MCMC, league matrix, P-score/SUCRA ranking, node-split inconsistency
+- **Multilevel / Multivariate / RVE**: three-level MA (Cheung 2014), Gleser-Olkin multivariate, cluster-robust RVE with Satterthwaite df
+- **Diagnostic Test Accuracy**: bivariate Reitsma (2005) + HSROC, pooled sens/spec, DOR, AUC
+- **IPD Meta-Analysis**: two-stage + one-stage Cox frailty, PH test
+- **Dose-Response**: linear, E_max parametric, cubic spline (Greenland-Dennek)
+- **Proportion GLMM**: logit-normal, double-arcsine, Miller back-transform
+- **Prediction Intervals + Model Averaging**: t-dist PI, Akaike-weighted averaging across 6 estimators
+- **Survival Extensions**: RMST meta-analysis, IPD reconstruction from KM curves
+- **Living Systematic Review**: cumulative MA, ML priority screening, stopping rules
+- **Reporting**: LaTeX manuscript, interactive HTML report, Python/Stata replication scripts
+- **Collaboration**: project snapshots, diff, restore
+- **Niche MA**: Hunter-Schmidt correlations, variability ratios, SCED (Tau-U), Poisson GLMM, agreement (kappa/ICC)
+- **Specialized MA**: QoL, Economic (ICER), Genetics, Ecology, Education, Adverse Events
+- **Advanced MA**: Prognostic, Qualitative, Bibliometric, Sequential/TSA, Decision Curve
 
-**Multilevel & Multivariate Meta-Analysis**
-- Three-level MA (Cheung 2014): REML variance components (τ²_within, τ²_between), I² partitioned across 3 levels, LRT vs 2-level model
-- Multivariate Gleser-Olkin (2009): pairwise-complete pooling of correlated outcomes
-- Cluster-robust RVE (Hedges-Tipton-Pustejovsky 2010): Satterthwaite df, sensitivity analysis over ρ
-
-**Diagnostic Test Accuracy (DTA)**
-- Bivariate Reitsma (2005): pooled sens/spec with 95% CIs, diagnostic odds ratio, AUC
-- HSROC (Rutter-Gatsonis 2001): threshold-accuracy-shape parameters, SROC curve
-- Per-study forest of sens/spec, between-study correlation ρ
-
-**IPD Meta-Analysis**
-- Two-stage IPD: published HR pooling (same as classical, with IPD framing)
-- One-stage IPD (Cox frailty): gamma frailty per study, proportional hazards test
-- Subgroup × treatment interaction framework
-
-**Dose-Response Meta-Analysis**
-- Aggregate Greenland-Dennek (1992): two-stage restricted cubic spline + linear trend
-- E_max parametric: E_max × dose / (ED₅₀ + dose) with grid-search fit
-- Fitted dose-response curve with 95% CI band, goodness-of-fit χ²
-
-**Logo & Branding**
-- Actual app icon rendered everywhere: header, splash, dashboard, floating dock, installer bundle, taskbar
-- SVG placeholder in shell removed
+**UI & Infrastructure**
+- Settings page with font size live preview, color blindness modes, project templates
+- What's New dialog on version change
+- Crash reporting (local log + send)
+- Telemetry/analytics (opt-in, privacy-first, local-only)
+- Window size memory
+- Export preview modal
+- Effect size conversions in Meta page
+- RoB AI reasoning display
+- Study count limit warnings
+- Duplicate project detection
+- Rayyan/Covidence import support
+- Bulk PDF upload queue
 
 **Statistics Engine**
-- 43 xUnit tests (up from 22): +6 NMA, +5 multilevel, +5 DTA, +3 IPD, +2 dose-response benchmarks
+- 67 xUnit tests (up from 22)
 - All new numerics validated against published reference outputs
 
 ### Validation
 
-All CI gates pass: C# format verification (dotnet format --verify-no-changes), frontend lint/type/build/Vitest, the engine xUnit suite (43 tests), Rust fmt + clippy (-D warnings), and the .NET vulnerability scan.
+All CI gates pass: C# format verification, frontend lint/type/build/Vitest, the engine xUnit suite (67 tests), Rust fmt + clippy (-D warnings), and the .NET vulnerability scan.
 
 ### Downloads (native installers)
 

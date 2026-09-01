@@ -64,9 +64,13 @@ public static class SpecializedEngine
 
         return new QolResult
         {
-            pooledMd = pooledMd, pooledSmd = pooledSmd,
-            respondersPooled = respondersPooled, respondersCiLower = respondersCiLo, respondersCiUpper = respondersCiHi,
-            i2 = tau2 / (tau2 + vars.DefaultIfEmpty(1).Average()) * 100, nStudies = valid.Count
+            pooledMd = pooledMd,
+            pooledSmd = pooledSmd,
+            respondersPooled = respondersPooled,
+            respondersCiLower = respondersCiLo,
+            respondersCiUpper = respondersCiHi,
+            i2 = tau2 / (tau2 + vars.DefaultIfEmpty(1).Average()) * 100,
+            nStudies = valid.Count
         };
     }
 
