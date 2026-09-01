@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Card, Input, Button, Pill } from '../components/ui';
-import { Search, Download, Upload } from 'lucide-react';
+import { Card, Input, Button } from '../components/ui';
+import { Search } from 'lucide-react';
 
 const DATABASES = [
   { id: 'pubmed', name: 'PubMed', key: false },

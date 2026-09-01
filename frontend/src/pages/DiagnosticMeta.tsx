@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Project } from "../lib/project";
-import { Card, Input, Select, Pill, EmptyState, Button } from "../components/ui";
+import { Card, Input, Pill, Button } from "../components/ui";
 import { toCsv, downloadText } from "../lib/project";
 
 interface DiagnosticStudy {
@@ -25,7 +25,7 @@ interface DiagnosticResult {
   table: { study: string; tp: number; fp: number; fn: number; tn: number; sens: number; spec: number }[];
 }
 
-function computeDiagnostic(studies: DiagnosticStudy[]): DiagnosticResult {
+function computeDiagnostic(studies: DiagnosticStudy[], _stage: "one" | "two"): DiagnosticResult {
   const table = studies.map((s) => {
     const sens = s.tp / Math.max(s.tp + s.fn, 1);
     const spec = s.tn / Math.max(s.tn + s.fp, 1);
@@ -111,7 +111,7 @@ export default function DiagnosticMeta({ project, onChange }: { project: Project
 
   const runAnalysis = () => {
     if (studies.length < 2) return;
-    const r = computeDiagnostic(studies);
+    const r = computeDiagnostic(studies, "one");
     setResults(r);
     persist(studies, r);
   };
