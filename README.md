@@ -63,7 +63,17 @@ No programming required. No cloud dependency. Your data stays on your machine.
 | Binary | OR, RR, RD | Fixed / Random-effects | DerSimonian-Laird, REML, Paule-Mandel, Hunter-Schmidt |
 | Continuous | MD, SMD (Hedges' g) | Fixed / Random-effects | Inverse variance, DL, REML |
 | Time-to-event | HR | Fixed / Random-effects | Generic inverse variance |
+| Proportions | logit, arcsine, double-arcsine | GLMM, IV | DL, REML |
+| Rates | IRR, IRD | Fixed / Random-effects | Inverse variance |
+| Correlations | Fisher z | Fixed / Random-effects | Inverse variance |
+| Generic IV | user-supplied yi/vi | Fixed / Random-effects | Any |
 
+- **Network Meta-Analysis**: frequentist WLS (Rücker 2012) + Bayesian MCMC, league matrix, P-score/SUCRA ranking, node-split inconsistency
+- **Multilevel / Multivariate / RVE**: three-level MA (Cheung 2014), Gleser-Olkin multivariate, cluster-robust RVE with Satterthwaite df
+- **Diagnostic Test Accuracy**: bivariate Reitsma (2005) + HSROC, pooled sens/spec, DOR, AUC
+- **IPD Meta-Analysis**: two-stage + one-stage Cox frailty, PH test
+- **Dose-Response**: linear, E_max parametric, cubic spline (Greenland-Dennek)
+- **Prediction intervals** (t-dist, k-2 df), **model averaging** across 6 estimators (Akaike weights)
 - **Subgroup analysis** by design, country, year, or custom fields
 - **Meta-regression** (year, sample size, continuous covariates)
 - **Publication bias**: Egger's test, Begg's test, funnel plot asymmetry
