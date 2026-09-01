@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo } from "react";
 import type { Project, Study } from "../lib/project";
 import { Card, Input, Select, Pill, EmptyState, Button } from "../components/ui";
 import { toCsv, downloadText } from "../lib/project";
