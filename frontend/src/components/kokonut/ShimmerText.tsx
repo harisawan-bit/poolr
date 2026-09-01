@@ -1,10 +1,5 @@
 "use client";
 
-/**
- * Adapted from kokonutui ShimmerText (@dorianbaffier, MIT).
- * Shown on long-running buttons / panels while the engine computes.
- */
-
 import { motion } from "motion/react";
 import { cn } from "../../lib/utils";
 
@@ -25,7 +20,7 @@ export default function ShimmerText({ text = "Text Shimmer", className }: Text_0
         <motion.h1
           animate={{ backgroundPosition: ["200% center", "-200% center"] }}
           className={cn(
-            "bg-[length:200%_100%] bg-gradient-to-r from-neutral-950 via-neutral-400 to-neutral-950 bg-clip-text font-bold text-3xl text-transparent dark:from-white dark:via-neutral-600 dark:to-white",
+            "bg-[length:200%_100%] bg-gradient-to-r from-[var(--color-text-muted)] via-[var(--color-text)] to-[var(--color-text-muted)] bg-clip-text font-bold text-3xl text-transparent",
             className
           )}
           transition={{

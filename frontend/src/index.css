@@ -88,10 +88,10 @@ html.dark {
   --color-unsure: #f2b84b;
   --color-linefield: rgba(255, 255, 255, 0.022);
 
-  --btn-bg: #e6e7ea;
-  --btn-fg: #0c0d11;
-  --btn-hover-bg: #ffffff;
-  --btn-border: #e6e7ea;
+  --btn-bg: #3b82f6;
+    --btn-fg: #ffffff;
+    --btn-hover-bg: #2563eb;
+    --btn-border: #3b82f6;
   --input-bg: #0c0d11;
   --placeholder-fg: #5a5c63;
   --card-bg: #141519;
@@ -191,20 +191,48 @@ html.dark {
   }
 
   .btn-ghost {
-    background: transparent;
-    color: var(--color-text-muted);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-btn);
-    font-size: 12px;
-    padding: 5px 12px;
-    cursor: pointer;
-    transition: all 0.12s ease;
-  }
-  .btn-ghost:hover {
-    color: var(--color-text);
-    border-color: var(--color-border-strong);
-    background: var(--hover-surface);
-  }
+      background: transparent;
+      color: var(--color-text-muted);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-btn);
+      font-size: 12px;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: all 0.12s ease;
+    }
+    .btn-ghost:hover {
+      color: var(--color-text);
+      border-color: var(--color-border-strong);
+      background: var(--hover-surface);
+    }
+    .btn-ghost:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+      /* Density modes */
+      body.density-compact .card {
+        padding: 8px;
+      }
+      body.density-compact .btn-primary,
+      body.density-compact .btn-ghost {
+        padding: 3px 8px;
+        font-size: 11px;
+      }
+      body.density-compact .space-y-3 {
+        gap: 6px;
+      }
+      body.density-comfortable .card {
+        padding: 16px;
+      }
+      body.density-comfortable .btn-primary,
+      body.density-comfortable .btn-ghost {
+        padding: 5px 12px;
+        font-size: 12px;
+      }
+      body.density-comfortable .space-y-3 {
+        gap: 12px;
+      }
 }
 
 /* Per-theme shadows/hairlines that can't live inside @theme vars cleanly */

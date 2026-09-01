@@ -1,9 +1,9 @@
 "use client";
 
 /**
- * Adapted from kokonutui AILoadingState (@kokonutui, MIT).
- * Shows live task status lines while the engine works, so users always
- * see that computation is happening. Sequences are poolr SRMA stages.
+ * ActivityState — live computation status while the engine works.
+ * Shows task status lines so users see computation is happening.
+ * Uses poolr CSS tokens for theme consistency.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -91,20 +91,19 @@ const LoadingAnimation = ({ progress }: { progress: number }) => (
         strokeDasharray="18% 40%"
         strokeWidth="16"
       >
-        {/* monochrome ramp — poolr palette, no rainbow */}
-        <circle cx="120" cy="120" opacity="0.95" r="150" stroke="#e6e7ea" />
-        <circle cx="120" cy="120" opacity="0.85" r="130" stroke="#b9bbc2" />
-        <circle cx="120" cy="120" opacity="0.75" r="110" stroke="#8b8d96" />
-        <circle cx="120" cy="120" opacity="0.65" r="90" stroke="#5c5e66" />
-        <circle cx="120" cy="120" opacity="0.55" r="70" stroke="#3a3c43" />
-        <circle cx="120" cy="120" opacity="0.45" r="50" stroke="#23262c" />
+        {/* Uses CSS token colors via currentColor */}
+        <circle cx="120" cy="120" opacity="0.95" r="150" stroke="var(--color-text)" />
+        <circle cx="120" cy="120" opacity="0.85" r="130" stroke="var(--color-text-muted)" />
+        <circle cx="120" cy="120" opacity="0.75" r="110" stroke="var(--color-text-muted)" />
+        <circle cx="120" cy="120" opacity="0.65" r="90" stroke="var(--color-border-strong)" />
+        <circle cx="120" cy="120" opacity="0.55" r="70" stroke="var(--color-border)" />
+        <circle cx="120" cy="120" opacity="0.45" r="50" stroke="var(--color-border)" />
       </g>
     </svg>
   </div>
 );
 
 interface ActivityStateProps {
-  /** Optional heading override; defaults to cycling through SRMA stages. */
   className?: string;
 }
 
@@ -117,7 +116,6 @@ export default function ActivityState({ className }: ActivityStateProps) {
   const [isVisible, setIsVisible] = useState(true);
   const lineHeight = 28;
 
-  // Only animate while on screen.
   useEffect(() => {
     const element = rootRef.current;
     if (!element) return;

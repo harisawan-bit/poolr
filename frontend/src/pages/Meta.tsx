@@ -43,11 +43,17 @@ export default function Meta({ project, onChange }: { project: Project; onChange
 
     const m = settings.measure || "OR";
     const invalid = studies.filter(s => {
-      if (["OR", "RR", "RD"].includes(m)) return !s.int_events || !s.int_n || !s.ctrl_events || !s.ctrl_n;
-      if (["MD", "SMD"].includes(m)) return (!s.int_mean && s.int_mean !== 0) || !s.int_sd || (!s.ctrl_mean && s.ctrl_mean !== 0) || !s.ctrl_sd || !s.int_n || !s.ctrl_n;
-      return false;
-    });
-    if (invalid.length) { setErr(`${invalid.length} studies have missing/invalid data.`); setBusy(false); return; }
+          const m = settings.measure || "OR";
+          if (["OR", "RR", "RD"].includes(m)) return !s.int_events || !s.int_n || !s.ctrl_events || !s.ctrl_n;
+          if (["MD", "SMD"].includes(m)) return (!s.int_mean && s.int_mean !== 0) || !s.int_sd || (!s.ctrl_mean && s.ctrl_mean !== 0) || !s.ctrl_sd || !s.int_n || !s.ctrl_n;
+          return false;
+        });
+        if (invalid.length) {
+          const invalidNames = invalid.map(s => s.study || "Untitled").join(", ");
+          setErr(`${invalid.length} studies have missing/invalid data: ${invalidNames}`);
+          setBusy(false);
+          return;
+        }
 
     try {
       const inputStudies = studies.map(s => ({
@@ -326,6 +332,7 @@ function generateForestSVG(data: { studies: { study: string; effect: number; ci_
   const scale = (v: number) => plotLeft + ((v - minVal) / range) * plotWidth;
 
   let svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" style="font-family: var(--font-sans); font-size: 10px;">`;
+  svg += `<style>.study-row:hover rect { fill: var(--hover-surface); }</style>`;
   svg += `<text x="10" y="20" fill="var(--color-text-muted)" font-size="9">Study</text>`;
   svg += `<text x="${plotLeft}" y="20" fill="var(--color-text-muted)" font-size="9" text-anchor="middle">Effect Size</text>`;
   svg += `<line x1="${plotLeft}" y1="${headerHeight}" x2="${plotRight}" y2="${headerHeight}" stroke="var(--color-border)" stroke-width="1"/>`;
@@ -333,15 +340,28 @@ function generateForestSVG(data: { studies: { study: string; effect: number; ci_
 
   data.studies.forEach((s, i) => {
     const y = headerHeight + i * rowHeight + 10;
+    svg += `<g class="study-row">`;
+    svg += `<rect x="0" y="${y - 8}" width="${width}" height="20" fill="transparent" rx="3"/>`;
+    svg += `<title>${s.study}
+Effect: ${s.effect.toFixed(3)}
+95% CI: [${s.ci_lower.toFixed(3)}, ${s.ci_upper.toFixed(3)}]
+Weight: ${s.weight.toFixed(1)}%</title>`;
     svg += `<text x="10" y="${y + 3}" fill="var(--color-text-muted)">${s.study.length > 15 ? s.study.slice(0, 14) + "…" : s.study}</text>`;
     svg += `<line x1="${scale(s.ci_lower)}" y1="${y}" x2="${scale(s.ci_upper)}" y2="${y}" stroke="var(--color-text)" stroke-width="1.5"/>`;
     svg += `<circle cx="${scale(s.effect)}" cy="${y}" r="3" fill="var(--color-accent)"/>`;
+    svg += `</g>`;
   });
 
   const pooledY = headerHeight + data.studies.length * rowHeight + 20;
+  svg += `<g class="study-row">`;
+  svg += `<rect x="0" y="${pooledY - 8}" width="${width}" height="20" fill="transparent" rx="3"/>`;
+  svg += `<title>Pooled Effect
+Effect: ${data.pooled.effect.toFixed(3)}
+95% CI: [${data.pooled.ci_lower.toFixed(3)}, ${data.pooled.ci_upper.toFixed(3)}]</title>`;
   svg += `<text x="10" y="${pooledY + 3}" fill="var(--color-text)" font-weight="bold">Pooled</text>`;
   svg += `<line x1="${scale(data.pooled.ci_lower)}" y1="${pooledY}" x2="${scale(data.pooled.ci_upper)}" y2="${pooledY}" stroke="var(--color-accent)" stroke-width="2"/>`;
   svg += `<polygon points="${scale(data.pooled.effect)},${pooledY - 4} ${scale(data.pooled.effect) - 4},${pooledY + 4} ${scale(data.pooled.effect) + 4},${pooledY + 4}" fill="var(--color-accent)"/>`;
+  svg += `</g>`;
   svg += `</svg>`;
   return svg;
 }
@@ -358,13 +378,24 @@ function generateFunnelSVG(data: { points: { effect: number; se: number; study: 
   const scaleY = (se: number) => plotBottom - (se / maxSE) * plotHeight;
 
   let svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" style="font-family: var(--font-sans); font-size: 9px;">`;
+  svg += `<style>.funnel-point:hover circle { r: 5; stroke: var(--color-accent); stroke-width: 2; }</style>`;
+
   for (let se = 0; se <= maxSE; se += maxSE / 5) {
     const y = scaleY(se);
     const halfWidth = 1.96 * se;
     svg += `<line x1="${scaleX(effectMid - halfWidth)}" y1="${y}" x2="${scaleX(effectMid + halfWidth)}" y2="${y}" stroke="var(--color-border)" stroke-width="0.5" stroke-dasharray="2,2"/>`;
   }
   svg += `<line x1="${scaleX(effectMid)}" y1="${plotTop}" x2="${scaleX(effectMid)}" y2="${plotBottom}" stroke="var(--color-border-strong)" stroke-width="1"/>`;
-  data.points.forEach(p => { svg += `<circle cx="${scaleX(p.effect)}" cy="${scaleY(p.se)}" r="3" fill="var(--color-accent)" opacity="0.7"/>`; });
+
+  data.points.forEach(p => {
+    svg += `<g class="funnel-point">`;
+    svg += `<title>${p.study}
+Effect: ${p.effect.toFixed(3)}
+SE: ${p.se.toFixed(3)}</title>`;
+    svg += `<circle cx="${scaleX(p.effect)}" cy="${scaleY(p.se)}" r="3" fill="var(--color-accent)" opacity="0.7"/>`;
+    svg += `</g>`;
+  });
+
   svg += `<text x="${plotLeft}" y="${plotBottom + 15}" fill="var(--color-text-muted)">Effect Size</text>`;
   svg += `<text x="10" y="${plotTop + 10}" fill="var(--color-text-muted)" transform="rotate(-90, 10, ${plotTop + 10})">Standard Error</text>`;
   svg += `</svg>`;

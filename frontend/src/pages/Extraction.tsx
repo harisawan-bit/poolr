@@ -30,9 +30,11 @@ export default function Extraction({ project, onChange }: { project: Project; on
   };
 
   const remove = (i: number) => {
-    const next = studies.filter((_, idx) => idx !== i);
-    onChange({ ...project, extraction: { studies: next }, meta: { ...project.meta, settings: { ...project.meta.settings, data: next } } });
-  };
+      const studyName = studies[i]?.study || 'this study';
+      if (!confirm(`Remove "${studyName}"? This cannot be undone.`)) return;
+      const next = studies.filter((_, idx) => idx !== i);
+      onChange({ ...project, extraction: { studies: next }, meta: { ...project.meta, settings: { ...project.meta.settings, data: next } } });
+    };
 
   const extractFromPDF = async () => {
     if (!pdfText.trim()) return;

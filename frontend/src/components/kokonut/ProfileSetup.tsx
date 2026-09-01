@@ -128,7 +128,7 @@ export default function ProfileSetup({ onComplete, className }: ProfileSetupProp
                     key={selectedAvatar.id}
                     transition={fade ?? { duration: 0.2, ease: "easeOut" }}
                   >
-                    <div className="scale-[4] transform">{selectedAvatar.svg}</div>
+                    {selectedAvatar.svg}
                   </motion.div>
                 </AnimatePresence>
               </div>

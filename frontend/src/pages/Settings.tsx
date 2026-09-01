@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, Input, Select, Button, Pill } from '../components/ui';
 import { loadProviders, saveProviders, DEFAULT_PROVIDERS, type AIProvider } from '../lib/ai';
 import { loadSettings, saveSettings, type PoolrSettings } from '../lib/settings';
@@ -21,6 +21,19 @@ export default function Settings() {
   const [dbKeys, setDbKeys] = useState<Record<string, string>>(() => {
     try { return JSON.parse(localStorage.getItem('poolr.dbKeys') || '{}'); } catch { return {}; }
   });
+
+  // Apply settings that affect the whole app
+  useEffect(() => {
+    // Apply density
+    document.body.classList.toggle('density-compact', settings.appearance.density === 'compact');
+    document.body.classList.toggle('density-comfortable', settings.appearance.density === 'comfortable');
+  }, [settings.appearance.density]);
+
+  useEffect(() => {
+    // Apply font size
+    document.documentElement.style.setProperty('--base-font-size', `${settings.appearance.fontSize}px`);
+    document.body.style.fontSize = `${settings.appearance.fontSize}px`;
+  }, [settings.appearance.fontSize]);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'ai', label: 'AI Providers' },
@@ -175,6 +188,14 @@ export default function Settings() {
               <Select value={settings.appearance.theme} onChange={e => updateAppearance({ theme: e.target.value as 'light' | 'dark' })}>
                 <option value="dark">Dark</option>
                 <option value="light">Light</option>
+              </Select>
+            </div>
+            <div>
+              <label className="text-[10.5px] text-[var(--color-text-muted)]">Dock Style</label>
+              <Select value={settings.appearance.dockStyle} onChange={e => updateAppearance({ dockStyle: e.target.value as any })}>
+                <option value="colorful">Colorful</option>
+                <option value="monochrome">Monochrome</option>
+                <option value="minimal">Minimal</option>
               </Select>
             </div>
             <div>

@@ -24,6 +24,7 @@ export interface AppearanceConfig {
   theme: 'light' | 'dark';
   density: 'compact' | 'comfortable';
   fontSize: number;
+  dockStyle: 'colorful' | 'monochrome' | 'minimal';
 }
 
 export interface StudyTypeConfig {
@@ -59,10 +60,11 @@ export const DEFAULT_SETTINGS: PoolrSettings = {
     citationStyle: 'vancouver',
   },
   appearance: {
-    theme: 'dark',
-    density: 'comfortable',
-    fontSize: 12.5,
-  },
+      theme: 'dark',
+      density: 'comfortable',
+      fontSize: 12.5,
+      dockStyle: 'colorful',
+    },
   studyType: {
     type: 'standard',
   },

@@ -1,16 +1,5 @@
 "use client";
 
-/**
- * FloatingDock — adapted from Aceternity UI's floating dock (MIT,
- * © Aceternity UI / Manu Arora) with the magnifying dock pattern the
- * user selected to replace poolr's sidebar. Icons are lucide (no
- * tabler dependency); navigation uses callbacks instead of links.
- *
- * v0.5.5: colorful professional icons — each nav item gets a distinct
- * color; active state has colored tint + border + text; rounded-lg
- * containers; subtle magnify animation; rgba dock background.
- */
-
 import { AnimatePresence, MotionValue, motion, useMotionValue, useSpring, useTransform } from "motion/react";
 import { useRef, useState, type ReactNode } from "react";
 import { cn } from "../../lib/utils";
@@ -25,7 +14,6 @@ export interface DockItem {
 
 const ICON_SIZE = 36;
 
-/** Per-icon color map. */
 const NAV_COLORS: Record<string, string> = {
   dashboard: "#3b82f6",
   protocol: "#8b5cf6",
@@ -38,13 +26,11 @@ const NAV_COLORS: Record<string, string> = {
   settings: "#6b7280",
 };
 
-/** Returns the hex color for a given nav key. */
 export function getNavColor(key: string | undefined): string {
   if (!key) return "#6b7280";
   return NAV_COLORS[key] ?? "#6b7280";
 }
 
-/** Converts a hex color to an rgba string with the given opacity. */
 function hexToRgba(hex: string, alpha: number): string {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -52,7 +38,7 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-function DockIcon({ item, mouseX }: { item: DockItem; mouseX: MotionValue<number> }) {
+function DockIcon({ item, mouseX, dockStyle = "colorful" }: { item: DockItem; mouseX: MotionValue<number>; dockStyle?: "colorful" | "monochrome" | "minimal" }) {
   const ref = useRef<HTMLButtonElement>(null);
   const color = getNavColor(item.key);
 
@@ -62,23 +48,22 @@ function DockIcon({ item, mouseX }: { item: DockItem; mouseX: MotionValue<number
   });
 
   const iconSize = useSpring(useTransform(distance, [-120, 0, 120], [ICON_SIZE, Math.round(ICON_SIZE * 1.35), ICON_SIZE]), {
-    mass: 0.1,
-    stiffness: 150,
-    damping: 12,
+    mass: 0.1, stiffness: 150, damping: 12,
   });
   const iconTranslate = useSpring(useTransform(distance, [-120, 0, 120], [-3, 0, -3]), {
-    mass: 0.1,
-    stiffness: 150,
-    damping: 12,
+    mass: 0.1, stiffness: 150, damping: 12,
   });
 
   const [hovered, setHovered] = useState(false);
 
+  const isMonochrome = dockStyle === "monochrome";
+  const isMinimal = dockStyle === "minimal";
+
   const activeStyle = item.active
     ? {
-        backgroundColor: hexToRgba(color, 0.1),
-        borderColor: hexToRgba(color, 0.5),
-        color: color,
+        backgroundColor: isMonochrome ? "rgba(255,255,255,0.1)" : isMinimal ? "rgba(255,255,255,0.05)" : hexToRgba(color, 0.1),
+        borderColor: isMonochrome ? "rgba(255,255,255,0.3)" : isMinimal ? "rgba(255,255,255,0.1)" : hexToRgba(color, 0.5),
+        color: isMonochrome ? "#ffffff" : isMinimal ? "rgba(255,255,255,0.7)" : color,
       }
     : {};
 
@@ -98,13 +83,7 @@ function DockIcon({ item, mouseX }: { item: DockItem; mouseX: MotionValue<number
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       ref={ref}
-      style={{
-        width: iconSize,
-        height: iconSize,
-        translateY: iconTranslate,
-        ...activeStyle,
-        ...hoverScale,
-      }}
+      style={{ width: iconSize, height: iconSize, translateY: iconTranslate, ...activeStyle, ...hoverScale }}
       type="button"
     >
       <div className="flex h-full w-full items-center justify-center">{item.icon}</div>
@@ -134,18 +113,8 @@ interface DockStatusProps {
 }
 
 function DockStatus({ connected, connLabel, saveState, saveLabel }: DockStatusProps) {
-  const connDot =
-    connected === null
-      ? "bg-[var(--color-text-muted)]"
-      : connected
-        ? "bg-[var(--color-include)]"
-        : "bg-[var(--color-exclude)]";
-  const saveDot =
-    saveState === "error"
-      ? "bg-[var(--color-exclude)]"
-      : saveState === "saved"
-        ? "bg-[var(--color-include)]"
-        : "bg-[#8b8d96]";
+  const connDot = connected === null ? "bg-[var(--color-text-muted)]" : connected ? "bg-[var(--color-include)]" : "bg-[var(--color-exclude)]";
+  const saveDot = saveState === "error" ? "bg-[var(--color-exclude)]" : saveState === "saved" ? "bg-[var(--color-include)]" : "bg-[#8b8d96]";
 
   return (
     <div className="flex flex-col gap-1 px-2 py-1.5 text-[10px] text-[var(--color-text-muted)]">
@@ -169,6 +138,7 @@ interface FloatingDockProps {
   saveState?: "idle" | "saving" | "saved" | "error";
   saveLabel?: string;
   optionsTrigger?: ReactNode;
+  dockStyle?: "colorful" | "monochrome" | "minimal";
 }
 
 export function FloatingDock({
@@ -179,8 +149,11 @@ export function FloatingDock({
   saveState = "idle",
   saveLabel = "",
   optionsTrigger,
+  dockStyle = "colorful",
 }: FloatingDockProps) {
   const mouseX = useMotionValue(Number.POSITIVE_INFINITY);
+
+  const dockBg = dockStyle === "minimal" ? "rgba(0, 0, 0, 0.2)" : dockStyle === "monochrome" ? "rgba(0, 0, 0, 0.5)" : "rgba(0, 0, 0, 0.4)";
 
   return (
     <motion.div
@@ -190,19 +163,16 @@ export function FloatingDock({
       )}
       onMouseMove={(e) => mouseX.set(e.pageX)}
       onMouseLeave={() => mouseX.set(Number.POSITIVE_INFINITY)}
-      style={{ backgroundColor: "rgba(0, 0, 0, 0.4)", backdropFilter: "blur(12px)" }}
+      style={{ backgroundColor: dockBg, backdropFilter: dockStyle === "minimal" ? "blur(4px)" : "blur(12px)" }}
     >
       {items.map((item) => (
-        <DockIcon item={item} key={item.title} mouseX={mouseX} />
+        <DockIcon item={item} key={item.title} mouseX={mouseX} dockStyle={dockStyle} />
       ))}
 
-      {/* Divider between nav and status/options */}
       <div className="mx-1 h-6 w-px bg-white/10" />
 
-      {/* Workspace options trigger (if provided) */}
       {optionsTrigger}
 
-      {/* Integrated status indicators */}
       <DockStatus
         connected={connected}
         connLabel={connLabel}

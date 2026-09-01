@@ -230,7 +230,8 @@ function Shell() {
   const [splashDone, setSplashDone] = useState(false);
   const [profile, setProfile] = useState<StoredProfile | null>(() => readProfile());
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
+    const [showProfile, setShowProfile] = useState(false);
+    const [showProjectSettings, setShowProjectSettings] = useState(false);
 
   const linefieldRef = useRef<HTMLCanvasElement | null>(null);
   useLineField(linefieldRef, theme);
@@ -451,26 +452,27 @@ function Shell() {
   );
 
   /* Command palette actions (Ctrl+K). */
-  const paletteActions: CommandAction[] = useMemo(
-    () => [
-      ...NAV.map((n) => ({
-        id: `go-${n.key}`,
-        label: n.label,
-        description: n.key === page ? "current page" : undefined,
-        end: "Go to",
-        icon: <n.Icon className="h-4 w-4" />,
-        onSelect: () => setPage(n.key),
-      })),
-      { id: "file-open", label: "Open project…", end: "File", short: "", icon: <FolderOpen className="h-4 w-4" />, onSelect: () => void handleOpen() },
-      { id: "file-demo", label: "Load demo review", description: "BCG dataset", end: "File", icon: <Sparkles className="h-4 w-4" />, onSelect: () => void loadDemo() },
-      { id: "file-new", label: "New workspace", end: "File", icon: <FilePlus2 className="h-4 w-4" />, onSelect: () => void handleNew() },
-      { id: "file-save", label: "Save project", end: "File", icon: <Save className="h-4 w-4" />, onSelect: () => void handleSave() },
-      { id: "file-export", label: "Export report (DOCX)", end: "File", icon: <FileDown className="h-4 w-4" />, onSelect: () => void handleExport() },
-      { id: "app-theme", label: theme === "dark" ? "Switch to light theme" : "Switch to dark theme", end: "Appearance", icon: theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />, onSelect: toggleTheme },
-    ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [theme, page, project]
-  );
+    const paletteActions: CommandAction[] = useMemo(
+      () => [
+        ...NAV.map((n) => ({
+          id: `go-${n.key}`,
+          label: n.label,
+          description: n.key === page ? "current page" : undefined,
+          end: "Go to",
+          short: n.key === "dashboard" ? "Ctrl+1" : n.key === "protocol" ? "Ctrl+2" : n.key === "search" ? "Ctrl+3" : n.key === "screening" ? "Ctrl+4" : n.key === "extraction" ? "Ctrl+5" : n.key === "rob" ? "Ctrl+6" : n.key === "meta" ? "Ctrl+7" : n.key === "prisma" ? "Ctrl+8" : undefined,
+          icon: <n.Icon className="h-4 w-4" />,
+          onSelect: () => setPage(n.key),
+        })),
+        { id: "file-open", label: "Open project…", end: "File", short: "Ctrl+O", icon: <FolderOpen className="h-4 w-4" />, onSelect: () => void handleOpen() },
+        { id: "file-demo", label: "Load demo review", description: "BCG dataset", end: "File", icon: <Sparkles className="h-4 w-4" />, onSelect: () => void loadDemo() },
+        { id: "file-new", label: "New workspace", end: "File", short: "Ctrl+N", icon: <FilePlus2 className="h-4 w-4" />, onSelect: () => void handleNew() },
+        { id: "file-save", label: "Save project", end: "File", short: "Ctrl+S", icon: <Save className="h-4 w-4" />, onSelect: () => void handleSave() },
+        { id: "file-export", label: "Export report (DOCX)", end: "File", short: "Ctrl+E", icon: <FileDown className="h-4 w-4" />, onSelect: () => void handleExport() },
+        { id: "app-theme", label: theme === "dark" ? "Switch to light theme" : "Switch to dark theme", end: "Appearance", short: "Ctrl+T", icon: theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />, onSelect: toggleTheme },
+      ],
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [theme, page, project]
+    );
 
   const connLabel = connected === null ? "connecting…" : connected ? "engine online" : "engine offline";
 
@@ -495,23 +497,34 @@ function Shell() {
         </div>
 
         <div className="flex items-center gap-1.5">
-          <button className="btn-ghost flex items-center gap-1.5" disabled={busy} onClick={handleOpen}>
-            <FolderOpen className="h-3.5 w-3.5" /> Open
-          </button>
-          <button className="btn-ghost flex items-center gap-1.5" disabled={busy} onClick={loadDemo}>
-            <Sparkles className="h-3.5 w-3.5" /> Demo
-          </button>
-          <button className="btn-ghost flex items-center gap-1.5" onClick={handleNew}>
-            <FilePlus2 className="h-3.5 w-3.5" /> New
-          </button>
-          <button className="btn-ghost flex items-center gap-1.5" disabled={!project} onClick={handleSave}>
-            <Save className="h-3.5 w-3.5" /> Save
-          </button>
-          <button className="btn-primary flex items-center gap-1.5" disabled={!project || busy} onClick={handleExport}>
-            <FileDown className="h-3.5 w-3.5" /> Export
-          </button>
-          <SwitchButton size="sm" showLabel={false} className="ml-1 !h-8 !rounded-lg !px-2" />
-          <ProfileDropdown
+                  <button className="btn-ghost flex items-center gap-1.5" disabled={busy} onClick={handleOpen} title="Open project (Ctrl+O)">
+                    <FolderOpen className="h-3.5 w-3.5" /> Open
+                  </button>
+                  <button className="btn-ghost flex items-center gap-1.5" disabled={busy} onClick={loadDemo} title="Load demo review">
+                    <Sparkles className="h-3.5 w-3.5" /> Demo
+                  </button>
+                  <button className="btn-ghost flex items-center gap-1.5" onClick={handleNew} title="New project (Ctrl+N)">
+                    <FilePlus2 className="h-3.5 w-3.5" /> New
+                  </button>
+                  <button className="btn-ghost flex items-center gap-1.5" disabled={!project} onClick={handleSave} title="Save project (Ctrl+S)">
+                    <Save className="h-3.5 w-3.5" /> Save
+                  </button>
+                  <button className="btn-primary flex items-center gap-1.5" disabled={!project || busy} onClick={handleExport} title="Export report (Ctrl+E)">
+                    <FileDown className="h-3.5 w-3.5" /> Export
+                  </button>
+                  <SwitchButton size="sm" showLabel={false} className="ml-1 !h-8 !rounded-lg !px-2" />
+                  <button
+                    className="btn-ghost flex items-center gap-1.5"
+                    onClick={() => setShowProjectSettings(true)}
+                    title="Project settings"
+                  >
+                    <Settings2 className="h-3.5 w-3.5" />
+                  </button>
+                  <div className="ml-1 flex items-center gap-1.5 rounded-lg border border-[var(--color-border)] px-2 py-1" title={`Engine: ${connLabel} | Save: ${saveLabel}`}>
+                    <span className={`h-2 w-2 rounded-full ${connected === null ? 'bg-[var(--color-text-muted)]' : connected ? 'bg-[var(--color-include)]' : 'bg-[var(--color-exclude)]'}`} />
+                    <span className={`h-2 w-2 rounded-full ${saveState === 'error' ? 'bg-[var(--color-exclude)]' : saveState === 'saved' ? 'bg-[var(--color-include)]' : 'bg-[#8b8d96]'}`} />
+                  </div>
+                  <ProfileDropdown
             appVersion={APP_VERSION}
             className="ml-1"
             data={{
@@ -560,6 +573,7 @@ function Shell() {
           connLabel={connLabel}
           saveState={saveState}
           saveLabel={saveLabel}
+          dockStyle={settings.appearance.dockStyle}
           optionsTrigger={
             <OptionsDrawer
               closeText="Close"

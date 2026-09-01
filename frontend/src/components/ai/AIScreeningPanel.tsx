@@ -23,28 +23,36 @@ interface RecordResult {
 }
 
 export default function AIScreeningPanel({ items, pico, inclusionCriteria, exclusionCriteria, onDecisions }: Props) {
-  const [activeProviders, setActiveProviders] = useState<AIProvider[]>(getActiveProviders());
+  const [allProviders, setAllProviders] = useState<AIProvider[]>(getActiveProviders());
+  const [selectedProviderIds, setSelectedProviderIds] = useState<string[]>([]);
+  const [showProviderSelector, setShowProviderSelector] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [progress, setProgress] = useState({ current: 0, total: 0 });
+  const [progress, setProgress] = useState({ current: 0, total: 0, perModel: {} as Record<string, number> });
   const [results, setResults] = useState<RecordResult[]>([]);
   const [expandedRecord, setExpandedRecord] = useState<string | null>(null);
   const settings = loadSettings();
 
+  const selectedProviders = allProviders.filter(p => selectedProviderIds.includes(p.id));
+  const activeProviders = selectedProviders.length > 0 ? selectedProviders : allProviders;
+
   const runScreening = async () => {
-    const providers = getActiveProviders();
-    setActiveProviders(providers);
+    const providers = activeProviders;
+    setAllProviders(providers);
     if (providers.length === 0) return;
 
     setProcessing(true);
     setResults([]);
-    setProgress({ current: 0, total: items.length });
+    setProgress({ current: 0, total: items.length, perModel: {} });
 
     const batchSize = settings.ai.batchSize;
     const allResults: RecordResult[] = [];
 
     for (let i = 0; i < items.length; i += batchSize) {
       const batch = items.slice(i, i + batchSize);
-      setProgress({ current: Math.min(i + batchSize, items.length), total: items.length });
+      setProgress(prev => ({
+        ...prev,
+        current: Math.min(i + batchSize, items.length),
+      }));
 
       const prompt = buildPrompt(batch, pico, inclusionCriteria, exclusionCriteria);
       const responses = await callAIMultiProvider(providers, [

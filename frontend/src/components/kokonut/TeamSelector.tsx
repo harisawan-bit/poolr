@@ -1,16 +1,5 @@
 "use client";
 
-/**
- * Adapted from kokonutui TeamSelector (@dorianbaffier, MIT).
- * Ported off next/image + dicebear remote URLs: avatars are poolr's local
- * inline SVG set (same visual family), so the desktop app works offline.
- * In poolr this selects how many reviewers are screening.
- *
- * v0.5.4: replaced all zinc-* hardcodes with poolr CSS tokens so the
- * component respects the active theme. Reduced counter proportion and
- * tightened spacing for a more professional footprint.
- */
-
 import { Minus, Plus } from "lucide-react";
 import {
   AnimatePresence,
@@ -29,8 +18,6 @@ export interface TeamMember {
   svg: React.ReactNode;
 }
 
-/* Local avatar set — same geometric-face style as the template's dicebear
-   notionists, rendered inline so nothing depends on the network. */
 function Face({ bg, fg, mouth = "#000000", seed = 0 }: { bg: string; fg: string; mouth?: string; seed?: number }) {
   const eyeY = 14;
   return (
@@ -97,7 +84,22 @@ export default function TeamSelector({
   className = "",
 }: TeamSelectorProps) {
   const maxTeamSize = members.length;
-  const [peopleCount, setPeopleCount] = useState(defaultValue);
+  const [peopleCount, setPeopleCount] = useState(() => {
+    try {
+      const saved = localStorage.getItem("poolr.teamSize");
+      return saved ? parseInt(saved, 10) || defaultValue : defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  });
+  const [reviewerNames, setReviewerNames] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("poolr.reviewerNames");
+      return saved ? JSON.parse(saved) : members.slice(0, defaultValue).map(m => m.name);
+    } catch {
+      return members.slice(0, defaultValue).map(m => m.name);
+    }
+  });
   const [isVibrating, setIsVibrating] = useState(false);
   const directionRef = useRef<1 | -1>(1);
   const prefersReducedMotion = useReducedMotion();
@@ -111,7 +113,21 @@ export default function TeamSelector({
   const applyCount = (n: number, dir: 1 | -1) => {
     directionRef.current = dir;
     setPeopleCount(n);
+    try {
+      localStorage.setItem("poolr.teamSize", String(n));
+    } catch { /* ignore */ }
     onChange?.(n);
+  };
+
+  const updateReviewerName = (index: number, name: string) => {
+    setReviewerNames(prev => {
+      const next = [...prev];
+      next[index] = name;
+      try {
+        localStorage.setItem("poolr.reviewerNames", JSON.stringify(next));
+      } catch { /* ignore */ }
+      return next;
+    });
   };
 
   const handleIncrement = (e: React.MouseEvent | React.KeyboardEvent) => {
@@ -237,6 +253,22 @@ export default function TeamSelector({
             </button>
           </motion.div>
         </fieldset>
+
+        {/* Reviewer names */}
+        <div className="mt-4 space-y-2">
+          <div className="text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+            Reviewer Names
+          </div>
+          {Array.from({ length: peopleCount }).map((_, i) => (
+            <input
+              key={i}
+              className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 text-[12px] text-[var(--color-text)] focus-visible:border-[var(--color-border-strong)] focus-visible:outline-none"
+              value={reviewerNames[i] || members[i]?.name || `Reviewer ${i + 1}`}
+              onChange={(e) => updateReviewerName(i, e.target.value)}
+              placeholder={`Reviewer ${i + 1}`}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
