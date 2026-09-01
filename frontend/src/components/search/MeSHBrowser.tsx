@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, Button, Input } from '../ui';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 
 interface MeSHResult {
   term: string;
@@ -13,13 +13,29 @@ export default function MeSHBrowser({ onSelect }: { onSelect: (term: string) => 
   const [results, setResults] = useState<MeSHResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'connected' | 'error'>('idle');
+
+  // Test NCBI connection on mount
+  useEffect(() => {
+    testConnection();
+  }, []);
+
+  const testConnection = async () => {
+    try {
+      const res = await fetch('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/einfo.fcgi?retmode.json', {
+        signal: AbortSignal.timeout(5000),
+      });
+      setConnectionStatus(res.ok ? 'connected' : 'error');
+    } catch {
+      setConnectionStatus('error');
+    }
+  };
 
   const search = async () => {
     if (!query.trim()) return;
     setLoading(true);
     setError(null);
     try {
-      // Search MeSH via NCBI E-utilities API
       const searchRes = await fetch(
         `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=mesh&term=${encodeURIComponent(query)}&retmode=json&retmax=10`
       );
@@ -32,7 +48,6 @@ export default function MeSHBrowser({ onSelect }: { onSelect: (term: string) => 
         return;
       }
 
-      // Fetch details for each ID
       const detailsRes = await fetch(
         `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=mesh&id=${ids.join(',')}&retmode=json`
       );
@@ -48,8 +63,10 @@ export default function MeSHBrowser({ onSelect }: { onSelect: (term: string) => 
       });
 
       setResults(meshResults);
+      setConnectionStatus('connected');
     } catch (err) {
-      setError('Failed to search MeSH. Please check your internet connection.');
+      setError('Failed to search MeSH. Check your internet connection.');
+      setConnectionStatus('error');
       setResults([]);
     } finally {
       setLoading(false);
@@ -57,7 +74,26 @@ export default function MeSHBrowser({ onSelect }: { onSelect: (term: string) => 
   };
 
   return (
-    <Card title="MeSH Term Browser">
+    <Card
+      title="MeSH Term Browser"
+      right={
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-1 text-[10px] text-[var(--color-text-muted)]">
+            {connectionStatus === 'connected' ? (
+              <CheckCircle2 className="h-3 w-3 text-[var(--color-include)]" />
+            ) : connectionStatus === 'error' ? (
+              <XCircle className="h-3 w-3 text-[var(--color-exclude)]" />
+            ) : (
+              <AlertCircle className="h-3 w-3" />
+            )}
+            {connectionStatus === 'connected' ? 'Connected' : connectionStatus === 'error' ? 'Offline' : 'Checking...'}
+          </span>
+          <Button variant="ghost" size="sm" onClick={testConnection}>
+            <Loader2 className="h-3 w-3" />
+          </Button>
+        </div>
+      }
+    >
       <div className="space-y-3">
         <div className="flex gap-2">
           <Input
