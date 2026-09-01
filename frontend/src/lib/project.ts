@@ -293,7 +293,7 @@ export interface AIScreeningResult {
 }
 
 export interface Project {
-  metadata: { version: string; created: string; title?: string; studyType?: string };
+  metadata: { version: string; created: string; title?: string; studyType?: string; config?: ProjectConfig };
   pico: Pico;
   protocol: ProtocolData;
   screening: { title_abstract: ScreeningItem[]; full_text: ScreeningItem[] };
@@ -309,6 +309,19 @@ export interface Project {
   diagnostic?: DiagnosticData;
   proportions?: ProportionsData;
   qualitative?: QualitativeData;
+}
+
+export interface ProjectConfig {
+  title: string;
+  studyType: string;
+  reviewType: string;
+  reviewers: { id: string; name: string }[];
+  dualScreening: boolean;
+  aiEnabled: boolean;
+  aiFeatures: string[];
+  databases: string[];
+  pico: { population: string; intervention: string; comparator: string; outcomes: string };
+  searchStrategy: Record<string, string>;
 }
 
 export function emptyProject(): Project {

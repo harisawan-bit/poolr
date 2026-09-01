@@ -25,7 +25,7 @@ import {
   saveProject,
   getProject,
 } from "./lib/api";
-import { emptyProject, normalizeProject, type Project } from "./lib/project";
+import { emptyProject, normalizeProject, type Project, type ProjectConfig } from "./lib/project";
 import { APP_VERSION } from "./lib/version";
 import { ThemeProvider, useTheme } from "./lib/theme";
 import Dashboard from "./pages/Dashboard";
@@ -45,6 +45,7 @@ import ProportionsMeta from "./pages/ProportionsMeta";
 import QualitativeMeta from "./pages/QualitativeMeta";
 import ManualMode from "./pages/ManualMode";
 import DisclaimerModal from "./components/DisclaimerModal";
+import NewProjectWizard from "./components/NewProjectWizard";
 
 // v0.5.3 kokonutui component family (adapted, MIT — see file headers)
 import FloatingDock, { type DockItem } from "./components/kokonut/FloatingDock";
@@ -325,9 +326,20 @@ function Shell() {
     finally { if (mounted.current) setBusy(false); }
   };
 
+  const [showWizard, setShowWizard] = useState(false);
+
   const handleNew = async () => {
+    setShowWizard(true);
+  };
+
+  const handleWizardComplete = async (config: ProjectConfig) => {
+    setShowWizard(false);
     cancelPendingSave();
     const p = emptyProject();
+    p.metadata.title = config.title;
+    p.metadata.studyType = config.studyType;
+    p.metadata.config = config;
+    p.pico = { ...p.pico, ...config.pico };
     setProject(p); setSaveState("idle"); setBanner(null);
     const seq = ++saveSeq.current;
     try {
@@ -637,6 +649,7 @@ function Shell() {
       </AnimatePresence>
 
       {showDisclaimer && <DisclaimerModal onClose={() => setShowDisclaimer(false)} />}
-    </div>
-  );
-}
+            {showWizard && <NewProjectWizard onComplete={handleWizardComplete} onCancel={() => setShowWizard(false)} />}
+          </div>
+        );
+      }
