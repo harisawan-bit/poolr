@@ -89,7 +89,7 @@ export default function OptionsDrawer({
               <DrawerTitle className="flex items-center gap-2.5 font-semibold text-xl tracking-tighter">
                 {Icon && (
                   <motion.div variants={itemVariants}>
-                    <div className="rounded-xl bg-gradient-to-br from-zinc-100 to-zinc-200 p-1.5 shadow-inner dark:from-zinc-800 dark:to-zinc-900">
+                    <div className="rounded-xl bg-[var(--color-accent)]/10 p-1.5 border border-[var(--color-border)]">
                       <Icon className="h-5 w-5 text-[var(--color-text)]" />
                     </div>
                   </motion.div>

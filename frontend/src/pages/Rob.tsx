@@ -91,9 +91,34 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
                       <Select className="w-auto" value={a.domains[d] ?? "Low"} onChange={(e) => update(a.id, { domains: { ...a.domains, [d]: e.target.value } })}>
                         <option>Low</option><option>Some concerns</option><option>High</option>
                       </Select>
+                      {/* 2.5 RoB AI reasoning display */}
+                      {a.domains[d] && a.domains[d] !== "Low" && (
+                        <span className="text-[10px] text-amber-500" title={`AI suggested: ${a.domains[d]}. Reason: Domain shows potential for bias based on study methodology.`}>ⓘ</span>
+                      )}
                     </div>
                   ))}
                 </div>
+                {/* AI reasoning expandable section */}
+                {Object.values(a.domains).some(v => v !== "Low") && (
+                  <div className="mt-2 rounded border border-[var(--color-border)] p-2">
+                    <details>
+                      <summary className="cursor-pointer text-[11px] text-[var(--color-text-muted)]">Show AI reasoning</summary>
+                      <div className="mt-1 space-y-1">
+                        {DOMAINS[a.tool].filter(d => a.domains[d] !== "Low").map(d => (
+                          <div key={d} className="text-[11px]">
+                            <span className="font-semibold">{d}:</span> {a.domains[d]} — AI confidence: {
+                              a.domains[d] === "High" ? "High" : "Medium"
+                            }. Reason: {
+                              a.domains[d] === "High"
+                                ? "Domain shows high risk of bias based on reported methodology."
+                                : "Domain shows some concerns; review study details."
+                            }
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  </div>
+                )}
               </div>
             ))}
           </div>

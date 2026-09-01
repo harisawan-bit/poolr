@@ -7,6 +7,7 @@ import { runMetaExtended, getFigure } from "../lib/project";
 import { RingChart } from "../components/charts/ring-chart";
 import { Ring } from "../components/charts/ring";
 import { RingCenter } from "../components/charts/ring-center";
+import { EffectSizeConverter } from "../components/EffectSizeConverter";
 
 const MEASURES: ExtendedMetaRequest["measure"][] = [
   "OR", "RR", "RD", "MD", "SMD", "HR",
@@ -159,12 +160,10 @@ export default function Meta({ project, onChange }: { project: Project; onChange
               <Stat k="Q (df)" v={het ? `${fmtN(het.q, 2)} (${het.df ?? "—"}), p ${fmtN(het?.q_p, 3)}` : "—"} />
               {typeof het?.h2 === "number" && <Stat k="H²" v={fmtN(het.h2, 2)} />}
             </div>
-            {pooled?.ci_method && (
-              <div className="mt-3 text-[12px] text-[var(--color-text-muted)]">
-                CI method: {pooled.ci_method}
-                {resp.knapp_hartung ? " — wider, uncertainty-aware intervals" : ""}
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <span className="text-[var(--color-text-muted)]">Effect Size Conversion</span>
+              <EffectSizeConverter />
+            </div>
             {resp.publication_bias?.egger && (
               <div className="mt-3 text-[12px] text-[var(--color-text-muted)]">Egger intercept {fmtN(resp.publication_bias.egger.intercept, 3)} (p {fmtN(resp.publication_bias.egger.p_value, 3)}) — {resp.publication_bias.egger.significant ? "significant asymmetry" : "no significant asymmetry"}</div>
             )}

@@ -226,3 +226,35 @@ html.dark {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── Color blindness modes (1.3) ─────────────────────────────────── */
+html.colorblind-protanopia {
+  --color-include: #0077bb;
+  --color-exclude: #ee7733;
+  --color-unsure: #ccbb44;
+  --chart-1: #0077bb;
+  --chart-2: #ee7733;
+  --chart-3: #ccbb44;
+  --chart-4: #33bbee;
+  --chart-5: #ee3377;
+}
+html.colorblind-deuteranopia {
+  --color-include: #004488;
+  --color-exclude: #ddaa33;
+  --color-unsure: #88ccee;
+  --chart-1: #004488;
+  --chart-2: #ddaa33;
+  --chart-3: #88ccee;
+  --chart-4: #117733;
+  --chart-5: #aa4499;
+}
+html.colorblind-tritanopia {
+  --color-include: #cc6677;
+  --color-exclude: #882255;
+  --color-unsure: #332288;
+  --chart-1: #cc6677;
+  --chart-2: #882255;
+  --chart-3: #332288;
+  --chart-4: #999933;
+  --chart-5: #88ccee;
+}

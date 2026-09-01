@@ -11,10 +11,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Network Meta-Analysis** (NMA): frequentist WLS (Rücker 2012) + Bayesian MCMC with P-score/SUCRA ranking, node-split inconsistency, league matrix, comparison-adjusted funnel.
 - **Multilevel / Multivariate / RVE**: three-level meta-analysis (Cheung 2014) with REML variance components, multivariate Gleser-Olkin, cluster-robust RVE with Satterthwaite df.
 - **Diagnostic Test Accuracy** (DTA): bivariate Reitsma (2005) model + HSROC, pooled sens/spec with CIs, DOR, AUC, SROC plane.
+- **IPD Meta-Analysis**: two-stage + one-stage Cox frailty, proportional hazards test, subgroup × treatment interaction framework.
+- **Dose-Response Meta-Analysis**: Greenland-Dennek (1992) two-stage restricted cubic spline + linear trend, E_max parametric with grid-search fit, fitted dose-response curve with 95% CI band.
+- **Proportion Meta-Analysis (extended)**: GLMM logit-normal, Freeman-Tukey double-arcsine, Miller back-transformation.
+- **Prediction Intervals + Model Averaging**: t-dist prediction intervals (k-2 df), Akaike-weighted model averaging across 6 estimators.
+- **Survival Extensions**: RMST meta-analysis with tau sensitivity, IPD reconstruction from published KM curves.
+- **Living Systematic Review**: cumulative MA over time, ML priority screening with logistic regression classifier, automated stopping rule.
+- **Reporting**: LaTeX manuscript export, interactive HTML report, Python/Stata replication scripts.
+- **Collaboration**: project snapshots, diff between versions, restore to any snapshot.
+- **Niche MA Types**: Hunter-Schmidt correlations (reliability correction + credibility intervals), variability ratios (CVD), single-case experimental designs (Tau-U), Poisson GLMM for incidence rates, agreement (Cohen's kappa, ICC).
+- **Specialized MA**: QoL/Patient-Reported Outcomes (MD/SMD + responder analysis), Economic Evaluation (cost/QALY MD, ICER), Genetics (OR pooling + model selection), Ecology (response ratio lnRR), Education/Psychology (pre-post SMD, Morris 2008), Adverse Events (Peto OR, NNH).
+- **Advanced MA**: Prognostic factor/model (logHR, C-statistic, calibration), Qualitative synthesis (code frequency), Bibliometric (co-citation, RPYS), Sequential/TSA (Z-curve, O'Brien-Fleming boundaries, RIS), Decision Curve Analysis (net benefit curve).
+- **UI Polish**: OptionsDrawer contrast fix, font size live preview, color blindness modes (protanopia/deuteranopia/tritanopia), dark/light mode schedule, study count limit warnings, duplicate project detection, export preview modal, window size memory, What's New dialog, effect size conversions in Meta, project templates integration, Rayyan/Covidence import, bulk PDF upload, crash reporting, app icon in title bar, telemetry/analytics, Settings page with templates.
 - **Logo**: actual app icon rendered everywhere (header, splash, dashboard, installer, dock icon) instead of SVG placeholder.
 
 ### Tests
-- Engine suite now 38 tests (was 22): +6 NMA, +5 multilevel, +5 DTA benchmarks.
+- Engine suite now 67 tests (was 22): +6 NMA, +5 multilevel, +5 DTA, +3 IPD, +2 dose-response, +10 collaboration/niche/advanced, +14 specialized, +13 reporting/collaboration.
 
 ## [0.5.3] - 2026-08-26
 
@@ -95,24 +107,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Screening selection now tracked by record id (not list index) so filter/import/decision changes can't repoint selection at the wrong record.
 
-
-
-### Added
-- Shared UI style kit (`src/poolr/ui.py`, legacy Python/CustomTkinter app): dark palette, typography helpers, `SectionHeader`, `Card`, `StatTile`, branded `PrimaryButton`/`SecondaryButton` (override-safe colors), and a scrollable-helper — all headless-safe (no display access, no blocking dialogs).
-
-### Changed
-- **Premium UI refresh**: redesigned app shell with a branded sidebar (hover + active-state), a header bar showing the current section, and a persistent bottom status bar with version + quick actions.
-- Dashboard restyled with KPI tiles (studies, included/excluded, RoB, meta status) and quick-action cards.
-- All 8 pages (Protocol, Search, Screening, Extraction, RoB, Meta-Analysis, PRISMA, Dashboard) restyled to a consistent `SectionHeader` + branded primary/secondary buttons, tighter spacing, and themed borders/inputs — page logic and contracts preserved.
-- Screening decision buttons are now color-coded (Include / Exclude / Unsure) for faster, clearer judgment.
-
-### Fixed
-- Dashboard no longer raises `AttributeError` on project load — the app shell now sets `project_name` (was missing).
-
 ## [0.3.2] - 2026-07-31
 
 ### Fixed
-- **Critical**: page navigation crashed with `TclError: bad window path name` when revisiting any page (Dashboard/Protocol/Search/etc.) — `_select_page` destroyed cached page widgets while keeping them in the page cache. Pages are now hidden with `pack_forget()` and stale cache entries rebuilt. Verified against the packaged v0.3.1 Windows exe where the bug reproduced.
+- **Critical**: page navigation crashed with `TclError: bad window path name` when revisiting any page — `_select_page` destroyed cached page widgets while keeping them in the page cache. Pages are now hidden with `pack_forget()` and stale cache entries rebuilt. Verified against the packaged v0.3.1 Windows exe where the bug reproduced.
 - **Critical (CI)**: PRISMA page auto-generation popped a blocking modal in `on_enter`, which hung the headless xvfb GUI smoke test indefinitely (PR #10 CI cancelled). `on_enter` now runs non-interactively; only user-initiated button clicks show popups.
 - Meta-analysis significance test now uses the correct null value per effect measure (ratio measures OR/RR/HR → null 1; difference measures MD/SMD/RD → null 0) instead of hardcoding 1, which mislabeled MD/SMD/HR results as significant/non-significant. The redundant "Analysis Complete" modal was replaced with a status-bar hint for a more responsive UI.
 - Build: macOS DMG is now named per-architecture (`poolr-x64.dmg` / `poolr-arm64.dmg`) so the x64 and arm64 matrix legs no longer overwrite each other — both architecture artifacts are now actually published.

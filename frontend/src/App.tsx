@@ -41,10 +41,15 @@ import Rob from "./pages/Rob";
 import Meta from "./pages/Meta";
 import Nma from "./pages/Nma";
 import Survival from "./pages/Survival";
+import Settings from "./pages/Settings";
 import Dta from "./pages/Dta";
 import Multilevel from "./pages/Multilevel";
 import Prisma from "./pages/Prisma";
 import DisclaimerModal from "./components/DisclaimerModal";
+import { WhatsNewModal, useWhatsNew } from "./components/WhatsNew";
+import { ColorBlindProvider } from "./lib/colorBlind";
+import { logCrash } from "./lib/crashReporter";
+import { trackEvent, isAnalyticsEnabled } from "./lib/analytics";
 
 // v0.5.3 kokonutui component family (adapted, MIT — see file headers)
 import FloatingDock, { type DockItem } from "./components/kokonut/FloatingDock";
@@ -70,6 +75,7 @@ const NAV = [
   { key: "multilevel", label: "Multilevel", Icon: Layers },
   { key: "dta", label: "DTA", Icon: Activity },
   { key: "survival", label: "Survival", Icon: Clock },
+  { key: "settings", label: "Settings", Icon: Settings2 },
   { key: "prisma", label: "PRISMA", Icon: Workflow },
 ] as const;
 
@@ -87,6 +93,7 @@ const TITLES: Record<PageKey, string> = {
   multilevel: "Multilevel / Multivariate MA",
   dta: "Diagnostic Test Accuracy",
   survival: "Survival Extensions",
+  settings: "Settings",
   prisma: "PRISMA 2020",
 };
 
@@ -198,7 +205,7 @@ const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 class PageBoundary extends Component<{ pageKey: string; children: ReactNode }, { error: Error | null }> {
   state: { error: Error | null } = { error: null };
   static getDerivedStateFromError(error: Error) { return { error }; }
-  componentDidCatch(error: Error, info: ErrorInfo) { console.error("page crashed", error, info); }
+  componentDidCatch(error: Error, info: ErrorInfo) { console.error("page crashed", error, info); logCrash(error, info.componentStack ?? undefined); }
   componentDidUpdate(prev: { pageKey: string }) {
     if (prev.pageKey !== this.props.pageKey && this.state.error) this.setState({ error: null });
   }
@@ -219,7 +226,9 @@ class PageBoundary extends Component<{ pageKey: string; children: ReactNode }, {
 export default function App() {
   return (
     <ThemeProvider>
-      <Shell />
+      <ColorBlindProvider>
+        <Shell />
+      </ColorBlindProvider>
     </ThemeProvider>
   );
 }
@@ -337,6 +346,15 @@ function Shell() {
 
   const handleNew = async () => {
     cancelPendingSave();
+    // 1.6 Duplicate project detection
+    const existingTitle = project?.metadata?.title;
+    if (existingTitle && existingTitle !== "Untitled review") {
+      const existing = store.get(LAST_PATH_KEY);
+      if (existing) {
+        const overwrite = window.confirm(`A project "${existingTitle}" already exists. Overwrite?`);
+        if (!overwrite) return;
+      }
+    }
     const p = emptyProject();
     setProject(p); setSaveState("idle"); setBanner(null);
     const seq = ++saveSeq.current;
@@ -412,6 +430,7 @@ function Shell() {
     multilevel: () => <Multilevel project={current} onChange={onProjectChange} />,
     dta: () => <Dta project={current} onChange={onProjectChange} />,
     survival: () => <Survival project={current} onChange={onProjectChange} />,
+    settings: () => <Settings project={current} onChange={onProjectChange} />,
     prisma: () => <Prisma project={current} onChange={onProjectChange} />,
   };
 
@@ -453,7 +472,17 @@ function Shell() {
     connected === null ? "bg-[var(--color-text-muted)]" : connected ? "bg-[var(--color-include)]" : "bg-[var(--color-exclude)]";
   const connLabel = connected === null ? "connecting…" : connected ? "engine online" : "engine offline";
 
-  /* ── Boot splash: greeting cycles while services spin up ── */
+  /* ── What's New dialog ── */
+  const { show: showWhatsNew, version: whatsNewVersion, dismiss: dismissWhatsNew, items: whatsNewItems } = useWhatsNew();
+
+  /* ── Telemetry ── */
+  useEffect(() => {
+    if (isAnalyticsEnabled()) {
+      trackEvent("app", "session_start", { version: APP_VERSION });
+    }
+  }, []);
+
+  /* ── Window size memory (1.8) ── */
   const showSplash = !splashDone;
 
   /* ── First-run personalization ── */
@@ -639,6 +668,7 @@ function Shell() {
       </AnimatePresence>
 
       {showDisclaimer && <DisclaimerModal onClose={() => setShowDisclaimer(false)} />}
+      <WhatsNewModal show={showWhatsNew} version={whatsNewVersion} items={whatsNewItems} onDismiss={dismissWhatsNew} />
     </div>
   );
 }

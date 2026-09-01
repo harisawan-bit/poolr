@@ -175,6 +175,16 @@ export default function Screening({ project, onChange }: { project: Project; onC
           <button className="btn-primary" onClick={addSample}>+ Add</button>
         </div>
       }>
+        {items.length > 1000 && (
+          <div className="mb-2 rounded-[3px] border border-[var(--color-exclude)]/30 bg-[var(--color-exclude)]/10 px-2.5 py-1.5 text-[12px] text-[var(--color-exclude)]">
+            Very large dataset (&gt;1000 records). Performance may be degraded.
+          </div>
+        )}
+        {items.length > 500 && items.length <= 1000 && (
+          <div className="mb-2 rounded-[3px] border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 text-[12px] text-amber-500">
+            Large dataset (&gt;500 records). Consider AI screening.
+          </div>
+        )}
         <input
           ref={fileRef}
           type="file"
