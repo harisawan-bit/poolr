@@ -4,14 +4,6 @@ import { X } from 'lucide-react';
 import { Input, Button } from './ui';
 import type { ProfileData } from './kokonut/ProfileSetup';
 
-// Avatar component from ProfileSetup
-const AVATAR_RGB: Record<number, string> = {
-  1: "255, 0, 91",
-  2: "255, 125, 16",
-  3: "10, 3, 16",
-  4: "137, 252, 179",
-};
-
 function AvatarSvg({ bg, fg, mouth = "#000000", seed = 0 }: { bg: string; fg: string; mouth?: string; seed?: number }) {
   return (
     <svg aria-hidden="true" fill="none" height="40" viewBox="0 0 36 36" width="40" xmlns="http://www.w3.org/2000/svg">
@@ -46,11 +38,8 @@ interface Props {
 }
 
 export default function ProfileModal({ profile, onClose, onSave }: Props) {
-  const [username, setUsername] = useState(profile?.username || '');
+  const [username, setUsername] = useState(profile?.username || "");
   const [avatarId, setAvatarId] = useState(profile?.avatarId || 1);
-
-  const selectedAvatar = avatars.find(a => a.id === avatarId) || avatars[0];
-  const rgb = AVATAR_RGB[avatarId];
 
   return (
     <motion.div

@@ -24,16 +24,13 @@ interface RecordResult {
 
 export default function AIScreeningPanel({ items, pico, inclusionCriteria, exclusionCriteria, onDecisions }: Props) {
   const [allProviders, setAllProviders] = useState<AIProvider[]>(getActiveProviders());
-  const [selectedProviderIds, setSelectedProviderIds] = useState<string[]>([]);
-  const [showProviderSelector, setShowProviderSelector] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0, perModel: {} as Record<string, number> });
   const [results, setResults] = useState<RecordResult[]>([]);
   const [expandedRecord, setExpandedRecord] = useState<string | null>(null);
   const settings = loadSettings();
 
-  const selectedProviders = allProviders.filter(p => selectedProviderIds.includes(p.id));
-  const activeProviders = selectedProviders.length > 0 ? selectedProviders : allProviders;
+  const activeProviders = allProviders;
 
   const runScreening = async () => {
     const providers = activeProviders;

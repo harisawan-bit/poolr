@@ -1,7 +1,6 @@
-import { useState } from 'react';
 import { motion } from 'motion/react';
 import { AlertTriangle, X } from 'lucide-react';
-import { Button, Card } from '../ui';
+import { Button } from './ui';
 
 interface Props {
   open: boolean;

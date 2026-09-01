@@ -28,6 +28,7 @@ import {
 import { emptyProject, normalizeProject, type Project, type ProjectConfig } from "./lib/project";
 import { APP_VERSION } from "./lib/version";
 import { ThemeProvider, useTheme } from "./lib/theme";
+import { loadSettings } from "./lib/settings";
 import Dashboard from "./pages/Dashboard";
 import Protocol from "./pages/Protocol";
 import Search from "./pages/Search";
@@ -230,8 +231,8 @@ function Shell() {
   const [splashDone, setSplashDone] = useState(false);
   const [profile, setProfile] = useState<StoredProfile | null>(() => readProfile());
   const [paletteOpen, setPaletteOpen] = useState(false);
-    const [showProfile, setShowProfile] = useState(false);
-    const [showProjectSettings, setShowProjectSettings] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+    const appSettings = loadSettings();
 
   const linefieldRef = useRef<HTMLCanvasElement | null>(null);
   useLineField(linefieldRef, theme);
@@ -515,7 +516,7 @@ function Shell() {
                   <SwitchButton size="sm" showLabel={false} className="ml-1 !h-8 !rounded-lg !px-2" />
                   <button
                     className="btn-ghost flex items-center gap-1.5"
-                    onClick={() => setShowProjectSettings(true)}
+                    onClick={() => setPage("settings")}
                     title="Project settings"
                   >
                     <Settings2 className="h-3.5 w-3.5" />
@@ -573,7 +574,7 @@ function Shell() {
           connLabel={connLabel}
           saveState={saveState}
           saveLabel={saveLabel}
-          dockStyle={settings.appearance.dockStyle}
+          dockStyle={appSettings.appearance.dockStyle}
           optionsTrigger={
             <OptionsDrawer
               closeText="Close"

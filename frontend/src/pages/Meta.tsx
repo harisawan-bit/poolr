@@ -10,10 +10,10 @@ import { Ring } from "../components/charts/ring";
 import { RingCenter } from "../components/charts/ring-center";
 import { Sparkles, Loader2 } from "lucide-react";
 
-const MEASURES = ["OR", "RR", "RD", "MD", "SMD", "HR", "MH_OR", "PETO", "GLASS", "LOGIT_PROP", "ARS_PROP", "IRR", "IRD", "Z_CORR", "GEN_IV"];
-const METHODS = ["DL", "REML", "PM", "HS", "ML", "EB"];
-const MODELS = ["random", "fixed"];
-const PUB = ["none", "egger", "all", "full"];
+const MEASURES: string[] = ["OR", "RR", "RD", "MD", "SMD", "HR", "MH_OR", "PETO", "GLASS", "LOGIT_PROP", "ARS_PROP", "IRR", "IRD", "Z_CORR", "GEN_IV"];
+const METHODS: string[] = ["DL", "REML", "PM", "HS", "ML", "EB"];
+const MODELS: string[] = ["random", "fixed"];
+const PUB: string[] = ["none", "egger", "all", "full"];
 
 const DEFAULTS: ExtendedMetaRequest = {
   model: "random", measure: "OR", method: "DL", subgroup: "none",
@@ -41,19 +41,19 @@ export default function Meta({ project, onChange }: { project: Project; onChange
     if (!studies.length) { setErr("Add at least one study in Extraction first."); return; }
     setBusy(true); setErr(null); setForest(null); setFunnel(null); setInterpretation(null);
 
-    const m = settings.measure || "OR";
+    const measure = settings.measure || "OR";
     const invalid = studies.filter(s => {
-          const m = settings.measure || "OR";
-          if (["OR", "RR", "RD"].includes(m)) return !s.int_events || !s.int_n || !s.ctrl_events || !s.ctrl_n;
-          if (["MD", "SMD"].includes(m)) return (!s.int_mean && s.int_mean !== 0) || !s.int_sd || (!s.ctrl_mean && s.ctrl_mean !== 0) || !s.ctrl_sd || !s.int_n || !s.ctrl_n;
-          return false;
-        });
-        if (invalid.length) {
-          const invalidNames = invalid.map(s => s.study || "Untitled").join(", ");
-          setErr(`${invalid.length} studies have missing/invalid data: ${invalidNames}`);
-          setBusy(false);
-          return;
-        }
+      if (["OR", "RR", "RD"].includes(measure)) return !s.int_events || !s.int_n || !s.ctrl_events || !s.ctrl_n;
+      if (["MD", "SMD"].includes(measure)) return (!s.int_mean && s.int_mean !== 0) || !s.int_sd || (!s.ctrl_mean && s.ctrl_mean !== 0) || !s.ctrl_sd || !s.int_n || !s.ctrl_n;
+      return false;
+    });
+
+    if (invalid.length) {
+      const invalidNames = invalid.map(s => s.study || "Untitled").join(", ");
+      setErr(`${invalid.length} studies have missing/invalid data: ${invalidNames}`);
+      setBusy(false);
+      return;
+    }
 
     try {
       const inputStudies = studies.map(s => ({
@@ -342,10 +342,7 @@ function generateForestSVG(data: { studies: { study: string; effect: number; ci_
     const y = headerHeight + i * rowHeight + 10;
     svg += `<g class="study-row">`;
     svg += `<rect x="0" y="${y - 8}" width="${width}" height="20" fill="transparent" rx="3"/>`;
-    svg += `<title>${s.study}
-Effect: ${s.effect.toFixed(3)}
-95% CI: [${s.ci_lower.toFixed(3)}, ${s.ci_upper.toFixed(3)}]
-Weight: ${s.weight.toFixed(1)}%</title>`;
+    svg += `<title>${s.study}\nEffect: ${s.effect.toFixed(3)}\n95% CI: [${s.ci_lower.toFixed(3)}, ${s.ci_upper.toFixed(3)}]\nWeight: ${s.weight.toFixed(1)}%</title>`;
     svg += `<text x="10" y="${y + 3}" fill="var(--color-text-muted)">${s.study.length > 15 ? s.study.slice(0, 14) + "…" : s.study}</text>`;
     svg += `<line x1="${scale(s.ci_lower)}" y1="${y}" x2="${scale(s.ci_upper)}" y2="${y}" stroke="var(--color-text)" stroke-width="1.5"/>`;
     svg += `<circle cx="${scale(s.effect)}" cy="${y}" r="3" fill="var(--color-accent)"/>`;
@@ -355,9 +352,7 @@ Weight: ${s.weight.toFixed(1)}%</title>`;
   const pooledY = headerHeight + data.studies.length * rowHeight + 20;
   svg += `<g class="study-row">`;
   svg += `<rect x="0" y="${pooledY - 8}" width="${width}" height="20" fill="transparent" rx="3"/>`;
-  svg += `<title>Pooled Effect
-Effect: ${data.pooled.effect.toFixed(3)}
-95% CI: [${data.pooled.ci_lower.toFixed(3)}, ${data.pooled.ci_upper.toFixed(3)}]</title>`;
+  svg += `<title>Pooled Effect\nEffect: ${data.pooled.effect.toFixed(3)}\n95% CI: [${data.pooled.ci_lower.toFixed(3)}, ${data.pooled.ci_upper.toFixed(3)}]</title>`;
   svg += `<text x="10" y="${pooledY + 3}" fill="var(--color-text)" font-weight="bold">Pooled</text>`;
   svg += `<line x1="${scale(data.pooled.ci_lower)}" y1="${pooledY}" x2="${scale(data.pooled.ci_upper)}" y2="${pooledY}" stroke="var(--color-accent)" stroke-width="2"/>`;
   svg += `<polygon points="${scale(data.pooled.effect)},${pooledY - 4} ${scale(data.pooled.effect) - 4},${pooledY + 4} ${scale(data.pooled.effect) + 4},${pooledY + 4}" fill="var(--color-accent)"/>`;
@@ -389,9 +384,7 @@ function generateFunnelSVG(data: { points: { effect: number; se: number; study: 
 
   data.points.forEach(p => {
     svg += `<g class="funnel-point">`;
-    svg += `<title>${p.study}
-Effect: ${p.effect.toFixed(3)}
-SE: ${p.se.toFixed(3)}</title>`;
+    svg += `<title>${p.study}\nEffect: ${p.effect.toFixed(3)}\nSE: ${p.se.toFixed(3)}</title>`;
     svg += `<circle cx="${scaleX(p.effect)}" cy="${scaleY(p.se)}" r="3" fill="var(--color-accent)" opacity="0.7"/>`;
     svg += `</g>`;
   });
