@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Card, Button, Textarea } from '../components/ui';
-import { FileText, Code, Upload } from 'lucide-react';
+import { Card, Textarea } from '../components/ui';
+import { FileText, Code } from 'lucide-react';
 
 export default function ManualMode({ project, onChange }: { project: any; onChange: (p: any) => void }) {
   const [jsonData, setJsonData] = useState(JSON.stringify(project, null, 2));

@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import type { Project } from "../lib/project";
-import { Card, Input, Select, Pill, EmptyState, Button } from "../components/ui";
+import { Card, Input, Pill, Button } from "../components/ui";
 import { toCsv, downloadText } from "../lib/project";
 
 interface IPDRow {
@@ -275,7 +275,7 @@ export default function IPDMeta({ project, onChange }: { project: Project; onCha
                       <td className="px-2 py-1.5">{sg.k}</td>
                       <td className="px-2 py-1.5">
                         <span className="font-mono">{sg.interactionP.toFixed(3)}</span>
-                        {sg.interactionP < 0.05 && <Pill tone="unsure" className="ml-1.5">sig</Pill>}
+                        {sg.interactionP < 0.05 && <Pill tone="unsure">sig</Pill>}
                       </td>
                     </tr>
                   ))}

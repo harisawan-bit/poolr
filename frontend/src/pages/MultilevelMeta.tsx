@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import type { Project } from "../lib/project";
-import { Card, Input, Select, Pill, EmptyState, Button } from "../components/ui";
+import { Card, Input, Pill, Button } from "../components/ui";
 import { toCsv, downloadText } from "../lib/project";
 
 interface EffectEntry {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, Input, Select, Pill, EmptyState } from '../components/ui';
+import { Card, Input, Select } from '../components/ui';
 
 interface ProportionStudy {
   study: string;

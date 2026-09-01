@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, Input, Button, EmptyState } from '../components/ui';
+import { Card, Input } from '../components/ui';
 
 interface Code {
   id: string;
