@@ -2,7 +2,8 @@ import { useState } from "react";
 import type { Project, ExtractedStudy } from "../lib/project";
 import { Card, Input, Select, Pill, EmptyState, Button, Textarea } from "../components/ui";
 import { toCsv, downloadText } from "../lib/project";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Calculator } from "lucide-react";
+import EffectSizeCalculator from "../components/EffectSizeCalculator";
 
 const TYPES: ExtractedStudy["type"][] = ["binary", "continuous", "survival"];
 
@@ -16,6 +17,7 @@ export default function Extraction({ project, onChange }: { project: Project; on
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [pdfText, setPdfText] = useState("");
+  const [showCalculator, setShowCalculator] = useState(false);
 
   const set = (patch: Partial<ExtractedStudy>) => setForm({ ...form, ...patch });
   const num = (v: string) => (v === "" ? null : Number(v));
@@ -144,16 +146,28 @@ export default function Extraction({ project, onChange }: { project: Project; on
       </Card>
 
       <Card title="Add study" right={
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={extractFromPDF}
-                disabled={busy || !pdfText.trim()}
-              >
-                {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-                {busy ? "Extracting…" : "Extract from PDF"}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => setShowCalculator(!showCalculator)}>
+                  <Calculator className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={extractFromPDF} disabled={busy || !pdfText.trim()}>
+                  {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                  {busy ? "Extracting…" : "Extract from PDF"}
+                </Button>
+              </div>
             }>
+              {showCalculator && (
+                <div className="mb-3">
+                  <EffectSizeCalculator onCalculate={(result) => {
+                    if (result.measure === 'OR') {
+                      setForm({ ...form, type: 'binary', int_events: Math.round(Math.exp(result.effect) * 10), int_n: 100, ctrl_events: 10, ctrl_n: 100 });
+                    } else if (result.measure === 'SMD') {
+                      setForm({ ...form, type: 'continuous', int_mean: result.effect, int_sd: 1, int_n: 100, ctrl_mean: 0, ctrl_sd: 1, ctrl_n: 100 });
+                    }
+                    setShowCalculator(false);
+                  }} />
+                </div>
+              )}
               <div className="mb-3">
                 <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Paste full-text for AI extraction</div>
                 <Textarea rows={3} value={pdfText} onChange={(e) => setPdfText(e.target.value)} placeholder="Paste the full-text of a study here, then click 'Extract from PDF' to auto-fill the fields below." />
