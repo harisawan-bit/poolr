@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, Input, Select, Button, Pill } from '../components/ui';
 import { loadProviders, saveProviders, DEFAULT_PROVIDERS, type AIProvider } from '../lib/ai';
 import { loadSettings, saveSettings, type PoolrSettings } from '../lib/settings';

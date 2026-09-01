@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { X } from 'lucide-react';
-import { Card, Input, Button } from './ui';
+import { Input, Button } from './ui';
 import type { ProfileData } from './kokonut/ProfileSetup';
 
 interface Props {

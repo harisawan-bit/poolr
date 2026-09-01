@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, LogOut, Moon, Palette, Settings, User } from "lucide-react";
+import { FileText, LogOut, Moon, Palette, Settings, Sun, User } from "lucide-react";
 import * as React from "react";
 import {
   DropdownMenu,

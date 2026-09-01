@@ -6,10 +6,9 @@
  * user selected to replace poolr's sidebar. Icons are lucide (no
  * tabler dependency); navigation uses callbacks instead of links.
  *
- * v0.5.4: integrated status (engine + save) and workspace options
- * into the dock itself, eliminating the separate footer bar and
- * bottom-right cluster. Reduced icon proportion for a tighter,
- * more professional footprint.
+ * v0.5.5: colorful professional icons — each nav item gets a distinct
+ * color; active state has colored tint + border + text; rounded-lg
+ * containers; subtle magnify animation; rgba dock background.
  */
 
 import { AnimatePresence, MotionValue, motion, useMotionValue, useSpring, useTransform } from "motion/react";
@@ -21,24 +20,53 @@ export interface DockItem {
   icon: React.ReactNode;
   onSelect: () => void;
   active?: boolean;
+  key?: string;
 }
 
 const ICON_SIZE = 36;
 
+/** Per-icon color map. */
+const NAV_COLORS: Record<string, string> = {
+  dashboard: "#3b82f6",
+  protocol: "#8b5cf6",
+  search: "#14b8a6",
+  screening: "#22c55e",
+  extraction: "#f97316",
+  rob: "#ef4444",
+  meta: "#6366f1",
+  prisma: "#64748b",
+  settings: "#6b7280",
+};
+
+/** Returns the hex color for a given nav key. */
+export function getNavColor(key: string | undefined): string {
+  if (!key) return "#6b7280";
+  return NAV_COLORS[key] ?? "#6b7280";
+}
+
+/** Converts a hex color to an rgba string with the given opacity. */
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 function DockIcon({ item, mouseX }: { item: DockItem; mouseX: MotionValue<number> }) {
   const ref = useRef<HTMLButtonElement>(null);
+  const color = getNavColor(item.key);
 
   const distance = useTransform(mouseX, (val: number) => {
     const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
     return val - bounds.x - bounds.width / 2;
   });
 
-  const iconSize = useSpring(useTransform(distance, [-120, 0, 120], [ICON_SIZE, 48, ICON_SIZE]), {
+  const iconSize = useSpring(useTransform(distance, [-120, 0, 120], [ICON_SIZE, Math.round(ICON_SIZE * 1.35), ICON_SIZE]), {
     mass: 0.1,
     stiffness: 150,
     damping: 12,
   });
-  const iconTranslate = useSpring(useTransform(distance, [-120, 0, 120], [-4, 0, -4]), {
+  const iconTranslate = useSpring(useTransform(distance, [-120, 0, 120], [-3, 0, -3]), {
     mass: 0.1,
     stiffness: 150,
     damping: 12,
@@ -46,21 +74,37 @@ function DockIcon({ item, mouseX }: { item: DockItem; mouseX: MotionValue<number
 
   const [hovered, setHovered] = useState(false);
 
+  const activeStyle = item.active
+    ? {
+        backgroundColor: hexToRgba(color, 0.1),
+        borderColor: hexToRgba(color, 0.5),
+        color: color,
+      }
+    : {};
+
+  const hoverScale = hovered && !item.active ? { scale: 1.1 } : {};
+
   return (
     <motion.button
       aria-label={item.title}
       aria-current={item.active ? "page" : undefined}
       className={cn(
-        "relative flex aspect-square rounded-full items-center justify-center border transition-colors",
+        "relative flex aspect-square rounded-lg items-center justify-center border transition-colors",
         item.active
-          ? "border-[var(--color-border-strong)] bg-[var(--btn-bg)] text-[var(--btn-fg)]"
-          : "border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          ? "border-2"
+          : "border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
       )}
       onClick={item.onSelect}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       ref={ref}
-      style={{ width: iconSize, height: iconSize, translateY: iconTranslate }}
+      style={{
+        width: iconSize,
+        height: iconSize,
+        translateY: iconTranslate,
+        ...activeStyle,
+        ...hoverScale,
+      }}
       type="button"
     >
       <div className="flex h-full w-full items-center justify-center">{item.icon}</div>
@@ -141,18 +185,19 @@ export function FloatingDock({
   return (
     <motion.div
       className={cn(
-        "mx-auto flex h-12 items-center gap-1.5 rounded-2xl border border-[var(--card-border)] bg-[var(--drawer-bg)] px-2.5 shadow-xl",
+        "mx-auto flex h-12 items-center gap-1.5 rounded-2xl border border-white/10 px-2.5 shadow-xl",
         className
       )}
       onMouseMove={(e) => mouseX.set(e.pageX)}
       onMouseLeave={() => mouseX.set(Number.POSITIVE_INFINITY)}
+      style={{ backgroundColor: "rgba(0, 0, 0, 0.4)", backdropFilter: "blur(12px)" }}
     >
       {items.map((item) => (
         <DockIcon item={item} key={item.title} mouseX={mouseX} />
       ))}
 
       {/* Divider between nav and status/options */}
-      <div className="mx-1 h-6 w-px bg-[var(--color-border)]" />
+      <div className="mx-1 h-6 w-px bg-white/10" />
 
       {/* Workspace options trigger (if provided) */}
       {optionsTrigger}

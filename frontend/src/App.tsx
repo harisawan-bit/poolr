@@ -46,6 +46,7 @@ import QualitativeMeta from "./pages/QualitativeMeta";
 import ManualMode from "./pages/ManualMode";
 import DisclaimerModal from "./components/DisclaimerModal";
 import NewProjectWizard from "./components/NewProjectWizard";
+import ProfileModal from "./components/ProfileModal";
 
 // v0.5.3 kokonutui component family (adapted, MIT — see file headers)
 import FloatingDock, { type DockItem } from "./components/kokonut/FloatingDock";
@@ -441,6 +442,7 @@ function Shell() {
     () =>
       activeNav.map((n) => ({
         title: n.label,
+        key: n.key,
         icon: <n.Icon className="h-[55%] w-[55%]" />,
         onSelect: () => setPage(n.key),
         active: n.key === page,
