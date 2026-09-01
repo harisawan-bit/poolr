@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import type { Project, ExtendedMetaRequest, ExtendedMetaResponse, Study, MetaResponse } from "../lib/project";
-import { Card, Select, Pill, EmptyState } from "../components/ui";
+import { Card, Select, Pill, EmptyState, Button } from "../components/ui";
 import ShimmerText from "../components/kokonut/ShimmerText";
 import ActivityState from "../components/kokonut/ActivityState";
 import { runMetaExtended, getFigure } from "../lib/project";
+import { interpretResults } from "../lib/ai";
 import { RingChart } from "../components/charts/ring-chart";
 import { Ring } from "../components/charts/ring";
 import { RingCenter } from "../components/charts/ring-center";
+import { Sparkles, Loader2 } from "lucide-react";
 
 const MEASURES: ExtendedMetaRequest["measure"][] = [
   "OR", "RR", "RD", "MD", "SMD", "HR",
@@ -34,6 +36,8 @@ export default function Meta({ project, onChange }: { project: Project; onChange
   const [forest, setForest] = useState<string | null>(null);
   const [funnel, setFunnel] = useState<string | null>(null);
   const [diag, setDiag] = useState<Record<string, string>>({});
+  const [interpreting, setInterpreting] = useState(false);
+  const [interpretation, setInterpretation] = useState<string | null>(null);
   const mounted = useRef(true);
   useEffect(() => () => { mounted.current = false; }, []);
 
@@ -44,7 +48,7 @@ export default function Meta({ project, onChange }: { project: Project; onChange
 
   const run = async () => {
     if (!studies.length) { setErr("Add at least one study in Extraction first."); return; }
-    setBusy(true); setErr(null); setForest(null); setFunnel(null); setDiag({});
+    setBusy(true); setErr(null); setForest(null); setFunnel(null); setDiag({}); setInterpretation(null);
     let r: ExtendedMetaResponse;
     try {
       // pass every field through — v0.5.1 outcome types need the new columns
@@ -77,6 +81,23 @@ export default function Meta({ project, onChange }: { project: Project; onChange
       if (mounted.current) setErr(`Analysis completed, but the plots could not be rendered: ${msg(e)}`);
     } finally {
       if (mounted.current) setBusy(false);
+    }
+  };
+
+  const handleInterpret = async () => {
+    if (!resp?.pooled) return;
+    setInterpreting(true);
+    try {
+      const text = await interpretResults({
+        pooled: { effect: resp.pooled.effect, ci_lower: resp.pooled.ci_lower, ci_upper: resp.pooled.ci_upper, p: resp.pooled.p },
+        heterogeneity: { i2: resp.heterogeneity?.i2 ?? 0, tau2: resp.heterogeneity?.tau2 ?? 0, q_p: resp.heterogeneity?.q_p ?? 1 },
+        measure: settings.measure ?? "OR",
+      });
+      setInterpretation(text);
+    } catch (e) {
+      setInterpretation("Could not generate interpretation. Check your AI provider settings.");
+    } finally {
+      setInterpreting(false);
     }
   };
 
@@ -160,12 +181,29 @@ export default function Meta({ project, onChange }: { project: Project; onChange
               {typeof het?.h2 === "number" && <Stat k="H²" v={fmtN(het.h2, 2)} />}
             </div>
             {pooled?.ci_method && (
-              <div className="mt-3 text-[12px] text-[var(--color-text-muted)]">
-                CI method: {pooled.ci_method}
-                {resp.knapp_hartung ? " — wider, uncertainty-aware intervals" : ""}
-              </div>
-            )}
-            {resp.publication_bias?.egger && (
+                          <div className="mt-3 text-[12px] text-[var(--color-text-muted)]">
+                            CI method: {pooled.ci_method}
+                            {resp.knapp_hartung ? " — wider, uncertainty-aware intervals" : ""}
+                          </div>
+                        )}
+                        <div className="mt-3 flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleInterpret}
+                            disabled={interpreting}
+                          >
+                            {interpreting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                            {interpreting ? "Interpreting…" : "Interpret Results"}
+                          </Button>
+                        </div>
+                        {interpretation && (
+                          <div className="mt-3 rounded-[3px] border border-[var(--color-border)] bg-white/[0.04] p-3 text-[12px] text-[var(--color-text)]">
+                            <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">AI Interpretation</div>
+                            {interpretation}
+                          </div>
+                        )}
+                        {resp.publication_bias?.egger && (
               <div className="mt-3 text-[12px] text-[var(--color-text-muted)]">Egger intercept {fmtN(resp.publication_bias.egger.intercept, 3)} (p {fmtN(resp.publication_bias.egger.p_value, 3)}) — {resp.publication_bias.egger.significant ? "significant asymmetry" : "no significant asymmetry"}</div>
             )}
             {/* v0.5.1 subgroup block: per-group heterogeneity + Q-between interaction test */}

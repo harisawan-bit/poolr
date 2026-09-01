@@ -1,11 +1,13 @@
 import { useState } from "react";
 import type { Project, RobAssessment } from "../lib/project";
-import { Card, Select, Pill, EmptyState } from "../components/ui";
+import { Card, Select, Pill, EmptyState, Button, Input } from "../components/ui";
 import { RadarChart } from "../components/charts/radar-chart";
 import { RadarGrid } from "../components/charts/radar-grid";
 import { RadarAxis } from "../components/charts/radar-axis";
 import { RadarLabels } from "../components/charts/radar-labels";
 import { RadarArea } from "../components/charts/radar-area";
+import { suggestRoB } from "../lib/ai";
+import { Sparkles, Loader2 } from "lucide-react";
 
 const TOOLS = ["RoB2", "NOS", "PROBAST", "ROBINS-I", "QUADAS-2", "AMSTAR-2"] as const;
 const OVERALL = ["Low", "Some concerns", "High", "Critical", "—"] as const;
@@ -32,6 +34,8 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
     ...list.map((a) => a.study),
   ])).filter(Boolean);
   const [tool, setTool] = useState<(typeof TOOLS)[number]>("RoB2");
+  const [busyDomain, setBusyDomain] = useState<string | null>(null);
+  const [abstracts, setAbstracts] = useState<Record<string, string>>({});
 
   const add = () => {
     const name = studyNames[0] ?? "New study";
@@ -44,6 +48,21 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
 
   const remove = (id: string) => {
     onChange({ ...project, rob: { assessments: list.filter((a) => a.id !== id) } });
+  };
+
+  const handleSuggestRating = async (assessmentId: string, domain: string) => {
+    const abstract = abstracts[assessmentId] || "";
+    if (!abstract.trim()) return;
+    setBusyDomain(domain);
+    try {
+      const { rating } = await suggestRoB(abstract, domain);
+      const assessment = list.find(a => a.id === assessmentId);
+      if (assessment) {
+        update(assessmentId, { domains: { ...assessment.domains, [domain]: rating } });
+      }
+    } finally {
+      setBusyDomain(null);
+    }
   };
 
   const counts = list.reduce((acc, a) => { acc[a.overall] = (acc[a.overall] ?? 0) + 1; return acc; }, {} as Record<string, number>);
@@ -84,16 +103,34 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
                     <button className="btn-ghost" onClick={() => remove(a.id)}>remove</button>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                  {DOMAINS[a.tool].map((d) => (
-                    <div key={d} className="flex items-center gap-2">
-                      <span className="flex-1 text-[12px] text-[var(--color-text-muted)]">{d}</span>
-                      <Select className="w-auto" value={a.domains[d] ?? "Low"} onChange={(e) => update(a.id, { domains: { ...a.domains, [d]: e.target.value } })}>
-                        <option>Low</option><option>Some concerns</option><option>High</option>
-                      </Select>
-                    </div>
-                  ))}
-                </div>
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                                  <span className="text-[11px] text-[var(--color-text-muted)]">Paste abstract for AI RoB suggestions:</span>
+                                  <Input
+                                    className="w-80"
+                                    placeholder="Study abstract…"
+                                    value={abstracts[a.id] ?? ""}
+                                    onChange={(e) => setAbstracts({ ...abstracts, [a.id]: e.target.value })}
+                                  />
+                                </div>
+                                <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                                  {DOMAINS[a.tool].map((d) => (
+                                    <div key={d} className="flex items-center gap-2">
+                                      <span className="flex-1 text-[12px] text-[var(--color-text-muted)]">{d}</span>
+                                      <Select className="w-auto" value={a.domains[d] ?? "Low"} onChange={(e) => update(a.id, { domains: { ...a.domains, [d]: e.target.value } })}>
+                                        <option>Low</option><option>Some concerns</option><option>High</option>
+                                      </Select>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleSuggestRating(a.id, d)}
+                                        disabled={busyDomain === d || !(abstracts[a.id] ?? "").trim()}
+                                      >
+                                        {busyDomain === d ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                                        Suggest
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
               </div>
             ))}
           </div>

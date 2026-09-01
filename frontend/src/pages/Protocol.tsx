@@ -1,8 +1,24 @@
 import type { Project } from "../lib/project";
-import { Card, Input, Textarea, SectionLabel } from "../components/ui";
+import { Card, Input, Textarea, SectionLabel, Button } from "../components/ui";
+import { suggestPICO } from "../lib/ai";
+import { Sparkles, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 export default function Protocol({ project, onChange }: { project: Project; onChange: (p: Project) => void }) {
   const set = (patch: Partial<Project>) => onChange({ ...project, ...patch });
+  const [busy, setBusy] = useState(false);
+
+  const handleSuggestPICO = async () => {
+    const question = project.metadata.title || project.protocol.objective;
+    if (!question.trim()) return;
+    setBusy(true);
+    try {
+      const pico = await suggestPICO(question);
+      set({ pico: { ...project.pico, ...pico } });
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <div className="space-y-3">
@@ -14,7 +30,20 @@ export default function Protocol({ project, onChange }: { project: Project; onCh
         />
       </Card>
 
-      <Card title="PICO definition">
+      <Card
+        title="PICO definition"
+        right={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSuggestPICO}
+            disabled={busy || !(project.metadata.title || project.protocol.objective).trim()}
+          >
+            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {busy ? "Suggesting…" : "Suggest PICO"}
+          </Button>
+        }
+      >
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div>
             <SectionLabel>Population</SectionLabel>

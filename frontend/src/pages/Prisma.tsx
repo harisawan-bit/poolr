@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import type { Project, GradeRow, PrismaFlow } from "../lib/project";
-import { Card, Input, Pill, EmptyState } from "../components/ui";
+import { Card, Input, Pill, EmptyState, Button, Textarea } from "../components/ui";
 import SankeyChart from "../components/charts/SankeyChart";
 import OptionsDrawer from "../components/kokonut/OptionsDrawer";
-import { ListChecks } from "lucide-react";
+import { ListChecks, Sparkles, Loader2 } from "lucide-react";
 import { runGrade } from "../lib/project";
 import { exportProject } from "../lib/api";
 import DisclaimerModal from "../components/DisclaimerModal";
+import { draftManuscriptSection } from "../lib/ai";
 
 // v0.5.1 — PRISMA 2020 27-item checklist tracker (item numbers per the official checklist)
 const PRISMA_ITEMS: { n: number; section: string; text: string }[] = [
@@ -63,6 +64,8 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
   const [grade, setGrade] = useState<GradeRow[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [draftingSection, setDraftingSection] = useState<string | null>(null);
+  const [manuscriptDrafts, setManuscriptDrafts] = useState<Record<string, string>>({});
   // v0.5.1 — checklist state lives on the project (auto-saved): prisma.checklist[itemNumber]=true
   type Checklist = Record<string, boolean>;
   const checklist = ((project.prisma as unknown as { checklist?: Checklist }).checklist ?? {}) as Checklist;
@@ -88,6 +91,19 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
       setGrade(rows);
     } finally {
       setBusy(false);
+    }
+  };
+
+  const handleDraftSection = async (section: 'introduction' | 'methods' | 'results' | 'discussion') => {
+    setDraftingSection(section);
+    try {
+      const text = await draftManuscriptSection(
+        { title: project.metadata.title, pico: project.pico, results: project.meta.results },
+        section
+      );
+      setManuscriptDrafts({ ...manuscriptDrafts, [section]: text });
+    } finally {
+      setDraftingSection(null);
     }
   };
 
@@ -201,15 +217,49 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
               </tbody>
             </table>
             {gradeTable.some((r) => r.downgrade_reasons && r.downgrade_reasons !== "None") && (
-              <div className="mt-2 text-[11px] text-[var(--color-text-muted)]">
-                Downgrades: {gradeTable.map((r) => `${r.outcome}: ${r.downgrade_reasons}`).join(" · ")}
-              </div>
-            )}
-          </div>
-        )}
-      </Card>
+                          <div className="mt-2 text-[11px] text-[var(--color-text-muted)]">
+                            Downgrades: {gradeTable.map((r) => `${r.outcome}: ${r.downgrade_reasons}`).join(" · ")}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Card>
 
-      {showDisclaimer && <DisclaimerModal onClose={() => setShowDisclaimer(false)} />}
+                  <Card title="AI Manuscript drafting">
+                    <p className="mb-3 text-[12.5px] text-[var(--color-text-muted)]">
+                      Generate draft sections for your systematic review manuscript. Edit the generated text as needed.
+                    </p>
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      {(['introduction', 'methods', 'results', 'discussion'] as const).map((section) => (
+                        <Button
+                          key={section}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDraftSection(section)}
+                          disabled={draftingSection === section}
+                        >
+                          {draftingSection === section ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                          {draftingSection === section ? "Drafting…" : `Draft ${section.charAt(0).toUpperCase() + section.slice(1)}`}
+                        </Button>
+                      ))}
+                    </div>
+                    {Object.entries(manuscriptDrafts).length > 0 && (
+                      <div className="space-y-3">
+                        {Object.entries(manuscriptDrafts).map(([section, text]) => (
+                          <div key={section}>
+                            <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{section}</div>
+                            <Textarea
+                              rows={6}
+                              value={text}
+                              onChange={(e) => setManuscriptDrafts({ ...manuscriptDrafts, [section]: e.target.value })}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </Card>
+
+                  {showDisclaimer && <DisclaimerModal onClose={() => setShowDisclaimer(false)} />}
     </div>
   );
 }

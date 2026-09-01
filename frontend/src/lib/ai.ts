@@ -124,3 +124,141 @@ export async function callAIMultiProvider(providers: AIProvider[], messages: AIM
     .filter((r): r is PromiseFulfilledResult<AIResponse> => r.status === 'fulfilled')
     .map(r => r.value);
 }
+
+// ── Phase C: AI Everywhere helpers ──
+
+/** Suggest PICO elements from a free-text research question. */
+export async function suggestPICO(
+  question: string
+): Promise<{ population: string; intervention: string; comparator: string; outcomes: string }> {
+  const providers = getActiveProviders();
+  const useProviders = providers.length > 0 ? providers : DEFAULT_PROVIDERS.filter(p => p.freeTier).map((p, i) => ({ ...p, id: `default-${i}`, apiKey: '', requestsUsed: 0, lastReset: new Date().toISOString().split('T')[0] }));
+
+  const messages: AIMessage[] = [
+    {
+      role: 'system',
+      content:
+        'You are a systematic review methodologist. Given a research question, extract the PICO elements. Respond with ONLY a JSON object in this exact format: {"population": "...", "intervention": "...", "comparator": "...", "outcomes": "..."}. Be specific and concise.',
+    },
+    { role: 'user', content: `Research question: ${question}` },
+  ];
+
+  const response = await callAI(useProviders[0], messages);
+  try {
+    const parsed = JSON.parse(response.content);
+    return {
+      population: parsed.population || '',
+      intervention: parsed.intervention || '',
+      comparator: parsed.comparator || '',
+      outcomes: parsed.outcomes || '',
+    };
+  } catch {
+    return { population: '', intervention: '', comparator: '', outcomes: '' };
+  }
+}
+
+/** Generate a Boolean search strategy for a specific database from PICO. */
+export async function generateSearchStrategy(
+  pico: { population: string; intervention: string; comparator: string; outcomes: string },
+  database: string
+): Promise<string> {
+  const providers = getActiveProviders();
+  const useProviders = providers.length > 0 ? providers : DEFAULT_PROVIDERS.filter(p => p.freeTier).map((p, i) => ({ ...p, id: `default-${i}`, apiKey: '', requestsUsed: 0, lastReset: new Date().toISOString().split('T')[0] }));
+
+  const messages: AIMessage[] = [
+    {
+      role: 'system',
+      content:
+        'You are a systematic review search specialist. Generate a Boolean search strategy (using AND, OR, NOT, MeSH terms, wildcards) for the given database based on the PICO. Return ONLY the search string, no explanation.',
+    },
+    {
+      role: 'user',
+      content: `Database: ${database}\nPICO:\n- Population: ${pico.population}\n- Intervention: ${pico.intervention}\n- Comparator: ${pico.comparator}\n- Outcomes: ${pico.outcomes}`,
+    },
+  ];
+
+  const response = await callAI(useProviders[0], messages);
+  return response.content.trim();
+}
+
+/** Suggest a risk-of-bias rating for a domain given study abstract and domain name. */
+export async function suggestRoB(
+  abstract: string,
+  domain: string
+): Promise<{ rating: string; reason: string }> {
+  const providers = getActiveProviders();
+  const useProviders = providers.length > 0 ? providers : DEFAULT_PROVIDERS.filter(p => p.freeTier).map((p, i) => ({ ...p, id: `default-${i}`, apiKey: '', requestsUsed: 0, lastReset: new Date().toISOString().split('T')[0] }));
+
+  const messages: AIMessage[] = [
+    {
+      role: 'system',
+      content:
+        'You are a risk-of-bias assessor. Given a study abstract and a RoB domain, suggest a rating: "Low", "Some concerns", or "High". Respond with ONLY a JSON object: {"rating": "...", "reason": "brief justification"}',
+    },
+    { role: 'user', content: `Domain: ${domain}\nAbstract: ${abstract}` },
+  ];
+
+  const response = await callAI(useProviders[0], messages);
+  try {
+    const parsed = JSON.parse(response.content);
+    return { rating: parsed.rating || 'Low', reason: parsed.reason || '' };
+  } catch {
+    return { rating: 'Low', reason: '' };
+  }
+}
+
+/** Interpret meta-analysis results in plain language. */
+export async function interpretResults(results: {
+  pooled: { effect: number; ci_lower: number; ci_upper: number; p: number };
+  heterogeneity: { i2: number; tau2: number; q_p: number };
+  measure: string;
+}): Promise<string> {
+  const providers = getActiveProviders();
+  const useProviders = providers.length > 0 ? providers : DEFAULT_PROVIDERS.filter(p => p.freeTier).map((p, i) => ({ ...p, id: `default-${i}`, apiKey: '', requestsUsed: 0, lastReset: new Date().toISOString().split('T')[0] }));
+
+  const messages: AIMessage[] = [
+    {
+      role: 'system',
+      content:
+        'You are a biostatistician. Interpret the meta-analysis results in plain language suitable for a systematic review manuscript. Summarize the pooled effect, heterogeneity, and statistical significance in 2-3 sentences.',
+    },
+    {
+      role: 'user',
+      content: `Results (${results.measure}):\n- Pooled effect: ${results.pooled.effect} (95% CI: ${results.pooled.ci_lower}–${results.pooled.ci_upper}), p=${results.pooled.p}\n- I² = ${results.heterogeneity.i2}%, τ² = ${results.heterogeneity.tau2}, Q p-value = ${results.heterogeneity.q_p}`,
+    },
+  ];
+
+  const response = await callAI(useProviders[0], messages);
+  return response.content.trim();
+}
+
+/** Draft a manuscript section for a systematic review. */
+export async function draftManuscriptSection(
+  project: { title?: string; pico: { population: string; intervention: string; comparator: string; outcomes: string }; results?: unknown },
+  section: 'introduction' | 'methods' | 'results' | 'discussion'
+): Promise<string> {
+  const providers = getActiveProviders();
+  const useProviders = providers.length > 0 ? providers : DEFAULT_PROVIDERS.filter(p => p.freeTier).map((p, i) => ({ ...p, id: `default-${i}`, apiKey: '', requestsUsed: 0, lastReset: new Date().toISOString().split('T')[0] }));
+
+  const sectionPrompts: Record<string, string> = {
+    introduction: 'Draft the Introduction section. State the rationale, gap in knowledge, and objective using PICO. 150-200 words.',
+    methods: 'Draft the Methods section. Describe the search strategy, inclusion/exclusion criteria, and synthesis approach. 200-300 words.',
+    results: 'Draft the Results section. Summarize the study selection, characteristics, and key findings. 200-300 words.',
+    discussion: 'Draft the Discussion section. Interpret findings, compare with prior work, note limitations, and state conclusions. 200-300 words.',
+  };
+
+  const messages: AIMessage[] = [
+    {
+      role: 'system',
+      content:
+        'You are a scientific writer specializing in systematic reviews. Write a well-structured, academic manuscript section in Vancouver style. Return ONLY the section text, no headings or meta-commentary.',
+    },
+    {
+      role: 'user',
+      content: `Review title: ${project.title || 'Untitled'}\nPICO:\n- Population: ${project.pico.population}\n- Intervention: ${project.pico.intervention}\n- Comparator: ${project.pico.comparator}\n- Outcomes: ${project.pico.outcomes}\n\nTask: ${sectionPrompts[section]}`,
+    },
+  ];
+
+  const response = await callAI(useProviders[0], messages);
+  return response.content.trim();
+}

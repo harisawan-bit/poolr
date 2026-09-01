@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { Project, ExtractedStudy } from "../lib/project";
-import { Card, Input, Select, Pill, EmptyState } from "../components/ui";
+import { Card, Input, Select, Pill, EmptyState, Button, Textarea } from "../components/ui";
 import { toCsv, downloadText } from "../lib/project";
+import { Sparkles, Loader2 } from "lucide-react";
 
 const TYPES: ExtractedStudy["type"][] = ["binary", "continuous", "survival"];
 
@@ -13,6 +14,8 @@ export default function Extraction({ project, onChange }: { project: Project; on
   const studies = project.extraction.studies;
   const [form, setForm] = useState<ExtractedStudy>(blank());
   const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [pdfText, setPdfText] = useState("");
 
   const set = (patch: Partial<ExtractedStudy>) => setForm({ ...form, ...patch });
   const num = (v: string) => (v === "" ? null : Number(v));
@@ -27,6 +30,64 @@ export default function Extraction({ project, onChange }: { project: Project; on
   const remove = (i: number) => {
     const next = studies.filter((_, idx) => idx !== i);
     onChange({ ...project, extraction: { studies: next }, meta: { ...project.meta, settings: { ...project.meta.settings, data: next } } });
+  };
+
+  const extractFromPDF = async () => {
+    if (!pdfText.trim()) return;
+    setBusy(true);
+    try {
+      const providers = JSON.parse(localStorage.getItem("poolr.aiProviders") || "[]");
+      const activeProviders = providers.filter((p: any) => p.enabled && p.apiKey);
+      const useProvider = activeProviders.length > 0 ? activeProviders[0] : {
+        baseUrl: "https://openrouter.ai/api/v1",
+        model: "auto",
+        apiKey: "",
+      };
+
+      const messages = [
+        {
+          role: "system",
+          content: 'You are a data extraction assistant for systematic reviews. Given the full-text of a study, extract the following fields and return ONLY a JSON object: {"study": "short study name (Author Year)", "type": "binary|continuous|survival", "int_events": number|null, "int_n": number|null, "ctrl_events": number|null, "ctrl_n": number|null, "int_mean": number|null, "int_sd": number|null, "ctrl_mean": number|null, "ctrl_sd": number|null, "hr": number|null, "hr_lower": number|null, "hr_upper": number|null, "subgroup": "", "design": "RCT|cohort|etc", "year": number|null}. If a field is not reported, use null.',
+        },
+        { role: "user", content: `Extract data from this study:\n\n${pdfText.slice(0, 8000)}` },
+      ];
+
+      const res = await fetch(`${useProvider.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${useProvider.apiKey}` },
+        body: JSON.stringify({ model: useProvider.model, messages, temperature: 0.1, max_tokens: 1024 }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        try {
+          const parsed = JSON.parse(data.choices[0].message.content);
+          setForm({
+            study: parsed.study || "",
+            type: parsed.type || "binary",
+            int_events: parsed.int_events ?? null,
+            int_n: parsed.int_n ?? null,
+            ctrl_events: parsed.ctrl_events ?? null,
+            ctrl_n: parsed.ctrl_n ?? null,
+            int_mean: parsed.int_mean ?? null,
+            int_sd: parsed.int_sd ?? null,
+            ctrl_mean: parsed.ctrl_mean ?? null,
+            ctrl_sd: parsed.ctrl_sd ?? null,
+            hr: parsed.hr ?? null,
+            hr_lower: parsed.hr_lower ?? null,
+            hr_upper: parsed.hr_upper ?? null,
+            subgroup: parsed.subgroup || "",
+            design: parsed.design || "",
+            year: parsed.year ?? null,
+          });
+        } catch {
+          // If parsing fails, just fill the study name
+          setForm({ ...form, study: data.choices[0].message.content.slice(0, 100) });
+        }
+      }
+    } finally {
+      setBusy(false);
+    }
   };
 
   const exportCsv = () => {
@@ -82,8 +143,22 @@ export default function Extraction({ project, onChange }: { project: Project; on
         )}
       </Card>
 
-      <Card title="Add study">
-        {err && <div className="mb-2 text-[12px] text-[var(--color-exclude)]">{err}</div>}
+      <Card title="Add study" right={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={extractFromPDF}
+                disabled={busy || !pdfText.trim()}
+              >
+                {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                {busy ? "Extracting…" : "Extract from PDF"}
+              </Button>
+            }>
+              <div className="mb-3">
+                <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Paste full-text for AI extraction</div>
+                <Textarea rows={3} value={pdfText} onChange={(e) => setPdfText(e.target.value)} placeholder="Paste the full-text of a study here, then click 'Extract from PDF' to auto-fill the fields below." />
+              </div>
+              {err && <div className="mb-2 text-[12px] text-[var(--color-exclude)]">{err}</div>}
         <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
           <Field label="Study name"><Input value={form.study} onChange={(e) => set({ study: e.target.value })} /></Field>
           <Field label="Type">

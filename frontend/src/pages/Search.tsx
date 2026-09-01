@@ -1,101 +1,166 @@
-import type { Project, SearchDb } from "../lib/project";
-import { Card, Input, Textarea, SectionLabel, Pill, EmptyState } from "../components/ui";
-import { downloadText } from "../lib/project";
+import { useState } from 'react';
+import { Search as SearchIcon, Database, FileText, Download, ChevronRight, Info } from 'lucide-react';
+import type { Project, ScreeningItem } from '../lib/project';
+import { mergeScreeningItems, downloadText } from '../lib/project';
+import { Card, Pill, EmptyState } from '../components/ui';
+import UnifiedSearch from '../components/UnifiedSearch';
+import DatabaseSelector, { DATABASES } from '../components/DatabaseSelector';
 
-const DB_LIST = ["PubMed", "Embase", "Cochrane CENTRAL", "Scopus", "Web of Science"];
-
-function buildQuery(p: Project): string {
-  const { population, intervention, comparator, outcomes } = p.pico;
-  const parts = [population, intervention, comparator].filter((s) => s && s.trim()).map((s) => `("${s.trim()}")`);
-  const out = outcomes ? `(${outcomes.trim()})` : "";
-  const base = parts.join(" AND ");
-  return [base, out].filter(Boolean).join(" AND ");
-}
+type Tab = 'unified' | 'strategy' | 'databases';
 
 export default function Search({ project, onChange }: { project: Project; onChange: (p: Project) => void }) {
-  const dbs = project.search?.databases ?? [];
+  const [tab, setTab] = useState<Tab>('unified');
+  const [selectedDatabases, setSelectedDatabases] = useState<string[]>(
+    project.metadata.config?.databases ?? ['pubmed', 'cochrane']
+  );
 
-  const ensure = () => {
-    if (dbs.length) return;
-    const seeded: SearchDb[] = DB_LIST.map((name) => ({ name, query: buildQuery(project), results: null }));
-    onChange({ ...project, search: { databases: seeded } });
+  const handleImport = (items: ScreeningItem[]) => {
+    const updated = mergeScreeningItems(project, 'title_abstract', items);
+    onChange(updated);
   };
 
-  const addDb = () => {
-    const list = [...dbs, { name: "New database", query: buildQuery(project), results: null }];
-    onChange({ ...project, search: { databases: list } });
+  const toggleDatabase = (id: string) => {
+    const updated = selectedDatabases.includes(id)
+      ? selectedDatabases.filter(d => d !== id)
+      : [...selectedDatabases, id];
+    setSelectedDatabases(updated);
+    if (project.metadata.config) {
+      onChange({
+        ...project,
+        metadata: {
+          ...project.metadata,
+          config: { ...project.metadata.config, databases: updated }
+        }
+      });
+    }
   };
 
-  const update = (i: number, patch: Partial<SearchDb>) => {
-    const list = dbs.map((d, idx) => (idx === i ? { ...d, ...patch } : d));
-    onChange({ ...project, search: { databases: list } });
+  const handleSelectAll = () => {
+    setSelectedDatabases(DATABASES.map(d => d.id));
   };
 
-  const regen = () => {
-    const q = buildQuery(project);
-    const list = dbs.map((d) => ({ ...d, query: q }));
-    onChange({ ...project, search: { databases: list } });
+  const handleClearAll = () => {
+    setSelectedDatabases([]);
   };
 
-  const exportTxt = () => {
-    const lines = dbs.map((d) => `${d.name}\n${d.query}\n(${d.results ?? "?"} results)\n`);
-    downloadText("poolr_search_strategy.txt", `poolr search strategy\n\n${lines.join("\n")}`);
+  const exportStrategy = () => {
+    const lines = DATABASES
+      .filter(db => selectedDatabases.includes(db.id))
+      .map(db => `${db.name}\nSearch strategy for ${db.name} will be generated from PICO\n`);
+    downloadText("poolr_search_strategy.txt", `poolr search strategy\n\n${lines.join('\n')}`);
   };
-
-  const totalResults = dbs.reduce((a, d) => a + (d.results ?? 0), 0);
 
   return (
-    <div className="space-y-3">
-      <Card title="Search strategy builder" right={
-        <div className="flex items-center gap-2">
-          <Pill tone="neutral">{dbs.length} databases</Pill>
-          <button className="btn-ghost" onClick={regen}>Regenerate from PICO</button>
-          <button className="btn-ghost" onClick={addDb}>+ DB</button>
-          <button className="btn-primary" onClick={exportTxt}>Export .txt</button>
-        </div>
-      }>
-        <p className="mb-3 text-[12.5px] text-[var(--color-text-muted)]">
-          Queries are derived from the Protocol PICO. Edit per-database, then export the full strategy.
-        </p>
+    <div className="space-y-4">
+      {/* Tab Navigation */}
+      <div className="flex items-center gap-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-1">
+        {[
+          { id: 'unified', label: 'Unified Search', icon: SearchIcon },
+          { id: 'databases', label: 'Database Selector', icon: Database },
+          { id: 'strategy', label: 'Search Strategy', icon: FileText },
+        ].map(t => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id as Tab)}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-[12.5px] font-medium transition-colors ${
+              tab === t.id
+                ? 'bg-[var(--color-accent)] text-white'
+                : 'text-[var(--color-text-muted)] hover:bg-[var(--hover-surface)] hover:text-[var(--color-text)]'
+            }`}
+          >
+            <t.icon className="h-4 w-4" />
+            {t.label}
+          </button>
+        ))}
+      </div>
 
-        {dbs.length === 0 ? (
-          <EmptyState>Generate the base strategy from your PICO, or add a database manually.</EmptyState>
-        ) : (
-          <div className="space-y-3">
-            {dbs.map((d, i) => (
-              <div key={i} className="rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)] p-3">
-                <div className="mb-2 flex items-center gap-2">
-                  <Input className="max-w-[220px]" value={d.name} onChange={(e) => update(i, { name: e.target.value })} />
-                  <div className="ml-auto flex items-center gap-2">
-                    <SectionLabel>results</SectionLabel>
-                    <Input
-                      type="number"
-                      className="w-24"
-                      value={d.results ?? ""}
-                      placeholder="?"
-                      onChange={(e) => update(i, { results: e.target.value === "" ? null : Number(e.target.value) })}
+      {/* Tab Content */}
+      {tab === 'unified' && (
+        <UnifiedSearch onImport={handleImport} />
+      )}
+
+      {tab === 'databases' && (
+        <Card title="Select Databases" right={
+          <div className="flex items-center gap-2">
+            <Pill tone="neutral">{selectedDatabases.length} selected</Pill>
+            <button onClick={exportStrategy} className="btn-ghost flex items-center gap-1.5">
+              <Download className="h-3.5 w-3.5" />
+              Export
+            </button>
+          </div>
+        }>
+          <DatabaseSelector
+            selected={selectedDatabases}
+            onToggle={toggleDatabase}
+            onSelectAll={handleSelectAll}
+            onClearAll={handleClearAll}
+          />
+        </Card>
+      )}
+
+      {tab === 'strategy' && (
+        <Card title="Search Strategy Builder" right={
+          <div className="flex items-center gap-2">
+            <button onClick={exportStrategy} className="btn-primary flex items-center gap-1.5">
+              <Download className="h-3.5 w-3.5" />
+              Export .txt
+            </button>
+          </div>
+        }>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3">
+              <Info className="h-5 w-5 shrink-0 text-[var(--color-accent)]" />
+              <p className="text-[12px] text-[var(--color-text-muted)]">
+                The search strategy builder generates database-specific queries from your PICO definition.
+                Use the Unified Search tab to search databases directly and import results to your screening queue.
+              </p>
+            </div>
+
+            {selectedDatabases.length === 0 ? (
+              <EmptyState>
+                Select databases from the Database Selector tab to build your search strategy.
+              </EmptyState>
+            ) : (
+              <div className="space-y-3">
+                {DATABASES.filter(db => selectedDatabases.includes(db.id)).map(db => (
+                  <div
+                    key={db.id}
+                    className="rounded-lg border border-[var(--color-border)] bg-[var(--input-bg)] p-3"
+                  >
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className="text-lg">{db.logo}</span>
+                      <span className="text-[12.5px] font-semibold text-[var(--color-text)]">
+                        {db.name}
+                      </span>
+                      {db.free ? (
+                        <span className="rounded-full bg-[var(--color-include)]/10 px-1.5 py-0.5 text-[9px] font-medium text-[var(--color-include)]">
+                          FREE
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-[var(--color-unsure)]/10 px-1.5 py-0.5 text-[9px] font-medium text-[var(--color-unsure)]">
+                          KEY REQUIRED
+                        </span>
+                      )}
+                      <ChevronRight className="ml-auto h-4 w-4 text-[var(--color-text-muted)]" />
+                    </div>
+                    <textarea
+                      className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 font-mono text-[11.5px] text-[var(--color-text)] placeholder:text-[var(--placeholder-fg)] focus-visible:border-[var(--color-border-strong)] focus-visible:outline-none"
+                      rows={3}
+                      placeholder={`Enter ${db.name} search query...`}
+                      defaultValue={(() => {
+                        const { population, intervention, comparator, outcomes } = project.pico;
+                        const parts = [population, intervention, comparator].filter(Boolean).map(s => `("${s?.trim()}")`);
+                        const base = parts.join(' AND ');
+                        return outcomes ? `${base} AND (${outcomes.trim()})` : base;
+                      })()}
                     />
-                    <button className="btn-ghost" onClick={() => onChange({ ...project, search: { databases: dbs.filter((_, idx) => idx !== i) } })}>remove</button>
                   </div>
-                </div>
-                <Textarea rows={2} value={d.query} onChange={(e) => update(i, { query: e.target.value })} className="font-mono text-[11.5px]" />
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
-
-        {dbs.length === 0 && (
-          <div className="mt-3 flex gap-2">
-            <button className="btn-primary" onClick={ensure}>Generate from PICO</button>
-          </div>
-        )}
-
-        {dbs.length > 0 && (
-          <div className="mt-3 border-t border-[var(--color-border)] pt-3 text-[12.5px] text-[var(--color-text-muted)]">
-            Total retrieved across databases: <span className="font-mono text-[var(--color-text)]">{totalResults.toLocaleString()}</span>
-          </div>
-        )}
-      </Card>
+        </Card>
+      )}
     </div>
   );
 }

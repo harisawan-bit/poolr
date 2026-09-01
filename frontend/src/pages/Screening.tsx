@@ -190,39 +190,39 @@ export default function Screening({ project, onChange }: { project: Project; onC
   ];
 
   return (
-    <div className="space-y-3">
-      {/* v0.5.3 — screening funnel + reviewer team, kokonutui-style */}
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-        <Card title="Screening funnel" className="lg:col-span-2">
-          <FunnelChart
-            color="var(--chart-1)"
-            data={funnelData}
-            layers={3}
-          />
-        </Card>
-        <Card title="Reviewers">
-          <TeamSelector defaultValue={reviewers} members={REVIEWER_MEMBERS} onChange={setReviewers} />
-          <p className="mt-2 text-center text-[11px] text-[var(--color-text-muted)]">
-            {reviewers > 1 ? "Dual screening — records should be agreed by both reviewers." : "Single reviewer screening."}
-          </p>
-        </Card>
-      </div>
+      <div className="space-y-3">
+        {/* v0.5.5 — AI Screening Assistant (prominent, at top) */}
+        <AIScreeningPanel
+          items={items}
+          pico={project.pico}
+          inclusionCriteria={project.protocol.objective || ""}
+          exclusionCriteria=""
+          onDecisions={(decisions) => {
+            const next = items.map(item => {
+              const d = decisions.find(x => x.id === item.id);
+              if (d) return { ...item, decision: d.decision };
+              return item;
+            });
+            onChange({ ...project, screening: { ...project.screening, [stage]: next } });
+          }}
+        />
 
-      {/* v0.5.5 — AI Screening Assistant */}
-      <AIScreeningPanel
-        items={items}
-        pico={project.pico}
-        inclusionCriteria={project.protocol.objective || ""}
-        exclusionCriteria=""
-        onDecisions={(decisions) => {
-          const next = items.map(item => {
-            const d = decisions.find(x => x.id === item.id);
-            if (d) return { ...item, decision: d.decision };
-            return item;
-          });
-          onChange({ ...project, screening: { ...project.screening, [stage]: next } });
-        }}
-      />
+        {/* v0.5.3 — screening funnel + reviewer team, kokonutui-style */}
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+          <Card title="Screening funnel" className="lg:col-span-2">
+            <FunnelChart
+              color="var(--chart-1)"
+              data={funnelData}
+              layers={3}
+            />
+          </Card>
+          <Card title="Reviewers">
+            <TeamSelector defaultValue={reviewers} members={REVIEWER_MEMBERS} onChange={setReviewers} />
+            <p className="mt-2 text-center text-[11px] text-[var(--color-text-muted)]">
+              {reviewers > 1 ? "Dual screening — records should be agreed by both reviewers." : "Single reviewer screening."}
+            </p>
+          </Card>
+        </div>
 
       {/* v0.5.5 — Screening workflow tabs */}
       <div className="flex items-center gap-1 border-b border-[var(--color-border)] pb-2">
