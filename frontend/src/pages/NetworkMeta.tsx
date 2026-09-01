@@ -106,7 +106,6 @@ export default function NetworkMeta({ project, onChange }: { project: Project; o
   const [comparisons, setComparisons] = useState<Comparison[]>(data.comparisons.length > 0 ? data.comparisons : [blankComparison(DEFAULT_TREATMENTS[0], DEFAULT_TREATMENTS[1])]);
   const [results, setResults] = useState<NetworkResult | null>(data.results);
   const [selectedStudies, setSelectedStudies] = useState<Record<number, string[]>>({});
-  const fileRef = useRef<HTMLInputElement>(null);
 
   const extractionStudies = project.extraction.studies;
 

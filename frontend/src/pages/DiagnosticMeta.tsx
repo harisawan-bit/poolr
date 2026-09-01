@@ -78,7 +78,7 @@ const DEFAULT_STUDIES: DiagnosticStudy[] = [
 
 export default function DiagnosticMeta({ project, onChange }: { project: Project; onChange: (p: Project) => void }) {
   const data = project.diagnostic ?? { studies: [], results: null };
-  const [studies, setStudies] = useState<DiagnosticStudy[]>(data.studies.length > 0 ? data.studies : DEFAULT_STUDIES);
+  const [studies, setStudies] = useState<DiagnosticStudy[]>(data.studies.length > 0 ? data.studies.map((s: any) => ({ ...s, id: s.id || `${Date.now()}_${Math.random().toString(36).slice(2, 6)}` })) : DEFAULT_STUDIES);
   const [results, setResults] = useState<DiagnosticResult | null>(data.results);
   const [model, setModel] = useState<"bivariate" | "hsroc" | "univariate">("bivariate");
   const [newStudy, setNewStudy] = useState({ study: "", tp: "", fp: "", fn: "", tn: "" });

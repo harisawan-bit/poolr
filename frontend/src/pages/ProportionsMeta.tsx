@@ -7,7 +7,7 @@ interface ProportionStudy {
   n: number;
 }
 
-export default function ProportionsMeta({ project, onChange }: { project: any; onChange: (p: any) => void }) {
+export default function ProportionsMeta({ project: _project, onChange: _onChange }: { project: any; onChange: (p: any) => void }) {
   const [studies, setStudies] = useState<ProportionStudy[]>([]);
   const [transform, setTransform] = useState<'logit' | 'arcsine' | 'freeman-tukey'>('logit');
   const [newStudy, setNewStudy] = useState({ study: '', events: '', n: '' });

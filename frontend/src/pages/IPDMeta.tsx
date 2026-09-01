@@ -27,7 +27,7 @@ interface IPDResult {
   nStudies: number;
 }
 
-function computeIPD(rows: IPDRow[], stage: "one" | "two"): IPDResult {
+function computeIPD(rows: IPDRow[], _stage: "one" | "two"): IPDResult {
   const studies = Array.from(new Set(rows.map((r) => r.study)));
   const nPatients = rows.length;
   const nStudies = studies.length;

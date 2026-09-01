@@ -84,7 +84,7 @@ const DEFAULT_ENTRIES: EffectEntry[] = [
 
 export default function MultilevelMeta({ project, onChange }: { project: Project; onChange: (p: Project) => void }) {
   const data = project.multilevel ?? { effectSizes: [], results: null };
-  const [entries, setEntries] = useState<EffectEntry[]>(data.effectSizes.length > 0 ? data.effectSizes : DEFAULT_ENTRIES);
+  const [entries, setEntries] = useState<EffectEntry[]>(data.effectSizes.length > 0 ? data.effectSizes.map((e: any) => ({ ...e, id: e.id || `${Date.now()}_${Math.random().toString(36).slice(2, 6)}` })) : DEFAULT_ENTRIES);
   const [model, setModel] = useState<"random" | "fixed">("random");
   const [rho, setRho] = useState(0.5);
   const [results, setResults] = useState<MultilevelResult | null>(data.results);

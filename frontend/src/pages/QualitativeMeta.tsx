@@ -13,7 +13,7 @@ interface Theme {
   codes: string[];
 }
 
-export default function QualitativeMeta({ project, onChange }: { project: any; onChange: (p: any) => void }) {
+export default function QualitativeMeta({ project: _project, onChange: _onChange }: { project: any; onChange: (p: any) => void }) {
   const [codes, setCodes] = useState<Code[]>([]);
   const [themes, setThemes] = useState<Theme[]>([]);
   const [newCode, setNewCode] = useState({ name: '', description: '' });
