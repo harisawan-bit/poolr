@@ -199,6 +199,20 @@ app.MapPost("/api/grade", ([FromBody] GradeRequest req) =>
     }
 });
 
+// v0.5.7 — Proportion Meta-Analysis (extended)
+app.MapPost("/api/proportion", ([FromBody] ProportionEngine.ProportionRequest req) =>
+{
+    try
+    {
+        var result = ProportionEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
 // v0.5.7 — Prediction interval
 app.MapPost("/api/prediction", ([FromBody] PredictionEngine.PredictionRequest req) =>
 {
