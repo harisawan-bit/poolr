@@ -26,8 +26,8 @@ app.Use(async (ctx, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.5.3", engine = "csharp" }));
-app.MapGet("/version", () => Results.Ok(new { version = "0.5.3" }));
+app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.5.7", engine = "csharp" }));
+app.MapGet("/version", () => Results.Ok(new { version = "0.5.7" }));
 
 // Phase B — C# meta-analysis engine (numerics covered by engine/Poolr.Engine.Tests xUnit).
 app.MapPost("/api/meta", ([FromBody] MetaRequest req) =>
@@ -192,6 +192,279 @@ app.MapPost("/api/grade", ([FromBody] GradeRequest req) =>
     {
         var rows = GradeEngine.Evaluate(req);
         return Results.Ok(rows);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.5.7 — Living Systematic Review
+app.MapPost("/api/living/cumulative", ([FromBody] LivingReviewEngine.CumulativeRequest req) =>
+{
+    try { return Results.Ok(LivingReviewEngine.RunCumulative(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+app.MapPost("/api/living/priority", ([FromBody] LivingReviewEngine.PriorityScreeningRequest req) =>
+{
+    try { return Results.Ok(LivingReviewEngine.RunPriorityScreening(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.5.7 — Niche MA types (correlations, variability, SCED, Poisson, agreement)
+app.MapPost("/api/niche/correlation", ([FromBody] List<NicheEngine.CorrelationStudy> studies) =>
+{
+    try { return Results.Ok(NicheEngine.RunCorrelationHunterSchmidt(studies)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/niche/variability", ([FromBody] List<NicheEngine.VariabilityStudy> studies) =>
+{
+    try { return Results.Ok(NicheEngine.RunVariabilityRatio(studies)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/niche/sced", ([FromBody] List<NicheEngine.ScdStudy> studies) =>
+{
+    try { return Results.Ok(NicheEngine.RunScd(studies)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/niche/poisson", ([FromBody] List<NicheEngine.PoissonStudy> studies) =>
+{
+    try { return Results.Ok(NicheEngine.RunPoissonGlmm(studies)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/niche/agreement", ([FromBody] List<NicheEngine.AgreementStudy> studies) =>
+{
+    try { return Results.Ok(NicheEngine.RunAgreement(studies)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.5.7 — Specialized (QoL, Economic, Genetics, Ecology, Education, Adverse Events)
+app.MapPost("/api/specialized/qol", ([FromBody] SpecializedEngine.QolRequest req) =>
+{
+    try { return Results.Ok(SpecializedEngine.RunQol(req.studies, req.pooledBaselineSd)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/specialized/economic", ([FromBody] List<SpecializedEngine.CostStudy> studies) =>
+{
+    try { return Results.Ok(SpecializedEngine.RunEconomic(studies)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/specialized/genetic", ([FromBody] List<SpecializedEngine.GeneticStudy> studies) =>
+{
+    try { return Results.Ok(SpecializedEngine.RunGenetic(studies)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/specialized/ecological", ([FromBody] List<SpecializedEngine.EcologicalStudy> studies) =>
+{
+    try { return Results.Ok(SpecializedEngine.RunEcological(studies)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/specialized/prepost", ([FromBody] List<SpecializedEngine.PrePostStudy> studies) =>
+{
+    try { return Results.Ok(SpecializedEngine.RunPrePost(studies)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/specialized/adverse", ([FromBody] List<SpecializedEngine.AeStudy> studies) =>
+{
+    try { return Results.Ok(SpecializedEngine.RunAdverseEvents(studies)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.5.7 — Advanced (Prognostic, Qualitative, Bibliometric, Sequential, DCA)
+app.MapPost("/api/advanced/prognostic", ([FromBody] List<AdvancedEngine.PrognosticStudy> studies) =>
+{
+    try { return Results.Ok(AdvancedEngine.RunPrognostic(studies)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/advanced/qualitative", ([FromBody] List<AdvancedEngine.CodeEntry> entries) =>
+{
+    try { return Results.Ok(AdvancedEngine.RunQualitative(entries)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/advanced/bibliometric", ([FromBody] List<AdvancedEngine.CitationEntry> entries) =>
+{
+    try { return Results.Ok(AdvancedEngine.RunBibliometric(entries)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/advanced/sequential", ([FromBody] AdvancedEngine.SequentialRequest req) =>
+{
+    try { return Results.Ok(AdvancedEngine.RunSequential(req.studies, req.alpha, req.beta, req.expectedEffect)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/advanced/dca", ([FromBody] List<AdvancedEngine.DcaStudy> studies) =>
+{
+    try { return Results.Ok(AdvancedEngine.RunDca(studies)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.5.7 — Collaboration (snapshots, diff, restore)
+app.MapPost("/api/collaboration/snapshot", ([FromBody] CollaborationEngine.SnapshotRequest req) =>
+{
+    try { return Results.Ok(new { id = CollaborationEngine.CreateSnapshot(req) }); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/collaboration/snapshots", () =>
+{
+    try { return Results.Ok(CollaborationEngine.ListSnapshots()); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/collaboration/diff", ([FromBody] CollaborationEngine.DiffRequest req) =>
+{
+    try { return Results.Ok(CollaborationEngine.GetDiff(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/collaboration/restore", ([FromBody] CollaborationEngine.RestoreRequest req) =>
+{
+    try { return Results.Ok(new { json = CollaborationEngine.RestoreSnapshot(req) }); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.5.7 — Reporting (LaTeX, HTML, Python, Stata)
+app.MapPost("/api/report/latex", ([FromBody] ReportingEngine.ManuscriptRequest req) =>
+    Results.Text(ReportingEngine.GenerateLatex(req), "application/x-tex"));
+app.MapPost("/api/report/html", ([FromBody] ReportingEngine.HtmlReportRequest req) =>
+    Results.Text(ReportingEngine.GenerateHtmlReport(req), "text/html"));
+app.MapPost("/api/report/python", ([FromBody] ReportingEngine.ManuscriptRequest req) =>
+    Results.Text(ReportingEngine.GeneratePythonReplication(req), "text/plain"));
+app.MapPost("/api/report/stata", ([FromBody] ReportingEngine.ManuscriptRequest req) =>
+    Results.Text(ReportingEngine.GenerateStataReplication(req), "text/plain"));
+
+// v0.5.7 — AI-assisted screening / extraction / RoB / GRADE
+app.MapPost("/api/ai/screening", async (HttpRequest req) =>
+{
+    try
+    {
+        using var sr = new StreamReader(req.Body);
+        var raw = await sr.ReadToEndAsync();
+        return Results.Ok(new { message = "AI screening endpoint - configure LLM in settings" });
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.5.7 — Survival extensions (RMST, IPD reconstruction)
+app.MapPost("/api/survival", async (HttpRequest req) =>
+{
+    try
+    {
+        using var sr = new StreamReader(req.Body);
+        var raw = await sr.ReadToEndAsync();
+        var doc = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(raw);
+        var type = doc.GetProperty("type").GetString();
+
+        if (type == "rmst")
+        {
+            var rmstReq = doc.GetProperty("request").Deserialize<SurvivalEngine.RmstRequest>();
+            return Results.Ok(SurvivalEngine.RunRmst(rmstReq));
+        }
+        else if (type == "kmreconstruct")
+        {
+            var kmReq = doc.GetProperty("request").Deserialize<SurvivalEngine.KmReconstructionRequest>();
+            return Results.Ok(SurvivalEngine.ReconstructIPD(kmReq));
+        }
+
+        return Results.BadRequest(new { error = "Unknown survival analysis type" });
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.5.7 — Proportion Meta-Analysis (extended)
+app.MapPost("/api/proportion", ([FromBody] ProportionEngine.ProportionRequest req) =>
+{
+    try
+    {
+        var result = ProportionEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.5.7 — Prediction interval
+app.MapPost("/api/prediction", ([FromBody] PredictionEngine.PredictionRequest req) =>
+{
+    try { return Results.Ok(PredictionEngine.ComputePredictionInterval(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.5.7 — Model averaging
+app.MapPost("/api/modelaverage", ([FromBody] PredictionEngine.ModelAverageRequest req) =>
+{
+    try { return Results.Ok(PredictionEngine.RunModelAveraging(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.5.7 — Dose-Response Meta-Analysis
+app.MapPost("/api/dose", ([FromBody] DoseResponseEngine.DoseRequest req) =>
+{
+    try
+    {
+        var result = DoseResponseEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.5.7 — IPD Meta-Analysis
+app.MapPost("/api/ipd", ([FromBody] IpdEngine.IpdRequest req) =>
+{
+    try
+    {
+        var result = IpdEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.5.7 — Diagnostic Test Accuracy Meta-Analysis
+app.MapPost("/api/dta", ([FromBody] DtaEngine.DtaRequest req) =>
+{
+    try
+    {
+        var result = DtaEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.5.7 — Multilevel / Multivariate / RVE
+app.MapPost("/api/multilevel", ([FromBody] MultilevelEngine.MultilevelRequest req) =>
+{
+    try
+    {
+        var result = MultilevelEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.5.7 — Network Meta-Analysis
+app.MapPost("/api/nma", ([FromBody] NmaEngine.NmaRequest req) =>
+{
+    try
+    {
+        var result = NmaEngine.Run(req);
+        return Results.Ok(result);
     }
     catch (Exception ex)
     {
