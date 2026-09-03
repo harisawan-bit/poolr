@@ -5,11 +5,30 @@ import ShimmerText from "../components/kokonut/ShimmerText";
 import ActivityState from "../components/kokonut/ActivityState";
 import { runMetaAnalysis, generateForestPlotData, generateFunnelPlotData } from "../lib/meta-engine";
 import { interpretResults } from "../lib/ai";
-import { postJson } from "../lib/api";
+import {
+  postJson,
+  fetchDiagnosticFigure,
+  computePredictionInterval,
+  runModelAveraging,
+  runTrialSequentialAnalysis,
+  exportReplicationCode,
+  type PredictionResult,
+  type ModelAverageResult,
+  type SequentialResult,
+} from "../lib/api";
+import { downloadText } from "../lib/project";
 import { RingChart } from "../components/charts/ring-chart";
 import { Ring } from "../components/charts/ring";
 import { RingCenter } from "../components/charts/ring-center";
-import { Sparkles, Loader2 } from "lucide-react";
+import {
+  Sparkles,
+  Loader2,
+  Download,
+  Copy,
+  Check,
+  Activity,
+  Layers,
+} from "lucide-react";
 
 const MEASURES: string[] = ["OR", "RR", "RD", "MD", "SMD", "HR", "MH_OR", "PETO", "GLASS", "LOGIT_PROP", "ARS_PROP", "IRR", "IRD", "Z_CORR", "GEN_IV"];
 const METHODS: string[] = ["DL", "REML", "PM", "HS", "ML", "EB"];
@@ -31,6 +50,24 @@ export default function Meta({ project, onChange }: { project: Project; onChange
   const [funnel, setFunnel] = useState<string | null>(null);
   const [interpreting, setInterpreting] = useState(false);
   const [interpretation, setInterpretation] = useState<string | null>(null);
+
+  // Advanced SRMA researcher additions
+  const [predInterval, setPredInterval] = useState<PredictionResult | null>(null);
+  const [figTab, setFigTab] = useState<"forest" | "funnel" | "funnel_contour" | "galbraith" | "labbe" | "baujat">("forest");
+  const [diagSvg, setDiagSvg] = useState<Record<string, string>>({});
+  const [diagLoading, setDiagLoading] = useState(false);
+
+  const [tsaResult, setTsaResult] = useState<SequentialResult | null>(null);
+  const [tsaLoading, setTsaLoading] = useState(false);
+
+  const [maResult, setMaResult] = useState<ModelAverageResult | null>(null);
+  const [maLoading, setMaLoading] = useState(false);
+
+  const [replTab, setReplTab] = useState<"r" | "stata" | "python" | "methods">("r");
+  const [replCode, setReplCode] = useState<Record<string, string>>({});
+  const [replLoading, setReplLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const mounted = useRef(true);
   useEffect(() => () => { mounted.current = false; }, []);
 
@@ -152,6 +189,50 @@ export default function Meta({ project, onChange }: { project: Project; onChange
 
       onChange({ ...project, meta: { ...project.meta, settings, results: r as ExtendedMetaResponse } });
 
+      // Reset cached figures and replication scripts for fresh run
+      setDiagSvg({});
+      setTsaResult(null);
+      setMaResult(null);
+      setReplCode({});
+
+      // Compute 95% Prediction Interval (Higgins 2009 / IntHout 2016)
+      if (r.studies.length >= 3 && settings.model === "random") {
+        const isRatio = ["OR", "RR", "HR"].includes(settings.measure || "OR");
+        const se = r.pooled.se || Math.abs(r.pooled.ci_upper - r.pooled.ci_lower) / 3.92;
+        computePredictionInterval({
+          pooledEffect: r.pooled.effect,
+          se,
+          tau2: r.heterogeneity?.tau2 || 0,
+          k: r.studies.length,
+          logScale: isRatio,
+        })
+          .then((pi) => setPredInterval(pi))
+          .catch(() => {
+            const df = Math.max(1, r.studies.length - 2);
+            const tCrit = df === 1 ? 12.71 : df === 2 ? 4.30 : df === 3 ? 3.18 : df === 4 ? 2.78 : df === 5 ? 2.57 : 2.1;
+            const tau2 = r.heterogeneity?.tau2 || 0;
+            const sePred = Math.sqrt(se * se + tau2);
+            if (isRatio) {
+              const logEff = Math.log(Math.max(1e-6, r.pooled.effect));
+              setPredInterval({
+                piLower: Math.exp(logEff - tCrit * sePred),
+                piUpper: Math.exp(logEff + tCrit * sePred),
+                piT: tCrit,
+                piDf: df,
+              });
+            } else {
+              setPredInterval({
+                piLower: r.pooled.effect - tCrit * sePred,
+                piUpper: r.pooled.effect + tCrit * sePred,
+                piT: tCrit,
+                piDf: df,
+              });
+            }
+          });
+      } else {
+        setPredInterval(null);
+      }
+
       try {
         const isRatioMeasure = settings.measure === "OR" || settings.measure === "RR" || settings.measure === "HR";
         setForest(generateForestSVG(generateForestPlotData(plotDataResult), isRatioMeasure));
@@ -165,6 +246,123 @@ export default function Meta({ project, onChange }: { project: Project; onChange
       if (mounted.current) setBusy(false);
     }
   };
+
+  // Fetch specialized diagnostic SVG when user switches figure tab
+  useEffect(() => {
+    if (!resp || !["funnel_contour", "galbraith", "labbe", "baujat"].includes(figTab)) return;
+    if (diagSvg[figTab]) return;
+
+    setDiagLoading(true);
+    const diagPayload = {
+      measure: settings.measure || "OR",
+      names: resp.studies.map((s) => s.study),
+      effs: resp.studies.map((s) => s.effect),
+      vars: resp.studies.map((s) => {
+        const se = (s as any).se || Math.abs(s.ci_upper - s.ci_lower) / 3.92;
+        return Math.max(1e-6, se * se);
+      }),
+      raw_data: studies.map((s) => ({
+        study: s.study,
+        int_events: s.int_events,
+        int_n: s.int_n,
+        ctrl_events: s.ctrl_events,
+        ctrl_n: s.ctrl_n,
+        int_mean: s.int_mean,
+        int_sd: s.int_sd,
+        ctrl_mean: s.ctrl_mean,
+        ctrl_sd: s.ctrl_sd,
+      })),
+    };
+
+    fetchDiagnosticFigure(figTab as any, diagPayload)
+      .then((svg) => {
+        setDiagSvg((prev) => ({ ...prev, [figTab]: svg }));
+      })
+      .catch((e) => {
+        console.error(`Failed to fetch ${figTab} figure:`, e);
+      })
+      .finally(() => setDiagLoading(false));
+  }, [figTab, resp, diagSvg, settings.measure]);
+
+  const handleRunTsa = async () => {
+    if (!resp?.studies.length) return;
+    setTsaLoading(true);
+    try {
+      const isRatio = ["OR", "RR", "HR"].includes(settings.measure || "OR");
+      const nullVal = isRatio ? 1 : 0;
+      const tsaStudies = resp.studies.map((s) => {
+        const se = (s as any).se || Math.abs(s.ci_upper - s.ci_lower) / 3.92;
+        const z = se > 0 ? (s.effect - nullVal) / se : 0;
+        return {
+          study: s.study,
+          zScore: z,
+          informationFraction: (s.weight || 1) / 100,
+        };
+      });
+      const res = await runTrialSequentialAnalysis({
+        studies: tsaStudies,
+        alpha: 0.05,
+        beta: 0.20,
+        expectedEffect: resp.pooled.effect,
+      });
+      setTsaResult(res);
+    } catch (e) {
+      console.error("TSA failed:", e);
+      alert("Trial Sequential Analysis requires the backend engine.");
+    } finally {
+      setTsaLoading(false);
+    }
+  };
+
+  const handleRunModelAveraging = async () => {
+    if (!resp?.studies.length) return;
+    setMaLoading(true);
+    try {
+      const effects = resp.studies.map((s) => s.effect);
+      const variances = resp.studies.map((s) => {
+        const se = (s as any).se || Math.abs(s.ci_upper - s.ci_lower) / 3.92;
+        return Math.max(1e-6, se * se);
+      });
+      const res = await runModelAveraging({ effects, variances });
+      setMaResult(res);
+    } catch (e) {
+      console.error("Model averaging failed:", e);
+      alert("Model Averaging requires the backend engine.");
+    } finally {
+      setMaLoading(false);
+    }
+  };
+
+  // Fetch replication code when replication tab changes
+  useEffect(() => {
+    if (!resp) return;
+    if (replCode[replTab]) return;
+    setReplLoading(true);
+    const payload = {
+      measure: settings.measure || "OR",
+      model: settings.model || "random",
+      method: settings.method || "DL",
+      studies: resp.studies.map((s) => ({
+        study: s.study,
+        effect: s.effect,
+        ci_lower: s.ci_lower,
+        ci_upper: s.ci_upper,
+        weight: s.weight,
+        se: (s as any).se || Math.abs(s.ci_upper - s.ci_lower) / 3.92,
+      })),
+      pooled: resp.pooled,
+      heterogeneity: resp.heterogeneity,
+    };
+
+    exportReplicationCode(replTab, payload)
+      .then((code) => {
+        setReplCode((prev) => ({ ...prev, [replTab]: code }));
+      })
+      .catch((e) => {
+        console.error(`Failed to export ${replTab} code:`, e);
+      })
+      .finally(() => setReplLoading(false));
+  }, [replTab, resp, replCode, settings.measure, settings.method, settings.model]);
 
   const handleInterpret = async () => {
     if (!resp?.pooled) return;
@@ -222,9 +420,13 @@ export default function Meta({ project, onChange }: { project: Project; onChange
       ) : (
         <>
           <Card title="Pooled result">
-            <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
               <Stat k="Pooled" v={fmtE(pooled?.effect)} accent />
               <Stat k="95% CI" v={`${fmtE(pooled?.ci_lower)} – ${fmtE(pooled?.ci_upper)}`} />
+              <Stat
+                k="95% Pred. Int."
+                v={predInterval ? `${fmtE(predInterval.piLower)} – ${fmtE(predInterval.piUpper)}` : "—"}
+              />
               <Stat k="p-value" v={fmtN(pooled?.p, 4)} />
               <Stat k="I²" v={het ? `${fmtN(het.i2, 1)}%` : "—"} />
               {typeof het?.i2_lower === "number" && typeof het?.i2_upper === "number" && (
@@ -237,6 +439,11 @@ export default function Meta({ project, onChange }: { project: Project; onChange
             {pooled?.ci_method && (
               <div className="mt-3 text-[12px] text-[var(--color-text-muted)]">
                 CI method: {pooled.ci_method}{resp.knapp_hartung ? " — wider, uncertainty-aware intervals" : ""}
+              </div>
+            )}
+            {predInterval && (
+              <div className="mt-1 text-[11.5px] text-[var(--color-text-muted)]">
+                95% Prediction Interval (Higgins 2009 / IntHout 2016): expected true treatment effect in an identical future trial (t = {fmtN(predInterval.piT, 2)}, df = {predInterval.piDf}).
               </div>
             )}
             <div className="mt-3 flex items-center gap-2">
@@ -261,11 +468,260 @@ export default function Meta({ project, onChange }: { project: Project; onChange
           </Card>
 
           <Card title="Study weights"><WeightRings resp={resp} /></Card>
-          <Card title="Forest plot">
-            {forest ? <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: forest }} /> : <EmptyState>{busy ? "Rendering…" : "Run the analysis to render the forest plot."}</EmptyState>}
+
+          {/* Interactive Figure Studio */}
+          <Card
+            title="Interactive Figure Studio"
+            right={
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1 rounded-md border border-[var(--color-border)] bg-[var(--input-bg)] p-0.5 text-[11px]">
+                  <button
+                    className={`rounded px-2 py-1 transition-colors ${figTab === "forest" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    onClick={() => setFigTab("forest")}
+                  >
+                    Forest Plot
+                  </button>
+                  <button
+                    className={`rounded px-2 py-1 transition-colors ${figTab === "funnel" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    onClick={() => setFigTab("funnel")}
+                  >
+                    Funnel (Std)
+                  </button>
+                  <button
+                    className={`rounded px-2 py-1 transition-colors ${figTab === "funnel_contour" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    onClick={() => setFigTab("funnel_contour")}
+                  >
+                    Contour Funnel
+                  </button>
+                  <button
+                    className={`rounded px-2 py-1 transition-colors ${figTab === "galbraith" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    onClick={() => setFigTab("galbraith")}
+                  >
+                    Galbraith Radial
+                  </button>
+                  {["OR", "RR", "RD"].includes(settings.measure || "OR") && (
+                    <button
+                      className={`rounded px-2 py-1 transition-colors ${figTab === "labbe" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                      onClick={() => setFigTab("labbe")}
+                    >
+                      L'Abbé Plot
+                    </button>
+                  )}
+                  <button
+                    className={`rounded px-2 py-1 transition-colors ${figTab === "baujat" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    onClick={() => setFigTab("baujat")}
+                  >
+                    Baujat Influence
+                  </button>
+                </div>
+                {((figTab === "forest" && forest) || (figTab === "funnel" && funnel) || diagSvg[figTab]) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const svgText = figTab === "forest" ? forest : figTab === "funnel" ? funnel : diagSvg[figTab];
+                      if (svgText) downloadText(`meta_${figTab}.svg`, svgText, "image/svg+xml");
+                    }}
+                    title="Download publication-quality SVG"
+                  >
+                    <Download className="h-3.5 w-3.5 mr-1" />
+                    Export SVG
+                  </Button>
+                )}
+              </div>
+            }
+          >
+            {figTab === "forest" ? (
+              forest ? (
+                <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: forest }} />
+              ) : (
+                <EmptyState>{busy ? "Rendering…" : "Run analysis to render forest plot."}</EmptyState>
+              )
+            ) : figTab === "funnel" ? (
+              funnel ? (
+                <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: funnel }} />
+              ) : (
+                <EmptyState>{busy ? "Rendering…" : "Run analysis to render funnel plot."}</EmptyState>
+              )
+            ) : diagLoading ? (
+              <div className="flex h-64 items-center justify-center text-[12px] text-[var(--color-text-muted)]">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin text-[var(--color-accent)]" />
+                Generating {figTab} diagnostic figure…
+              </div>
+            ) : diagSvg[figTab] ? (
+              <div className="flex flex-col items-center">
+                <div
+                  className="max-w-full overflow-x-auto rounded-lg bg-[var(--color-surface)] p-2"
+                  dangerouslySetInnerHTML={{ __html: diagSvg[figTab] }}
+                />
+                <p className="mt-2 text-center text-[11px] text-[var(--color-text-muted)]">
+                  {figTab === "funnel_contour"
+                    ? "Contour-enhanced funnel plot: shaded regions represent p < 0.10, p < 0.05, and p < 0.01 statistical significance boundaries."
+                    : figTab === "galbraith"
+                    ? "Galbraith radial plot: standardized effect size z-score vs precision (1/SE). Studies outside the ±2 SE corridor are outliers."
+                    : figTab === "labbe"
+                    ? "L'Abbé plot: experimental event rate vs control event rate. Studies along the diagonal have equal rates."
+                    : "Baujat plot: study contribution to overall heterogeneity (Q) on the x-axis vs influence on the pooled result on the y-axis."}
+                </p>
+              </div>
+            ) : (
+              <EmptyState>No data available to render {figTab} figure.</EmptyState>
+            )}
           </Card>
-          <Card title="Funnel plot">
-            {funnel ? <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: funnel }} /> : <EmptyState>{busy ? "Rendering…" : "Run the analysis to render the funnel plot."}</EmptyState>}
+
+          {/* Trial Sequential Analysis (TSA) */}
+          <Card
+            title="Trial Sequential Analysis (TSA)"
+            right={
+              <Button variant="outline" size="sm" onClick={handleRunTsa} disabled={tsaLoading}>
+                {tsaLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Activity className="h-3.5 w-3.5 mr-1" />}
+                {tsaLoading ? "Calculating TSA…" : "Run TSA"}
+              </Button>
+            }
+          >
+            {tsaResult ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                  <Stat k="Required Info Size (RIS)" v={Math.round(tsaResult.requiredInformationSize).toLocaleString()} />
+                  <Stat k="Accrued Info Fraction" v={`${Math.round(tsaResult.accruedFraction * 100)}%`} />
+                  <Stat k="Boundary Crossed" v={tsaResult.crossedBoundary ? "Yes (Decisive)" : "No (Inconclusive)"} accent={tsaResult.crossedBoundary} />
+                  <Stat k="Boundary Type" v={tsaResult.boundaryType || "O'Brien-Fleming"} />
+                </div>
+                <p className="text-[12px] text-[var(--color-text-muted)]">
+                  {tsaResult.crossedBoundary
+                    ? "✓ The cumulative Z-curve has crossed the trial sequential monitoring boundary. The evidence is firm and further trials may be redundant or unethical."
+                    : "⚠ The cumulative Z-curve has not yet crossed the trial sequential monitoring boundary. Further high-quality randomized trials are required to confirm the effect size."}
+                </p>
+              </div>
+            ) : (
+              <EmptyState>
+                Click "Run TSA" to evaluate whether cumulative evidence has reached the Required Information Size (RIS) or crossed O'Brien-Fleming monitoring boundaries.
+              </EmptyState>
+            )}
+          </Card>
+
+          {/* Multimodel Inference / Model Averaging */}
+          <Card
+            title="Model Averaging (Multimodel Inference)"
+            right={
+              <Button variant="outline" size="sm" onClick={handleRunModelAveraging} disabled={maLoading}>
+                {maLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Layers className="h-3.5 w-3.5 mr-1" />}
+                {maLoading ? "Calculating Weights…" : "Run Model Averaging"}
+              </Button>
+            }
+          >
+            {maResult ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                  <Stat k="Model-Averaged Effect" v={fmtE(maResult.pooledEffect)} accent />
+                  <Stat k="Averaged 95% CI" v={`${fmtE(maResult.ciLower)} – ${fmtE(maResult.ciUpper)}`} />
+                  <Stat k="Averaged SE" v={fmtN(maResult.se, 4)} />
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[12px]">
+                    <thead className="text-[var(--color-text-muted)]">
+                      <tr className="border-b border-[var(--color-border)]">
+                        <th className="px-2 py-1 text-left font-medium">Estimator</th>
+                        <th className="px-2 py-1 text-left font-medium">τ²</th>
+                        <th className="px-2 py-1 text-left font-medium">AICc</th>
+                        <th className="px-2 py-1 text-left font-medium">Akaike Weight</th>
+                        <th className="px-2 py-1 text-left font-medium">Pooled Effect</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {maResult.modelWeights.map((m, idx) => (
+                        <tr key={idx} className="border-b border-[var(--color-border)] last:border-0">
+                          <td className="px-2 py-1 font-semibold text-[var(--color-text)]">{m.method}</td>
+                          <td className="px-2 py-1 font-mono text-[var(--color-text)]">{fmtN(m.tau2, 4)}</td>
+                          <td className="px-2 py-1 font-mono text-[var(--color-text)]">{fmtN(m.aicc, 2)}</td>
+                          <td className="px-2 py-1 font-mono text-[var(--color-text)]">{fmtN(m.weight * 100, 1)}%</td>
+                          <td className="px-2 py-1 font-mono text-[var(--color-text)]">{fmtE(m.pooledEffect)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <EmptyState>
+                Click "Run Model Averaging" to perform AICc multimodel inference across 6 between-study variance estimators (DL, REML, Paule-Mandel, EB, HS, SJ).
+              </EmptyState>
+            )}
+          </Card>
+
+          {/* Reproducibility & Replication Suite */}
+          <Card
+            title="Replication & Manuscript Methods Suite"
+            right={
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 rounded-md border border-[var(--color-border)] bg-[var(--input-bg)] p-0.5 text-[11px]">
+                  <button
+                    className={`rounded px-2 py-1 transition-colors ${replTab === "r" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    onClick={() => setReplTab("r")}
+                  >
+                    R (metafor)
+                  </button>
+                  <button
+                    className={`rounded px-2 py-1 transition-colors ${replTab === "stata" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    onClick={() => setReplTab("stata")}
+                  >
+                    Stata (meta)
+                  </button>
+                  <button
+                    className={`rounded px-2 py-1 transition-colors ${replTab === "python" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    onClick={() => setReplTab("python")}
+                  >
+                    Python
+                  </button>
+                  <button
+                    className={`rounded px-2 py-1 transition-colors ${replTab === "methods" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    onClick={() => setReplTab("methods")}
+                  >
+                    Cochrane Methods Text
+                  </button>
+                </div>
+                {replCode[replTab] && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        void navigator.clipboard.writeText(replCode[replTab]);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                    >
+                      {copied ? <Check className="h-3.5 w-3.5 mr-1" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
+                      {copied ? "Copied" : "Copy"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const ext = replTab === "r" ? "R" : replTab === "stata" ? "do" : replTab === "python" ? "py" : "txt";
+                        downloadText(`meta_replication.${ext}`, replCode[replTab], "text/plain");
+                      }}
+                    >
+                      <Download className="h-3.5 w-3.5 mr-1" />
+                      Download
+                    </Button>
+                  </>
+                )}
+              </div>
+            }
+          >
+            {replLoading ? (
+              <div className="flex h-32 items-center justify-center text-[12px] text-[var(--color-text-muted)]">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin text-[var(--color-accent)]" />
+                Generating {replTab.toUpperCase()} replication script…
+              </div>
+            ) : replCode[replTab] ? (
+              <pre className="max-h-72 overflow-auto rounded-lg bg-[var(--color-surface)] p-3 font-mono text-[11.5px] leading-relaxed text-[var(--color-text)]">
+                {replCode[replTab]}
+              </pre>
+            ) : (
+              <EmptyState>Replication script will appear here once generated.</EmptyState>
+            )}
           </Card>
         </>
       )}

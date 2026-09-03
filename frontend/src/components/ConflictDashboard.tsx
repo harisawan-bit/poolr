@@ -122,6 +122,57 @@ export default function ConflictDashboard(props: Props) {
     return { total, pending, resolved, aiAdj, discuss, actualConflicts };
   }, [conflictRecords]);
 
+  const kappaStats = useMemo(() => {
+    let bothInc = 0;
+    let r1IncR2Exc = 0;
+    let r2IncR1Exc = 0;
+    let bothExc = 0;
+
+    for (const r of conflictRecords) {
+      if (!r.decisions || r.decisions.length < 2) continue;
+      const d1 = r.decisions[0]?.decision;
+      const d2 = r.decisions[1]?.decision;
+      if (!d1 || !d2 || d1 === "unset" || d2 === "unset") continue;
+
+      const inc1 = d1 === "include";
+      const inc2 = d2 === "include";
+
+      if (inc1 && inc2) bothInc++;
+      else if (inc1 && !inc2) r1IncR2Exc++;
+      else if (!inc1 && inc2) r2IncR1Exc++;
+      else bothExc++;
+    }
+
+    const n = bothInc + r1IncR2Exc + r2IncR1Exc + bothExc;
+    if (n < 2) return null;
+
+    const po = (bothInc + bothExc) / n;
+    const p1 = (bothInc + r1IncR2Exc) / n;
+    const p2 = (bothInc + r2IncR1Exc) / n;
+    const pe = p1 * p2 + (1 - p1) * (1 - p2);
+
+    const kappa = pe < 1 ? (po - pe) / (1 - pe) : 1.0;
+    const se = Math.sqrt(Math.max(0, po * (1 - po)) / Math.max(1, n * Math.pow(1 - pe, 2)));
+    const ciLower = Math.max(-1, kappa - 1.96 * se);
+    const ciUpper = Math.min(1, kappa + 1.96 * se);
+
+    let interpretation = "Poor";
+    if (kappa >= 0.81) interpretation = "Almost Perfect";
+    else if (kappa >= 0.61) interpretation = "Substantial";
+    else if (kappa >= 0.41) interpretation = "Moderate";
+    else if (kappa >= 0.21) interpretation = "Fair";
+    else if (kappa >= 0.0) interpretation = "Slight";
+
+    return {
+      n,
+      po: Math.round(po * 100),
+      kappa: Number(kappa.toFixed(3)),
+      ciLower: Number(ciLower.toFixed(3)),
+      ciUpper: Number(ciUpper.toFixed(3)),
+      interpretation,
+    };
+  }, [conflictRecords]);
+
   const updateItem = useCallback(
     (id: string, patch: Partial<ScreeningItem>) => {
       const next = items.map((it) => (it.id === id ? { ...it, ...patch } : it));
@@ -285,6 +336,40 @@ export default function ConflictDashboard(props: Props) {
           <div className="text-[10.5px] text-[var(--color-text-muted)]">Discuss</div>
         </div>
       </div>
+
+      {/* Inter-Rater Reliability (Cohen's Kappa) */}
+      {kappaStats && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-[12px]">
+          <div className="flex flex-wrap items-center gap-3">
+            <Users className="h-4 w-4 text-[var(--color-accent)] shrink-0" />
+            <div>
+              <span className="font-semibold text-[var(--color-text)]">
+                Cohen's Kappa (&kappa;): {kappaStats.kappa}
+              </span>
+              <span className="ml-1.5 text-[var(--color-text-muted)]">
+                (95% CI: {kappaStats.ciLower} – {kappaStats.ciUpper})
+              </span>
+              <span className="ml-2 rounded bg-[var(--color-accent)]/10 px-1.5 py-0.5 text-[11px] font-medium text-[var(--color-accent)]">
+                {kappaStats.interpretation} Agreement
+              </span>
+            </div>
+            <div className="text-[11px] text-[var(--color-text-muted)]">
+              Observed Agreement: {kappaStats.po}% (n = {kappaStats.n})
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const stmt = `Screening was conducted independently in duplicate by two reviewers. Inter-rater agreement was ${kappaStats.interpretation.toLowerCase()} (Cohen's kappa = ${kappaStats.kappa}, 95% CI ${kappaStats.ciLower} to ${kappaStats.ciUpper}; ${kappaStats.po}% observed agreement across ${kappaStats.n} evaluated citations). Discrepancies were resolved by consensus or third-party adjudication.`;
+              void navigator.clipboard.writeText(stmt);
+              alert("Copied methods statement to clipboard!");
+            }}
+          >
+            Copy Methods Statement
+          </Button>
+        </div>
+      )}
 
       {/* Controls */}
       <Card

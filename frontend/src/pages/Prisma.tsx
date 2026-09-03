@@ -3,9 +3,9 @@ import type { Project, GradeRow, PrismaFlow } from "../lib/project";
 import { Card, Input, Pill, EmptyState, Button, Textarea } from "../components/ui";
 import SankeyChart from "../components/charts/SankeyChart";
 import OptionsDrawer from "../components/kokonut/OptionsDrawer";
-import { ListChecks, Sparkles, Loader2 } from "lucide-react";
+import { ListChecks, Sparkles, Loader2, RefreshCw, Copy, Check } from "lucide-react";
 import { runGrade } from "../lib/project";
-import { exportProject } from "../lib/api";
+import { exportProject, generateGradeSof } from "../lib/api";
 import DisclaimerModal from "../components/DisclaimerModal";
 import { draftManuscriptSection } from "../lib/ai";
 
@@ -66,6 +66,9 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [draftingSection, setDraftingSection] = useState<string | null>(null);
   const [manuscriptDrafts, setManuscriptDrafts] = useState<Record<string, string>>({});
+  const [sofMarkdown, setSofMarkdown] = useState<string | null>(null);
+  const [copiedSof, setCopiedSof] = useState(false);
+
   // v0.5.1 — checklist state lives on the project (auto-saved): prisma.checklist[itemNumber]=true
   type Checklist = Record<string, boolean>;
   const checklist = ((project.prisma as unknown as { checklist?: Checklist }).checklist ?? {}) as Checklist;
@@ -79,14 +82,78 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
   const setFlow = (key: keyof PrismaFlow, v: string) =>
     onChange({ ...project, prisma: { ...project.prisma, flow: { ...flow, [key]: v === "" ? null : Number(v) } } });
 
+  const autoSyncFlow = () => {
+    const taItems = project.screening?.title_abstract ?? [];
+    const ftItems = project.screening?.full_text ?? [];
+    const extracted = project.extraction?.studies ?? [];
+
+    const identified = Math.max(taItems.length, flow.identified ?? 0);
+    const duplicates = flow.duplicates ?? 0;
+    const screened = taItems.length;
+    const excludedTa = taItems.filter((i) => i.decision === "exclude").length;
+    const fullText = ftItems.length > 0 ? ftItems.length : taItems.filter((i) => i.decision === "include").length;
+    const excludedFt = ftItems.filter((i) => i.decision === "exclude").length;
+    const included =
+      extracted.length > 0
+        ? extracted.length
+        : ftItems.length > 0
+        ? ftItems.filter((i) => i.decision === "include").length
+        : Math.max(0, fullText - excludedFt);
+
+    onChange({
+      ...project,
+      prisma: {
+        ...project.prisma,
+        flow: {
+          identified,
+          duplicates,
+          screened,
+          excludedTa,
+          fullText,
+          excludedFt,
+          included,
+        },
+      },
+    });
+  };
+
   const autoGrade = async () => {
     setBusy(true);
     try {
       const meta = project.meta.results;
-      const rob = project.rob.assessments.map((a) => ({ overall: a.overall === "—" ? undefined : a.overall }));
+      const rob = project.rob.assessments.map((a) => ({
+        study: a.study,
+        overall: a.overall === "—" ? undefined : a.overall,
+        domains: a.domains,
+      }));
       const outcomes = project.pico.outcomes
         .split(/[;\n,]/).map((s) => s.trim()).filter(Boolean)
         .map((o) => ({ outcome: o, studies: project.extraction.studies.length, design: "RCT" }));
+
+      try {
+        const sofRes = await generateGradeSof({
+          title: project.metadata?.title || "Systematic Review",
+          comparison: `${project.pico.intervention || "Intervention"} vs. ${project.pico.comparator || "Control"}`,
+          meta,
+          rob,
+          outcomes: outcomes.length ? outcomes : [{ outcome: "Primary outcome", studies: project.extraction.studies.length, design: "RCT" }],
+        });
+        if (sofRes?.rows?.length) {
+          setGrade(sofRes.rows);
+          if (sofRes.markdown) setSofMarkdown(sofRes.markdown);
+          onChange({
+            ...project,
+            prisma: {
+              ...project.prisma,
+              grade: sofRes.rows as any,
+            },
+          });
+          return;
+        }
+      } catch {
+        // Fallback to local heuristic runGrade
+      }
+
       const rows = await runGrade({ outcomes: outcomes.length ? outcomes : [{ outcome: "Primary outcome", studies: project.extraction.studies.length, design: "RCT" }], meta, rob });
       setGrade(rows);
       onChange({
@@ -160,8 +227,17 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
 
       <Card title="PRISMA 2020 flow" right={
         <div className="flex items-center gap-2">
-          <button className="btn-ghost" onClick={autoGrade} disabled={busy || !project.meta.results}>Auto-GRADE</button>
-          <button className="btn-primary" onClick={() => tryExport(project, () => setShowDisclaimer(true))}>Export report</button>
+          <Button variant="outline" size="sm" onClick={autoSyncFlow} title="Automatically extract record counts from Screening and Extraction">
+            <RefreshCw className="h-3.5 w-3.5 mr-1" />
+            Auto-Sync Flow
+          </Button>
+          <Button variant="outline" size="sm" onClick={autoGrade} disabled={busy || !project.meta.results}>
+            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
+            Auto-GRADE (SoF)
+          </Button>
+          <Button variant="default" size="sm" onClick={() => tryExport(project, () => setShowDisclaimer(true))}>
+            Export Report
+          </Button>
         </div>
       }>
         <div className="max-w-[460px] space-y-2">
@@ -194,7 +270,25 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
         <div className="mt-1 text-[11px] text-[var(--color-text-muted)]">Tick items as your manuscript covers them — progress saves with the project.</div>
       </Card>
 
-      <Card title="GRADE certainty of evidence">
+      <Card
+        title="Cochrane Summary of Findings (GRADE)"
+        right={
+          sofMarkdown && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                void navigator.clipboard.writeText(sofMarkdown);
+                setCopiedSof(true);
+                setTimeout(() => setCopiedSof(false), 2000);
+              }}
+            >
+              {copiedSof ? <Check className="h-3.5 w-3.5 mr-1" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
+              {copiedSof ? "Copied SoF" : "Copy SoF Markdown"}
+            </Button>
+          )
+        }
+      >
         {gradeTable.length === 0 ? (
           <EmptyState>Run a meta-analysis, then <span className="text-[var(--color-text)]">Auto-GRADE</span> to build the evidence profile from your results + RoB.</EmptyState>
         ) : (

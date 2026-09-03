@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Project, RobAssessment } from "../lib/project";
 import { Card, Select, Pill, EmptyState, Button, Input } from "../components/ui";
 import { RadarChart } from "../components/charts/radar-chart";
@@ -7,7 +7,9 @@ import { RadarAxis } from "../components/charts/radar-axis";
 import { RadarLabels } from "../components/charts/radar-labels";
 import { RadarArea } from "../components/charts/radar-area";
 import { suggestRoB } from "../lib/ai";
-import { Sparkles, Loader2 } from "lucide-react";
+import { fetchRobFigure } from "../lib/api";
+import { downloadText } from "../lib/project";
+import { Sparkles, Loader2, Download } from "lucide-react";
 
 const TOOLS = ["RoB2", "NOS", "PROBAST", "ROBINS-I", "QUADAS-2", "AMSTAR-2"] as const;
 const OVERALL = ["Low", "Some concerns", "High", "Critical", "—"] as const;
@@ -36,6 +38,29 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
   const [tool, setTool] = useState<(typeof TOOLS)[number]>("RoB2");
   const [busyDomain, setBusyDomain] = useState<string | null>(null);
   const [abstracts, setAbstracts] = useState<Record<string, string>>({});
+  const [vizTab, setVizTab] = useState<"traffic" | "summary" | "radar">("traffic");
+  const [robSvg, setRobSvg] = useState<string | null>(null);
+  const [svgLoading, setSvgLoading] = useState(false);
+
+  useEffect(() => {
+    if (vizTab === "radar" || list.length === 0) return;
+    const forTool = list.filter((a) => a.tool === tool);
+    if (forTool.length === 0) {
+      setRobSvg(null);
+      return;
+    }
+    const domains = DOMAINS[tool];
+    const studies = forTool.map((a) => a.study);
+    const judgements = forTool.map((a) => domains.map((d) => a.domains[d] ?? "Low"));
+    setSvgLoading(true);
+    fetchRobFigure({ studies, domains, judgements }, vizTab)
+      .then((svg) => setRobSvg(svg))
+      .catch((e) => {
+        console.error("Failed to fetch RoB figure", e);
+        setRobSvg(null);
+      })
+      .finally(() => setSvgLoading(false));
+  }, [vizTab, list, tool]);
 
   const add = () => {
     const name = studyNames[0] ?? "New study";
@@ -147,8 +172,76 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
       </Card>
 
       {list.length > 0 && (
-        <Card title="Domain coverage — % of studies rated low risk">
-          <DomainRadar list={list} tool={tool} />
+        <Card
+          title="Risk of Bias Visualization"
+          right={
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 rounded-md border border-[var(--color-border)] bg-[var(--input-bg)] p-0.5 text-[11px]">
+                <button
+                  className={`rounded px-2.5 py-1 transition-colors ${
+                    vizTab === "traffic"
+                      ? "bg-[var(--color-accent)] text-white font-medium shadow-sm"
+                      : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                  }`}
+                  onClick={() => setVizTab("traffic")}
+                >
+                  Traffic Light
+                </button>
+                <button
+                  className={`rounded px-2.5 py-1 transition-colors ${
+                    vizTab === "summary"
+                      ? "bg-[var(--color-accent)] text-white font-medium shadow-sm"
+                      : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                  }`}
+                  onClick={() => setVizTab("summary")}
+                >
+                  Summary Bar
+                </button>
+                <button
+                  className={`rounded px-2.5 py-1 transition-colors ${
+                    vizTab === "radar"
+                      ? "bg-[var(--color-accent)] text-white font-medium shadow-sm"
+                      : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                  }`}
+                  onClick={() => setVizTab("radar")}
+                >
+                  Radar
+                </button>
+              </div>
+              {vizTab !== "radar" && robSvg && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => downloadText(`rob_${vizTab}_${tool.toLowerCase()}.svg`, robSvg, "image/svg+xml")}
+                  title="Download publication-quality SVG"
+                >
+                  <Download className="h-3.5 w-3.5 mr-1" />
+                  Export SVG
+                </Button>
+              )}
+            </div>
+          }
+        >
+          {vizTab === "radar" ? (
+            <DomainRadar list={list} tool={tool} />
+          ) : svgLoading ? (
+            <div className="flex h-64 items-center justify-center text-[12px] text-[var(--color-text-muted)]">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin text-[var(--color-accent)]" />
+              Generating Cochrane {vizTab === "traffic" ? "traffic light" : "summary bar"} figure…
+            </div>
+          ) : robSvg ? (
+            <div className="flex flex-col items-center">
+              <div
+                className="max-w-full overflow-x-auto rounded-lg bg-[var(--color-surface)] p-2 shadow-inner"
+                dangerouslySetInnerHTML={{ __html: robSvg }}
+              />
+              <p className="mt-2 text-center text-[11px] text-[var(--color-text-muted)]">
+                Standard Cochrane robvis-style figure ({tool}) • Fully vector Scalable Vector Graphics (SVG)
+              </p>
+            </div>
+          ) : (
+            <EmptyState>No {tool} data available to render figure.</EmptyState>
+          )}
         </Card>
       )}
     </div>

@@ -198,6 +198,65 @@ export async function exportProject(
         const totalResults = parseInt(searchData?.esearchresult?.count || "0", 10);
         if (idList.length === 0) return { query, database: "PubMed", totalResults: 0, results: [] };
 
+        // Fetch full MEDLINE text to extract authentic abstracts
+        const medlineUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=${idList.join(",")}&rettype=medline&retmode=text${apiKey ? `&api_key=${apiKey}` : ""}`;
+        const medlineRes = await fetch(medlineUrl);
+        if (medlineRes.ok) {
+          const text = await medlineRes.text();
+          const records = text.split(/(?:^|\n)PMID-\s+/).filter(Boolean);
+          const results: SearchResult[] = records.map((rec) => {
+            const lines = rec.split("\n");
+            const pmid = lines[0]?.trim() || "";
+            let title = "";
+            const authors: string[] = [];
+            let abstract = "";
+            let journal = "";
+            let year = new Date().getFullYear();
+            let doi = "";
+            let currentField = "";
+
+            for (let i = 1; i < lines.length; i++) {
+              const line = lines[i];
+              const tag = line.slice(0, 4).trim();
+              const val = line.slice(6);
+              if (line.startsWith("    ") || line.startsWith("\t")) {
+                if (currentField === "TI") title += " " + line.trim();
+                else if (currentField === "AB") abstract += " " + line.trim();
+              } else if (tag) {
+                currentField = tag;
+                if (tag === "TI") title = val.trim();
+                else if (tag === "AB") abstract = val.trim();
+                else if (tag === "AU" || tag === "FAU") authors.push(val.trim());
+                else if (tag === "JT" || tag === "TA") journal = val.trim();
+                else if (tag === "DP") {
+                  const y = parseInt(val.trim().slice(0, 4), 10);
+                  if (!isNaN(y)) year = y;
+                } else if (tag === "LID" || tag === "AID") {
+                  if (val.includes("[doi]")) {
+                    doi = val.replace(/\[doi\].*$/, "").trim();
+                  }
+                }
+              }
+            }
+            return {
+              id: `pubmed-${pmid}`,
+              title: title || "Untitled",
+              authors: authors.slice(0, 5).join(", ") + (authors.length > 5 ? " et al." : "") || "Unknown authors",
+              year,
+              source: journal || "PubMed",
+              abstract: abstract || "",
+              doi: doi || undefined,
+              pmid,
+              url: `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`,
+              database: "PubMed",
+            };
+          });
+          if (results.length > 0) {
+            return { query, database: "PubMed", totalResults, results };
+          }
+        }
+
+        // Fallback to esummary
         const eSummaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${idList.join(",")}&retmode=json${apiKey ? `&api_key=${apiKey}` : ""}`;
         const sumRes = await fetch(eSummaryUrl);
         if (!sumRes.ok) throw new Error(`PubMed summary error: ${sumRes.statusText}`);
@@ -215,7 +274,7 @@ export async function exportProject(
             authors: authors || "Unknown authors",
             year,
             source: item.source || "PubMed",
-            abstract: item.sorttitle || "",
+            abstract: "",
             doi: doiObj?.value,
             pmid,
             url: `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`,
@@ -239,17 +298,28 @@ export async function exportProject(
         if (!res.ok) throw new Error(`OpenAlex error: ${res.statusText}`);
         const data = await res.json();
         const works = data.results || [];
-        const results: SearchResult[] = works.map((w: any) => ({
-          id: w.id || `openalex-${w.doi}`,
-          title: w.title || "Untitled",
-          authors: (w.authorships || []).map((a: any) => a.author?.display_name).filter(Boolean).join(", ") || "Unknown",
-          year: w.publication_year || new Date().getFullYear(),
-          source: w.primary_location?.source?.display_name || "OpenAlex",
-          abstract: "",
-          doi: w.doi ? w.doi.replace("https://doi.org/", "") : undefined,
-          url: w.doi || w.id,
-          database: "OpenAlex",
-        }));
+        const results: SearchResult[] = works.map((w: any) => {
+          let abstract = "";
+          if (w.abstract_inverted_index) {
+            const words: [number, string][] = [];
+            for (const [word, positions] of Object.entries(w.abstract_inverted_index as Record<string, number[]>)) {
+              for (const pos of positions) words.push([pos, word]);
+            }
+            words.sort((a, b) => a[0] - b[0]);
+            abstract = words.map((x) => x[1]).join(" ");
+          }
+          return {
+            id: w.id || `openalex-${w.doi}`,
+            title: w.title || "Untitled",
+            authors: (w.authorships || []).map((a: any) => a.author?.display_name).filter(Boolean).join(", ") || "Unknown",
+            year: w.publication_year || new Date().getFullYear(),
+            source: w.primary_location?.source?.display_name || "OpenAlex",
+            abstract,
+            doi: w.doi ? w.doi.replace("https://doi.org/", "") : undefined,
+            url: w.doi || w.id,
+            database: "OpenAlex",
+          };
+        });
         return { query, database: "OpenAlex", totalResults: data.meta?.count || results.length, results };
       } catch (e: any) {
         throw new Error(`OpenAlex search failed: ${e.message}`);
@@ -350,4 +420,171 @@ export async function exportProject(
 
   export async function googleScholarSearch(query: string, apiKey?: string): Promise<SearchResponse> {
     return await postJson<SearchResponse>("/api/search/google_scholar", { query, apiKey });
+  }
+
+  // ── Cochrane & Diagnostic Figures (SVG from C# Engine) ──
+
+  export interface RobFigureRequest {
+    studies: string[];
+    domains: string[];
+    judgements: string[][];
+    weights?: number[];
+  }
+
+  export async function fetchRobFigure(req: RobFigureRequest, type: "traffic" | "summary"): Promise<string> {
+    return await postJson<string>(type === "traffic" ? "/api/figure/rob_traffic" : "/api/figure/rob_summary", req);
+  }
+
+  export interface DiagnosticPlotInput {
+    measure: string;
+    effs: number[];
+    vars: number[];
+    names: string[];
+  }
+
+  export async function fetchDiagnosticFigure(
+    type: "galbraith" | "labbe" | "baujat" | "funnel_contour",
+    data: any
+  ): Promise<string> {
+    const route =
+      type === "galbraith"
+        ? "/api/figure/galbraith"
+        : type === "labbe"
+        ? "/api/figure/labbe"
+        : type === "baujat"
+        ? "/api/figure/baujat"
+        : "/api/figure/funnel_contour";
+    return await postJson<string>(route, data);
+  }
+
+  // ── Statistical Rigor (Prediction Interval, Model Averaging, TSA) ──
+
+  export interface PredictionRequest {
+    pooledEffect: number;
+    se: number;
+    tau2: number;
+    k: number;
+    logScale: boolean;
+  }
+
+  export interface PredictionResult {
+    piLower: number;
+    piUpper: number;
+    piT: number;
+    piDf: number;
+  }
+
+  export async function computePredictionInterval(req: PredictionRequest): Promise<PredictionResult> {
+    return await postJson<PredictionResult>("/api/prediction", req);
+  }
+
+  export interface ModelWeight {
+    method: string;
+    tau2: number;
+    aicc: number;
+    weight: number;
+    pooledEffect: number;
+  }
+
+  export interface ModelAverageResult {
+    pooledEffect: number;
+    se: number;
+    ciLower: number;
+    ciUpper: number;
+    modelWeights: ModelWeight[];
+  }
+
+  export async function runModelAveraging(req: { effects: number[]; variances: number[] }): Promise<ModelAverageResult> {
+    return await postJson<ModelAverageResult>("/api/modelaverage", req);
+  }
+
+  export interface SequentialStudy {
+    study: string;
+    zScore?: number;
+    informationFraction?: number;
+  }
+
+  export interface SequentialResult {
+    zCurve: Array<{ study: number; zScore: number; boundary: number }>;
+    requiredInformationSize: number;
+    accruedFraction: number;
+    crossedBoundary: boolean;
+    boundaryType: string;
+  }
+
+  export async function runTrialSequentialAnalysis(req: {
+    studies: SequentialStudy[];
+    alpha?: number;
+    beta?: number;
+    expectedEffect: number;
+  }): Promise<SequentialResult> {
+    return await postJson<SequentialResult>("/api/advanced/sequential", req);
+  }
+
+  // ── GRADE Summary of Findings (SoF) ──
+
+  export interface SofResponse {
+    rows: any[];
+    markdown: string;
+  }
+
+  export async function generateGradeSof(req: any): Promise<SofResponse> {
+    return await postJson<SofResponse>("/api/grade/sof", req);
+  }
+
+  // ── Priority Screening ML ──
+
+  export async function runPriorityScreening(req: {
+    items: Array<{ id: string; title: string; abstract: string; decision: string }>;
+    picoTerms: string[];
+  }): Promise<Array<{ id: string; title: string; abstract: string; decision: string; score?: number }>> {
+    return await postJson<any>("/api/living/priority", req);
+  }
+
+  // ── Specialized Analyses ──
+
+  export async function runDoseResponse(req: any): Promise<any> {
+    return await postJson<any>("/api/dose", req);
+  }
+
+  export async function runSurvivalRmst(req: any): Promise<any> {
+    return await postJson<any>("/api/survival", { type: "rmst", request: req });
+  }
+
+  export async function runEconomicMeta(studies: any[]): Promise<any> {
+    return await postJson<any>("/api/specialized/economic", studies);
+  }
+
+  export async function runAdverseEventsMeta(studies: any[]): Promise<any> {
+    return await postJson<any>("/api/specialized/adverse", studies);
+  }
+
+  export async function runDcaMeta(studies: any[]): Promise<any> {
+    return await postJson<any>("/api/advanced/dca", studies);
+  }
+
+  // ── Replication & Manuscript Export Suite ──
+
+  export async function exportReplicationCode(
+    type: "r" | "stata" | "python" | "methods" | "latex" | "html",
+    data: any
+  ): Promise<string> {
+    let route = "/api/export/r_code";
+    if (type === "stata") route = "/api/report/stata";
+    else if (type === "python") route = "/api/report/python";
+    else if (type === "methods") route = "/api/export/methods";
+    else if (type === "latex") route = "/api/report/latex";
+    else if (type === "html") route = "/api/report/html";
+
+    return await postJson<string>(route, data);
+  }
+
+  export async function exportCitations(data: any[], format: "bibtex" | "ris"): Promise<string> {
+    const r = await fetch(`${ENGINE_URL}/api/export/citations?format=${format}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data }),
+    });
+    if (!r.ok) throw new Error(`Citations export failed (${r.status})`);
+    return await r.text();
   }

@@ -16,12 +16,12 @@ import {
   ShieldAlert,
   Table2,
   Workflow,
+  Activity,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import {
   engineHealth,
   openProjectDialog,
-  exportProject,
   saveProject,
   getProject,
 } from "./lib/api";
@@ -48,6 +48,8 @@ import ManualMode from "./pages/ManualMode";
 import DisclaimerModal from "./components/DisclaimerModal";
 import NewProjectWizard from "./components/NewProjectWizard";
 import ProfileModal from "./components/ProfileModal";
+import SpecializedAnalysesModal from "./components/SpecializedAnalysesModal";
+import ExportCenterModal from "./components/ExportCenterModal";
 
 // v0.5.3 kokonutui component family (adapted, MIT — see file headers)
 import FloatingDock, { type DockItem } from "./components/kokonut/FloatingDock";
@@ -232,7 +234,9 @@ function Shell() {
   const [profile, setProfile] = useState<StoredProfile | null>(() => readProfile());
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-    const appSettings = loadSettings();
+  const [specializedOpen, setSpecializedOpen] = useState(false);
+  const [exportCenterOpen, setExportCenterOpen] = useState(false);
+  const appSettings = loadSettings();
 
   const linefieldRef = useRef<HTMLCanvasElement | null>(null);
   useLineField(linefieldRef, theme);
@@ -390,16 +394,6 @@ function Shell() {
 
   const [showDisclaimer, setShowDisclaimer] = useState(false);
 
-  const handleExport = async () => {
-    if (!project) return;
-    setBusy(true); setBanner(null);
-    try {
-      await exportProject(project, "docx");
-      if (mounted.current) setShowDisclaimer(true);
-    } catch (e) { console.error(e); if (mounted.current) setBanner(errText(e)); }
-    finally { if (mounted.current) setBusy(false); }
-  };
-
   const saveLabel =
     saveState === "saving" ? "saving…" : saveState === "saved" ? "saved" : saveState === "error" ? "save error" : "unsaved";
 
@@ -468,7 +462,8 @@ function Shell() {
         { id: "file-demo", label: "Load demo review", description: "BCG dataset", end: "File", icon: <Sparkles className="h-4 w-4" />, onSelect: () => void loadDemo() },
         { id: "file-new", label: "New workspace", end: "File", short: "Ctrl+N", icon: <FilePlus2 className="h-4 w-4" />, onSelect: () => void handleNew() },
         { id: "file-save", label: "Save project", end: "File", short: "Ctrl+S", icon: <Save className="h-4 w-4" />, onSelect: () => void handleSave() },
-        { id: "file-export", label: "Export report (DOCX)", end: "File", short: "Ctrl+E", icon: <FileDown className="h-4 w-4" />, onSelect: () => void handleExport() },
+        { id: "analysis-specialized", label: "Specialized Analyses…", description: "Dose-response, Survival RMST, Economics, Adverse, DCA", end: "Analysis", icon: <Activity className="h-4 w-4" />, onSelect: () => setSpecializedOpen(true) },
+        { id: "file-export", label: "Universal Export Center…", description: "DOCX, LaTeX, HTML, R, Stata, Python, BibTeX", end: "File", short: "Ctrl+E", icon: <FileDown className="h-4 w-4" />, onSelect: () => setExportCenterOpen(true) },
         { id: "app-theme", label: theme === "dark" ? "Switch to light theme" : "Switch to dark theme", end: "Appearance", short: "Ctrl+T", icon: theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />, onSelect: toggleTheme },
       ],
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -507,10 +502,13 @@ function Shell() {
                   <button className="btn-ghost flex items-center gap-1.5" onClick={handleNew} title="New project (Ctrl+N)">
                     <FilePlus2 className="h-3.5 w-3.5" /> New
                   </button>
+                  <button className="btn-ghost flex items-center gap-1.5" onClick={() => setSpecializedOpen(true)} title="Specialized Analyses (Dose-Response, Survival, Economics, Adverse, DCA)">
+                    <Activity className="h-3.5 w-3.5" /> Specialized
+                  </button>
                   <button className="btn-ghost flex items-center gap-1.5" disabled={!project} onClick={handleSave} title="Save project (Ctrl+S)">
                     <Save className="h-3.5 w-3.5" /> Save
                   </button>
-                  <button className="btn-primary flex items-center gap-1.5" disabled={!project || busy} onClick={handleExport} title="Export report (Ctrl+E)">
+                  <button className="btn-primary flex items-center gap-1.5" disabled={!project || busy} onClick={() => setExportCenterOpen(true)} title="Publish & Export Center (Ctrl+E)">
                     <FileDown className="h-3.5 w-3.5" /> Export
                   </button>
                   <SwitchButton size="sm" showLabel={false} className="ml-1 !h-8 !rounded-lg !px-2" />
@@ -677,6 +675,20 @@ function Shell() {
                   setShowProfile(false);
                 }}
               />
+            )}
+            {project && (
+              <>
+                <SpecializedAnalysesModal
+                  open={specializedOpen}
+                  onClose={() => setSpecializedOpen(false)}
+                  project={project}
+                />
+                <ExportCenterModal
+                  open={exportCenterOpen}
+                  onClose={() => setExportCenterOpen(false)}
+                  project={project}
+                />
+              </>
             )}
           </div>
         );
