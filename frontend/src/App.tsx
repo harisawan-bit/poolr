@@ -221,7 +221,9 @@ export default function App() {
 
 function Shell() {
   const { theme, toggleTheme } = useTheme();
-  const [page, setPage] = useState<PageKey>("dashboard");
+  const queryParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const initialPage = (queryParams?.get("page") as PageKey) || "dashboard";
+  const [page, setPage] = useState<PageKey>(initialPage);
   const [connected, setConnected] = useState<boolean | null>(null);
   const [project, setProject] = useState<Project | null>(null);
   const [projectPath, setProjectPath] = useState<string | null>(null);
@@ -230,12 +232,12 @@ function Shell() {
   const [banner, setBanner] = useState<string | null>(null);
 
   // v0.5.3 boot experience: splash (greeting) → first-run setup (optional) → app.
-  const [splashDone, setSplashDone] = useState(false);
-  const [profile, setProfile] = useState<StoredProfile | null>(() => readProfile());
+  const [splashDone, setSplashDone] = useState(() => queryParams?.get("nosplash") === "1");
+  const [profile, setProfile] = useState<StoredProfile | null>(() => readProfile() || (queryParams?.get("demo") === "1" ? { username: "Dr. Haris", avatarId: 1 } : null));
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [specializedOpen, setSpecializedOpen] = useState(false);
-  const [exportCenterOpen, setExportCenterOpen] = useState(false);
+  const [specializedOpen, setSpecializedOpen] = useState(() => queryParams?.get("modal") === "specialized");
+  const [exportCenterOpen, setExportCenterOpen] = useState(() => queryParams?.get("modal") === "export");
   const appSettings = loadSettings();
 
   const linefieldRef = useRef<HTMLCanvasElement | null>(null);
@@ -375,6 +377,12 @@ function Shell() {
       setBanner("Could not load the bundled demo project. Reinstall poolr or use Open with a saved project file.");
     }
   };
+
+  useEffect(() => {
+    if (queryParams?.get("demo") === "1") {
+      void loadDemo();
+    }
+  }, []);
 
   const handleSave = async () => {
     if (!project) return;

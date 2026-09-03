@@ -2,14 +2,47 @@
 
 ## Latest Release
 
-**poolr v0.5.7** — Comprehensive Engine & Frontend Repair
+**poolr v0.5.7** — Complete PRISMA 2020 Platform & Diagnostics Suite
 Release date: 2026-09-03
 
-> A complete audit and repair pass establishing mathematical parity, zero C# compiler warnings, zero CI errors, deterministic statistical modeling with direct backend API integration across all advanced meta-analysis pages, and authentic literature searching with PubMed, OpenAlex, Crossref, and ClinicalTrials.gov.
+> An institutional-grade release establishing mathematical parity with gold-standard R packages, zero compiler warnings, zero CI errors, an interactive diagnostic figure studio with Cochrane robvis visualizations, automated PRISMA 2020 flow-syncing, Trial Sequential Analysis, specialized meta-analysis hubs, and a universal manuscript export center.
+
+### Native Desktop Installers (v0.5.7)
+
+| Platform | Architecture | Installer Package | Direct Download |
+|---|---|---|---|
+| **Windows** | x64 (Standard) | `.msi` (Enterprise) / `.exe` (NSIS) | [poolr_0.5.7_x64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x64_en-US.msi) · [poolr_0.5.7_x64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x64-setup.exe) |
+| **Windows** | ARM64 (Surface / Snapdragon) | `.msi` / `.exe` | [poolr_0.5.7_arm64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_arm64_en-US.msi) · [poolr_0.5.7_arm64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_arm64-setup.exe) |
+| **Windows** | x86 (32-bit Legacy) | `.msi` / `.exe` | [poolr_0.5.7_x86_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x86_en-US.msi) · [poolr_0.5.7_x86-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x86-setup.exe) |
+| **macOS** | Apple Silicon (M1/M2/M3/M4) | `.dmg` | [poolr_0.5.7_aarch64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_aarch64.dmg) |
+| **macOS** | Intel x64 | `.dmg` | [poolr_0.5.7_x64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x64.dmg) |
+| **Linux** | x86_64 (Debian / Ubuntu / Mint) | `.deb` | [poolr_0.5.7_amd64.deb](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_amd64.deb) |
+| **Linux** | x86_64 (Fedora / RHEL / openSUSE)| `.rpm` | [poolr-0.5.7-1.x86_64.rpm](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr-0.5.7-1.x86_64.rpm) |
 
 ### What's New in v0.5.7
 
-**Engine Correctness & Parity**
+**Interactive Figure Studio & Visualizations**
+- **Cochrane robvis Figures**: Real-time vector SVG Traffic Light and Weighted Summary Bar figures adhering to McGuinness & Higgins (2021) standards with 1-click SVG download.
+- **Contour-Enhanced Funnel Plots**: Identifies publication bias vs small-study effects by mapping $p < 0.10, 0.05, 0.01$ significance contours.
+- **Diagnostic Vector Plots**: Galbraith radial plots (outlier detection), L'Abbé plots (event-rate scatter), and Baujat plots (heterogeneity contribution vs effect influence).
+
+**Statistical Rigor & Advanced Engines**
+- **95% Prediction Interval**: Higgins (2009) and IntHout (2016) random-effects prediction intervals ($PI = \hat{\theta} \pm t_{k-2} \sqrt{SE^2 + \tau^2}$) displayed beneath pooled effects.
+- **Trial Sequential Analysis (TSA)**: Evaluates Required Information Size (RIS), accrued fraction, and O'Brien-Fleming monitoring boundary crossing status.
+- **Model Averaging (Multimodel Inference)**: Generates AICc-weighted pooled estimates across DL, REML, Paule-Mandel, Empirical Bayes, Hunter-Schmidt, and Sidik-Jonkman.
+- **Specialized Analyses Hub**: Dedicated modals for Dose-Response (spline), Survival RMST, Health Economics (ICER/INMB), Adverse Events, and Decision Curve Analysis (DCA).
+
+**Screening, Extraction & PRISMA 2020 Flow**
+- **Promote Included to Full-Text**: 1-click promotion of title/abstract includes directly to full-text screening.
+- **Priority Screening**: Machine-learning-assisted ranking of unreviewed citations against PICO criteria.
+- **Inter-Rater Reliability**: $2 \times 2$ contingency table calculating Cohen's Kappa $\kappa$, 95% CI, observed agreement, Landis & Koch ratings, and copyable methods statements.
+- **Auto-Sync PRISMA Flow**: Automatically extracts counts across identification, screening, and extraction into the PRISMA 2020 Sankey flow.
+- **Cochrane Summary of Findings**: Automated GRADE evidence grading with OIS imprecision downgrades and copyable Markdown.
+
+**Universal Manuscript & Replication Export**
+- 1-click export of PRISMA 2020 Word Manuscripts (`.docx`), LaTeX journal templates (`.tex`), interactive standalone HTML reports (`.html`), R (`metafor`) replication scripts (`.R`), Stata scripts (`.do`), Python scripts (`.py`), BibTeX (`.bib`), and RIS (`.ris`).
+
+**Engine Correctness & Zero-Warning Gate**
 - Eliminated all 39 nullable dereference warnings (`CS8629`) across 15 engine components; `dotnet build` now runs with 0 warnings and 0 errors.
 - Decision Curve Analysis (DCA): clamped evaluation threshold $p_t < 0.995$ to prevent infinity JSON serialization crashes.
 - Safeguarded qualitative synthesis and trial sequential analysis against zero-division exceptions.

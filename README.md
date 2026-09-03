@@ -1,265 +1,330 @@
 # poolr
 
+<div align="center">
+
+[![Release](https://img.shields.io/github/v/release/harisawan-bit/poolr?color=007ACC&label=release)](https://github.com/harisawan-bit/poolr/releases)
 [![CI](https://github.com/harisawan-bit/poolr/actions/workflows/ci.yml/badge.svg)](https://github.com/harisawan-bit/poolr/actions/workflows/ci.yml)
 [![Build & Release](https://github.com/harisawan-bit/poolr/actions/workflows/build.yml/badge.svg)](https://github.com/harisawan-bit/poolr/actions/workflows/build.yml)
-[![Release](https://img.shields.io/github/v/release/harisawan-bit/poolr)](https://github.com/harisawan-bit/poolr/releases)
+[![PRISMA 2020](https://img.shields.io/badge/PRISMA%202020-Compliant-success.svg)](https://www.prisma-statement.org/)
+[![Cochrane Handbook](https://img.shields.io/badge/Cochrane%20Handbook-v6.4-success.svg)](https://training.cochrane.org/handbook)
+[![.NET 8 / C# 12](https://img.shields.io/badge/.NET%208-C%23%2012-512BD4.svg)](https://dotnet.microsoft.com/)
+[![Tauri 2 / Rust](https://img.shields.io/badge/Tauri%202-Rust-DEA584.svg)](https://tauri.app/)
+[![React 19](https://img.shields.io/badge/React%2019-TypeScript-61DAFB.svg)](https://react.dev/)
+[![100% Python-Free](https://img.shields.io/badge/100%25-Python--Free-brightgreen.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![.NET 8](https://img.shields.io/badge/.NET-8-512BD4.svg)](https://dotnet.microsoft.com/)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](https://github.com/harisawan-bit/poolr/releases)
 
-**poolr** is a free, open-source, no-code desktop application for conducting **Systematic Reviews and Meta-Analyses (SRMA)**. It guides you through the entire PRISMA 2020-compliant pipeline — from PICO definition to publication-ready manuscript — with a modern, native GUI.
+**Free, open-source, no-code desktop application for Systematic Reviews & Meta-Analyses (SRMA)**
 
-No programming required. No cloud dependency. Your data stays on your machine.
+*From PICO protocol definition to publication-ready PRISMA 2020 manuscripts, vector diagnostics, and reproducible statistical scripts.*
 
-> **Current release — v0.5.3.** New interface with light & dark themes, floating-dock navigation, command palette (Ctrl+K), boot splash with first-run personalization, live computation states, screening funnel, reviewer-team selector and a live PRISMA flow diagram. Complete classical meta-analysis (introduced in v0.5.1): Knapp–Hartung CIs, Mantel-Haenszel & Peto poolers (validated against `metafor`'s published outputs), leave-one-out/cumulative sensitivity, computed trim-and-fill, PET/PEESE/p-curve/selection models, proportions/rates/correlations/generic-IV outcome types, robvis-style risk-of-bias figures with ROBINS-I/QUADAS-2/AMSTAR-2, a GRADE Summary-of-Findings generator with OIS imprecision, R replication-script export, BibTeX/RIS citations, structured exclusion reasons with import de-duplication, a PRISMA 27-item checklist tracker, and a one-click demo project. v0.5.2 polishes the desktop build: no console-window flash on Windows launch, truthful app-version and connection indicators, and visible demo-load errors. The app is a fully native desktop build (Tauri 2 / Rust shell, React + TypeScript UI, bundled C# 12 / .NET 8 engine sidecar) — **100% Python-free**. All 8 pages reimplemented, screening import from PubMed/CSV/RIS/EndNote, in-app forest/funnel plots, GRADE, and 6-OS native installers. See [RELEASES.md](./RELEASES.md) for details.
+[Download Installers](#direct-downloads) • [Features](#features) • [Screenshots](#screenshots) • [Architecture](#architecture) • [How to Cite](#how-to-cite-poolr) • [Releases](RELEASES.md)
+
+</div>
+
+---
+
+> **Current release — v0.5.7.** Complete PRISMA 2020 Platform & Diagnostics Suite. Built for clinicians, epidemiologists, biostatisticians, and students. Features zero-warning .NET 8 / C# 12 statistical engine with gold-standard parity tests, vector Cochrane *robvis* Traffic Light & Summary Bar plots, Interactive Figure Studio (Contour-Enhanced Funnel, Galbraith, L'Abbé, Baujat), Higgins 95% Prediction Intervals, Trial Sequential Analysis (TSA), Model Averaging across 6 $\tau^2$ estimators, Specialized Analyses Hub (Dose-Response, Survival RMST, Health Economics, Adverse Events, DCA), Dual Screening with Cohen's Kappa $\kappa$, PRISMA 2020 auto-synced Sankey flow, and 1-click manuscript export to Word (.docx), LaTeX (.tex), Standalone HTML, R metafor (.R), Stata (.do), Python (.py), BibTeX, and RIS. 100% offline-first, native desktop build, and 100% Python-free.
+
+---
+
+## Table of Contents
+
+1. [Screenshots & Visual Tour](#screenshots)
+2. [Direct Downloads (v0.5.7)](#direct-downloads)
+3. [Key Features by SRMA Phase](#features)
+4. [Interactive Figure Studio & Visualizations](#interactive-figure-studio)
+5. [Specialized Analyses Suite](#specialized-analyses-suite)
+6. [Universal Manuscript & Script Export Center](#universal-export-center)
+7. [How Poolr Compares](#how-poolr-compares)
+8. [Architecture & Technology Stack](#architecture)
+9. [How to Cite Poolr](#how-to-cite-poolr)
+10. [Local Development & Testing](#local-development)
+11. [Community & Contributing](#contributing)
 
 ---
 
 ## Screenshots
 
-| Dashboard — screening rings & heterogeneity gauge | Meta-analysis — pooled estimate, study weights, forest plot |
-|---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Meta-analysis](docs/screenshots/meta-top.png) |
+| **Dashboard** — Screening Rings, Heterogeneity Gauge & PICO Overview | **Meta-Analysis** — Forest Plot, Pooled Diamond & 95% Prediction Interval |
+|:---:|:---:|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Meta-Analysis](docs/screenshots/meta-forest.png) |
 
-| Risk of bias — domain radar | Screening — dual-reviewer decisions |
-|---|---|
-| ![Risk of Bias](docs/screenshots/rob-radar.png) | ![Screening](docs/screenshots/screening.png) |
+| **Cochrane robvis** — Vector Traffic Light & Summary Bar Plots | **PRISMA 2020** — Interactive Sankey Flow & 27-Item Checklist Tracker |
+|:---:|:---:|
+| ![Risk of Bias](docs/screenshots/rob-robvis.png) | ![PRISMA 2020 Flow](docs/screenshots/prisma-flow.png) |
 
-*Charts are rendered with [Bklit UI](https://bklit.com) components (visx + motion), themed to poolr's monochrome palette.*
+| **Interactive Figure Studio** — Contour-Enhanced Funnel Plot | **Dual Screening** — Cohen's $\kappa$ Agreement & Conflict Dashboard |
+|:---:|:---:|
+| ![Figure Studio Diagnostics](docs/screenshots/meta-diagnostics.png) | ![Screening & Conflicts](docs/screenshots/screening-conflicts.png) |
+
+| **Specialized Analyses Hub** — Dose-Response, Survival RMST & DCA | **Universal Export Center** — Word, LaTeX, HTML, R, Stata, Python |
+|:---:|:---:|
+| ![Specialized Analyses](docs/screenshots/specialized-hub.png) | ![Universal Export Center](docs/screenshots/export-center.png) |
+
+---
+
+## Direct Downloads
+
+Poolr runs natively on Windows, macOS, and Linux without requiring Python, R, Docker, or runtime configuration.
+
+| Operating System | Architecture | Installer Package | Direct Download (v0.5.7) |
+|---|---|---|---|
+| **Windows** | x64 (Standard Intel/AMD) | `.msi` (Enterprise) / `.exe` (NSIS) | [poolr_0.5.7_x64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x64_en-US.msi) · [poolr_0.5.7_x64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x64-setup.exe) |
+| **Windows** | ARM64 (Surface / Copilot+ PC) | `.msi` / `.exe` | [poolr_0.5.7_arm64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_arm64_en-US.msi) · [poolr_0.5.7_arm64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_arm64-setup.exe) |
+| **Windows** | x86 (32-bit Legacy) | `.msi` / `.exe` | [poolr_0.5.7_x86_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x86_en-US.msi) · [poolr_0.5.7_x86-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x86-setup.exe) |
+| **macOS** | Apple Silicon (M1/M2/M3/M4) | `.dmg` | [poolr_0.5.7_aarch64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_aarch64.dmg) |
+| **macOS** | Intel x64 | `.dmg` | [poolr_0.5.7_x64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x64.dmg) |
+| **Linux** | x86_64 (Debian / Ubuntu / Mint) | `.deb` | [poolr_0.5.7_amd64.deb](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_amd64.deb) |
+| **Linux** | x86_64 (Fedora / RHEL / openSUSE)| `.rpm` | [poolr-0.5.7-1.x86_64.rpm](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr-0.5.7-1.x86_64.rpm) |
 
 ---
 
 ## Features
 
-### **Protocol & Planning**
-- **PICO Builder** for Population, Intervention, Comparator, Outcomes with placeholders
-- Protocol registration fields (PROSPERO ID, study designs, date range, languages)
-- Auto-saves to local `poolr.json` — fully portable projects
+### 1. Protocol & PICO Formulation
+- Structured input for **Population**, **Intervention**, **Comparator**, and **Outcomes**.
+- Protocol tracking: PROSPERO registration ID, publication date boundaries, inclusion criteria, and language restrictions.
+- All state auto-persisted to standard, human-readable `poolr.json` files.
 
-### **Search Strategy Builder**
-- Auto-generates search strings for **PubMed/MEDLINE, Embase, Cochrane CENTRAL, Scopus, Web of Science** from your PICO
-- Editable syntax-highlighted text areas per database
-- Export all strategies as `.txt` for protocol appendix
+### 2. Multi-Database Search Builder
+- Automated search query generator converting PICO parameters into optimized boolean expressions for:
+  - **PubMed / MEDLINE** (with MeSH expansion)
+  - **Embase**
+  - **Cochrane CENTRAL**
+  - **Scopus**
+  - **Web of Science**
+- Real-time API retrieval from **NCBI Entrez E-utilities**, **OpenAlex**, **Crossref**, and **ClinicalTrials.gov**.
+- 1-click copy and export of documented search strategies for manuscript methodology appendices.
 
-### **Dual Independent Screening**
-- **Title/Abstract** and **Full-Text** screening modes
-- Two-reviewer workflow with **conflict detection and resolution UI**
-- CSV import/export for Rayyan/Covidence interoperability
-- PRISMA flow numbers auto-calculated from decisions
+### 3. Dual Screening & Inter-Rater Reliability
+- Independent **Title & Abstract** and **Full-Text** screening stages.
+- Multi-reviewer configuration (1 to 4 independent reviewers).
+- **Conflict Resolution UI**: Automated $2 \times 2$ contingency table calculating:
+  - Observed percent agreement ($P_o$)
+  - **Cohen's Kappa ($\kappa$)** and Standard Error
+  - $95\%$ Confidence Intervals
+  - **Landis & Koch qualitative strength classification** (Slight, Fair, Moderate, Substantial, Almost Perfect)
+  - 1-click **Copy Methods Statement** button for copy-pasting into manuscript methodology.
+- **Promote Included (N)**: 1-click progression of title/abstract includes directly to full-text screening.
+- **Priority Screening**: Machine-learning ranking of unreviewed citations against PICO criteria.
 
-### **Structured Data Extraction**
-- Comprehensive forms: Study ID, Design, Population, Intervention/Control groups (binary, continuous, time-to-event), Outcomes, Neurosurgery-specific fields
-- CSV and **RIS (EndNote/Zotero/Mendeley)** import/export
-- Add/edit/delete studies with validation
+### 4. Structured Data Extraction
+- Multi-type study extraction: Binary, Continuous (Mean $\pm$ SD, Sample size), Time-to-Event (HR, Log[HR], SE), Proportions, and Diagnostic Accuracy.
+- **Import from Screening**: 1-click populator creating study records directly from screened inclusions.
+- Flexible CSV/TSV table importer with automated column header detection and mapping.
+- Automatic missing summary completion: Wan et al. (2014) median and IQR to mean and SD converter.
 
-### **Risk of Bias Assessment**
-- **RoB 2** (RCTs), **NOS** (cohort/case-control), **PROBAST** (diagnostic/prognostic), **ROBINS-I** (non-randomized), **QUADAS-2** (diagnostic accuracy), **AMSTAR-2** (reviews); robvis-style traffic-light + weighted summary-bar figures
-- Domain-level judgments with overall rating
-- Summary tables auto-generated + **domain-coverage radar chart**
+### 5. Risk of Bias Assessment (Cochrane robvis)
+- Domain-level assessments for standard evidence synthesis tools:
+  - **RoB 2** (Randomized Controlled Trials)
+  - **ROBINS-I** (Non-Randomized Studies of Interventions)
+  - **QUADAS-2** (Diagnostic Accuracy Studies)
+  - **AMSTAR-2** (Systematic Review Quality)
+  - **Newcastle-Ottawa Scale (NOS)** (Cohort / Case-Control Studies)
+- Publication-grade vector graphics complying with McGuinness & Higgins (2021) *robvis*:
+  - **Traffic Light Plots**: Domain-by-study colored circle matrices.
+  - **Weighted Summary Bar Plots**: Proportion of studies / sample weights at Low, Some Concerns, High, or Critical risk of bias.
+  - 1-click Scalable Vector Graphics (`.svg`) vector download.
 
-### **Advanced Meta-Analysis Engine**
-| Outcome Type | Effect Measures | Models | Methods |
-|--------------|----------------|--------|---------|
-| Binary | OR, RR, RD | Fixed / Random-effects | DerSimonian-Laird, REML, Paule-Mandel, Hunter-Schmidt |
-| Continuous | MD, SMD (Hedges' g) | Fixed / Random-effects | Inverse variance, DL, REML |
-| Time-to-event | HR | Fixed / Random-effects | Generic inverse variance |
-
-- **Subgroup analysis** by design, country, year, or custom fields
-- **Meta-regression** (year, sample size, continuous covariates)
-- **Publication bias**: Egger's test, Begg's test, funnel plot asymmetry
-- **Heterogeneity**: Cochran's Q, I² (with 95% CI), τ², H², prediction intervals
-- **Sensitivity**: leave-one-out with influence ranking, cumulative meta-analysis, fixed-vs-random comparison
-- **Publication-bias depth**: Egger's test, Begg's test, computed trim-and-fill, Peters & Harbord, PET/PEESE, p-curve, Henmi-Copas limit meta-analysis, step-function selection model (3PSM), fail-safe N
-- **More outcome types**: single-arm proportions (logit/arcsine), incidence rates (IRR/IRD), correlations (Fisher z), generic inverse-variance; Glass's delta; OR↔RR↔RD↔NNT and SMD↔OR conversions; Wan-2014 median→mean/SD completion
-- **Subgroups done right**: model-consistent per-group pooling, within-group heterogeneity, and the Q-between interaction test
-- **Study-weight ring chart** — see each study's contribution at a glance
-
-### **Publication-Ready Figures**
-- **Forest plots**: weight-proportional squares, diamond pooled estimate, log/linear scale, SVG/PNG/PDF export
-- **Funnel plots**: pseudo-95% CI contours, study weights as bubble size, color-coded
-- **PRISMA 2020 Flow Diagram**: interactive canvas with auto-population from screening data, SVG export
-
-### **GRADE Evidence Profiles**
-- Auto-populated from meta-analysis results + RoB assessments
-- Five-domain assessment (Risk of Bias, Inconsistency, Indirectness, Imprecision, Publication Bias)
-- Starting certainty (RCT=High, Observational=Low) with automatic downgrade logic
-- Export as Word table, LaTeX, JSON
-
-### **Manuscript Export**
-- **Word (.docx)**: full PRISMA-structured manuscript with tables, figures, references
-- **LaTeX (.tex)**: journal-ready with `booktabs`, `forestplot`, `pgfplots` support
-- **JSON**: complete project archive for reproducibility
-
-### **PubMed Direct Import**
-- Search PubMed via NCBI Entrez API (with API key support for 10 req/s)
-- Import records directly into screening with PMID, abstract, MeSH, keywords
-- Date range filters, query history
-
-### **Cross-Platform Desktop App**
-| Platform | Architectures | Package |
-|----------|---------------|---------|
-| **Windows** | x64, x86, ARM64 | native `.msi` installer + `.exe` (NSIS) with WebView2 embedded |
-| **macOS** | Intel (x64), Apple Silicon (ARM64) | `.dmg` (drag `poolr.app` to Applications) |
-| **Linux** | x64 | native `.deb` (+ `.rpm`) |
+### 6. Classical & Advanced Meta-Analysis Engine
+- **Effect Measures**: Odds Ratio (OR), Risk Ratio (RR), Risk Difference (RD), Mean Difference (MD), Standardized Mean Difference (SMD / Hedges' $g$), Hazard Ratio (HR), Single-Arm Proportions (Freeman-Tukey double arcsine), Correlation ($z$), and Generic Inverse-Variance.
+- **Statistical Pooling Models**: Fixed-Effect (Inverse Variance, Mantel-Haenszel, Peto) and Random-Effects.
+- **Between-Study Variance ($\tau^2$) Estimators**:
+  - DerSimonian-Laird (DL)
+  - Restricted Maximum Likelihood (REML)
+  - Paule-Mandel (PM)
+  - Empirical Bayes (EB)
+  - Hunter-Schmidt (HS)
+  - Sidik-Jonkman (SJ)
+- **Small-Sample Adjustment**: Knapp-Hartung-Sidik-Jonkman (KHSJ) $t$-distribution adjustments.
+- **Heterogeneity Evaluation**: Cochran's $Q$, $I^2$ (with Jackson 95% CI), $\tau^2$, $H^2$.
+- **Higgins 95% Prediction Interval**: $PI = \hat{\theta} \pm t_{k-2} \sqrt{SE^2 + \tau^2}$ predicting the treatment effect in a future clinical trial.
+- **Sensitivity Analyses**: Leave-one-out influence analysis ranking, cumulative meta-analysis, and fixed vs. random discordance diagnostics.
+- **Publication Bias & Small-Study Diagnostics**: Egger's regression test, Begg's rank test, Duval & Tweedie trim-and-fill, PET/PEESE meta-regression, $p$-curve analysis, and 3-parameter selection models (3PSM).
 
 ---
 
-## How poolr compares
+## Interactive Figure Studio
 
-| | **poolr** | RevMan (Cochrane) | R `metafor` | JASP |
-|---|---|---|---|---|
-| Price | **Free, open source** | Free (web) | Free | Free |
-| No coding | Yes | Yes | No | Yes |
-| Offline / local data | Yes | No | Yes | Yes |
-| Full PRISMA 2020 pipeline | Yes | Partial | No | No |
-| Dual screening + conflicts | Yes | No | No | No |
-| GRADE profiles | Yes | Partial | No | No |
-| Word/LaTeX manuscript export | Yes | No | No | No |
-| Windows / macOS / Linux | Yes | Web only | Yes | Yes |
+Poolr features an integrated vector graphics studio that renders publication-ready charts in real time with 1-click SVG download:
+
+1. **Forest Plots**: Proportional study weight markers, individual confidence intervals, pooled diamond summary, reference lines ($1.0$ for ratios, $0.0$ for differences), and study weight percentages.
+2. **Standard Funnel Plots**: Pseudo-95% confidence intervals centered on the pooled estimate.
+3. **Contour-Enhanced Funnel Plots**: Overlays $p < 0.10, p < 0.05, p < 0.01$ statistical significance zones (Peters et al. 2008) to assist in differentiating publication bias from other causes of funnel plot asymmetry.
+4. **Galbraith Radial Plots**: Standardized effect size $z$-scores plotted against precision ($1/SE$) for instant graphical outlier identification outside the $\pm 2$ error corridor.
+5. **L'Abbé Plots**: Plots experimental event rates vs. control event rates to inspect treatment homogeneity across study baselines.
+6. **Baujat Heterogeneity Diagnostics**: Compares each study's contribution to overall Cochran's $Q$ against its influence on the pooled effect size.
 
 ---
 
-## Quick Start
+## Specialized Analyses Suite
 
-### Download (Recommended)
-1. Go to [Releases](https://github.com/harisawan-bit/poolr/releases/latest)
-2. Download the native installer for your platform:
-   - **Windows**: `poolr-windows-x64.msi` (or `x86` / `arm64`) — also ships `poolr-windows-x64.exe` (NSIS)
-   - **macOS**: `poolr-macos-arm64.dmg` (Apple Silicon) or `poolr-macos-x64.dmg` (Intel) — drag `poolr.app` to Applications
-   - **Linux**: `poolr-linux-x86_64.deb` (Debian/Ubuntu) or `poolr-linux-x86_64.rpm` (RHEL/Fedora)
-3. 100% Python-free — the C# engine and WebView2 (Windows) are bundled, with no Python runtime anywhere in the product or the repo.
+Accessible from the top header or via Command Palette (`Ctrl+K`):
 
-### Releases
-See [RELEASES.md](./RELEASES.md) for version history, migration notes, and download links.
+- **Dose-Response Meta-Analysis**: Greenland & Longnecker linear trend estimation and 3-knot restricted cubic spline / Emax modeling (`/api/dose`).
+- **Survival RMST Meta-Analysis**: Restricted Mean Survival Time differences pooled up to truncation horizon $\tau$ (`/api/survival`).
+- **Health Economics Evaluation**: Bivariate cost-effectiveness pooling, Incremental Cost-Effectiveness Ratio (ICER), and Incremental Net Monetary Benefit (INMB) across willingness-to-pay thresholds $\lambda$ (`/api/specialized/economic`).
+- **Adverse Events & Peto Odds Ratios**: Peto one-step pooling with zero-event continuity corrections and Number Needed to Harm (NNH) (`/api/specialized/adverse`).
+- **Decision Curve Analysis (DCA)**: Net Benefit curves evaluated across clinical decision threshold probabilities $p_t$ (`/api/advanced/dca`).
+- **Trial Sequential Analysis (TSA)**: Calculates Required Information Size (RIS) based on $\alpha=0.05, \beta=0.20$ and tracks cumulative $Z$-curve crossing against Lan-DeMets O'Brien-Fleming monitoring boundaries.
+- **Multimodel Inference (Model Averaging)**: Computes AICc-weighted pooled estimates across 6 $\tau^2$ estimators to eliminate single-estimator selection bias.
 
-### From Source (Developers)
+---
+
+## Universal Export Center
+
+Generate complete manuscript files and replication packages with one click (`Ctrl+E`):
+
+| Format | Output Type | Description |
+|---|---|---|
+| **Word (`.docx`)** | PRISMA 2020 Manuscript | Formatted Word document containing Title, Structured Abstract, PICO, Search Strategy, Screening Flow, Extraction Table, Meta-Analysis summary, and GRADE SoF table. |
+| **LaTeX (`.tex`)** | Academic Article | Publication-grade LaTeX template with `booktabs`, `amsmath`, and PGF/TikZ figure wrappers. |
+| **HTML (`.html`)** | Standalone Interactive Report | Self-contained HTML report with embedded CSS, interactive vector charts, and offline tables. |
+| **R Script (`.R`)** | `metafor` Replication Code | Executable R script recreating the exact analysis, forest plot, and funnel plot using `metafor::rma()`. |
+| **Stata (`.do`)** | Stata Meta Script | Executable Stata do-file using official `meta esize` and `meta forestplot` syntax. |
+| **Python (`.py`)** | `statsmodels` Replication Code | Python script using `pandas` and `statsmodels` for reproducible independent recalculation. |
+| **BibTeX (`.bib`)** | Citation Bibliography | Formatted BibTeX bibliography of all included studies. |
+| **RIS (`.ris`)** | Reference Manager Archive | Standard RIS file compatible with EndNote, Zotero, Mendeley, and Rayyan. |
+
+---
+
+## How Poolr Compares
+
+| Feature | **Poolr** | Cochrane RevMan | R (`metafor`) | JASP | Covidence / Rayyan |
+|---|:---:|:---:|:---:|:---:|:---:|
+| **Price** | **100% Free & Open-Source** | Free (Web only) / Subscription | Free & Open-Source | Free & Open-Source | Commercial / Freemium |
+| **Installation** | **Standalone Native Desktop** | Web browser | CLI / IDE required | Native Desktop | Web browser |
+| **No-Code Interface** | :white_check_mark: | :white_check_mark: | :x: | :white_check_mark: | :white_check_mark: |
+| **Data Privacy (100% Local)** | :white_check_mark: | :x: (Cloud-stored) | :white_check_mark: | :white_check_mark: | :x: (Cloud-stored) |
+| **Full PRISMA 2020 Pipeline** | :white_check_mark: (All 8 stages) | Partial (No search/screening) | :x: (Analysis only) | :x: (Analysis only) | Screening only |
+| **Dual Screening + Cohen's $\kappa$** | :white_check_mark: | :x: | :x: | :x: | :white_check_mark: |
+| **Cochrane robvis Vector Figures** | :white_check_mark: | :x: (Separate tool) | Via `robvis` package | :x: | :x: |
+| **Figure Studio (Contour/Galbraith/Baujat)**| :white_check_mark: | :x: | Via scripts | Partial | :x: |
+| **Trial Sequential Analysis (TSA)** | :white_check_mark: | :x: | Via `tsa` package | :x: | :x: |
+| **Dose-Response / Survival RMST / DCA** | :white_check_mark: | :x: | Via complex scripts | :x: | :x: |
+| **1-Click Word / LaTeX Manuscript Export** | :white_check_mark: | :x: | :x: | :x: | :x: |
+| **1-Click R & Stata Replication Script** | :white_check_mark: | :x: | Self | :x: | :x: |
+| **Python Dependency Free** | :white_check_mark: (100% Python-free) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+
+---
+
+## Architecture
+
+Poolr is designed as a modular, multi-tier native desktop application with decoupled UI and statistical computation layers:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        Tauri 2 Native Desktop Shell                    │
+│                 (Rust / Windows WebView2, WebKitGTK, WKWebView)        │
+└────────────────────────────────────┬───────────────────────────────────┘
+                                     │
+                 ┌───────────────────┴───────────────────┐
+                 │                                       │
+                 ▼                                       ▼
+┌─────────────────────────────────┐   HTTP REST   ┌──────────────────────────────┐
+│       Frontend User Interface   │ ────────────> │     C# 12 / .NET 8 Engine    │
+│  React 19 · TypeScript · Vite   │ <──────────── │  ASP.NET Core (127.0.0.1:5180│
+│  Tailwind CSS · Bklit UI Charts │ (JSON/Vector) │  Math.NET · SkiaSharp SVG    │
+└─────────────────────────────────┘               └──────────────────────────────┘
+                 │                                               │
+                 ▼                                               ▼
+     ┌────────────────────────┐                    ┌────────────────────────────┐
+     │  Local File Storage    │                    │ Process Lifecycle Sentinel │
+     │  Project poolr.json    │                    │ Win32 JobObject / POSIX    │
+     │  Autosave & LocalStore │                    │ Auto-reaping on App Close  │
+     └────────────────────────┘                    └────────────────────────────┘
+```
+
+For in-depth technical documentation regarding inter-process communication, zero-zombie process guarantees, and statistical precision validation, read [ARCHITECTURE.md](ARCHITECTURE.md).
+
+---
+
+## How to Cite Poolr
+
+If you use Poolr to conduct, screen, analyze, or report evidence in your systematic review or meta-analysis, please cite the software:
+
+### APA Format
+> Awan, M. H. (2026). *Poolr: Free, open-source desktop platform for systematic reviews & meta-analyses* (Version 0.5.7) [Computer software]. https://github.com/harisawan-bit/poolr
+
+### BibTeX
+```bibtex
+@software{Awan_Poolr_2026,
+  author = {Awan, Muhammad Haris},
+  title = {{Poolr: Free, Open-Source Desktop Platform for Systematic Reviews & Meta-Analyses}},
+  version = {0.5.7},
+  year = {2026},
+  url = {https://github.com/harisawan-bit/poolr},
+  publisher = {GitHub}
+}
+```
+
+Standardized machine-readable citation metadata is maintained in [CITATION.cff](CITATION.cff).
+
+---
+
+## Local Development
+
+### Prerequisites
+- **Node.js**: >= 20.x (v24 LTS recommended)
+- **.NET SDK**: 8.0.x
+- **Rust**: 1.77+ with Cargo
+- **Git**
+
+### Step-by-Step Setup
 ```bash
-# Requirements: Node 24, .NET 8 SDK, Rust (stable), Git
+# Clone repository
 git clone https://github.com/harisawan-bit/poolr.git
 cd poolr
 
-# Install frontend deps
+# 1. Install frontend dependencies and run dev server
 cd frontend
 npm install
-npm run dev        # launches the React UI in a browser (engine runs separately)
+npm run dev
 
-# In another terminal — run the C# engine sidecar (localhost:5180)
+# 2. In a separate terminal, launch the .NET 8 statistics engine (port 5180)
 cd engine
-dotnet run --project Poolr.Engine.Api
+dotnet run --project Poolr.Engine.Api/Poolr.Engine.Api.csproj
 
-# Or run the full native shell (Tauri + bundled engine)
+# 3. Or launch the full native desktop environment (Tauri 2 + bundled engine)
 cd src-tauri
 cargo tauri dev
 ```
 
-> The stats engine is a pure C# 12 / .NET 8 implementation (no Python). Its numerics are guarded by the `engine/Poolr.Engine.Tests` xUnit suite that runs in CI.
-
-### Engine API (for Automation / CI)
-
-The bundled C# engine exposes a local REST API (default `http://127.0.0.1:5180`). You can drive meta-analyses headlessly without the GUI:
-
+### Running the Test & Verification Matrix
 ```bash
-# Health check
-curl http://127.0.0.1:5180/health
-
-# Run a meta-analysis (binary OR, random-effects, DerSimonian-Laird)
-curl -X POST http://127.0.0.1:5180/api/meta \
-  -H "Content-Type: application/json" \
-  -d '{"model":"random","measure":"OR","method":"DL",
-       "data":[{"study":"A","type":"binary","int_events":10,"int_n":50,"ctrl_events":5,"ctrl_n":50}]}'
-```
-
-> The engine is pure C# — there is no Python anywhere in the product or the repository.
-
----
-
-## Project Structure
-
-```
-poolr/
-├── frontend/                  # React + TypeScript UI (Vite)
-│   ├── src/
-│   │   ├── pages/             # 8 SRMA pages (Dashboard, Protocol, Search, Screening,
-│   │   │                      #   Extraction, Risk of Bias, Meta, PRISMA)
-│   │   ├── components/charts/ # Bklit UI chart components (ring, radar, gauge)
-│   │   ├── lib/               # engine API bridge, screening-import parser, project store
-│   │   └── __tests__/         # Vitest unit tests (parsers, API bridge)
-│   └── package.json
-├── src-tauri/                 # Tauri 2 (Rust) shell
-│   ├── src/                   # Rust app + C# engine spawner (JobObject reaping)
-│   ├── resources/engine/      # bundled self-contained C# sidecar (gitignored, built in CI)
-│   ├── icons/                 # app icons (png/ico/icns)
-│   ├── tauri.conf.json        # bundle config: msi/nsis/dmg/deb/rpm + WebView2 embed
-│   └── package.json           # @tauri-apps/cli (build script)
-├── engine/                    # C# 12 / .NET 8 meta-analysis engine (sidecar)
-│   ├── Poolr.Engine.Api/      # ASP.NET localhost HTTP API (:5180)
-│   └── Poolr.Engine.Tests/    # xUnit numerics suite (CI gate — 100% Python-free)
-├── docs/screenshots/          # README screenshots
-├── .github/workflows/         # CI (lint/type/test/clippy/security) + Build Installers (6-OS matrix)
-└── README.md · RELEASES.md · CHANGELOG.md · LICENSE
-```
-
----
-
-## Testing
-
-```bash
-# C# engine numerics suite (CI: C# Engine Tests job)
+# 1. C# 12 Engine mathematical parity suite (xUnit)
 dotnet test engine/Poolr.Engine.Tests/Poolr.Engine.Tests.csproj -c Release
 
-# Frontend type-check + build + unit tests
-cd frontend && npm ci && npm run build && npm run test -- --run
+# 2. C# Engine code formatting check (enforced in CI)
+dotnet format engine/Poolr.Engine.Api/Poolr.Engine.Api.csproj --verify-no-changes
 
-# Rust shell format + lint
-cd src-tauri && cargo fmt --check && cargo clippy --all-targets -- -D warnings
+# 3. Frontend linting, type-checking, and unit tests
+cd frontend
+npm run lint
+npm run build
+npm test -- --run
+
+# 4. Rust desktop shell formatting and clippy
+cd src-tauri
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
 ```
-
-> The entire product and its test suite are **100% Python-free** — the engine is C#/.NET and CI validates it with xUnit; the UI is guarded by Vitest + TypeScript.
 
 ---
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Development Workflow
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes with tests (C# engine changes go in `engine/Poolr.Engine.Tests`, UI logic in `frontend/src/**/__tests__`)
-4. Run the test suite: `dotnet test engine/Poolr.Engine.Tests -c Release`
-5. Submit a Pull Request to `develop`
-
-### Code Style
-- **C#**: `dotnet format` (CI enforces `--verify-no-changes`)
-- **Frontend**: oxlint + TypeScript strict (`npm run lint`, `npm run build`)
-- **Rust**: `cargo fmt` / `cargo clippy -- -D warnings` (both enforced in CI)
+We warmly welcome contributions from the medical research, biostatistics, and open-source software communities. Please review:
+- [CONTRIBUTING.md](CONTRIBUTING.md) — Contribution guidelines, conventional commit rules, and PR workflow.
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — Contributor Covenant v2.1.
+- [ROADMAP.md](ROADMAP.md) — Upcoming feature milestones and version plans.
+- [SECURITY.md](SECURITY.md) — Vulnerability disclosure policy.
+- [SUPPORT.md](SUPPORT.md) — Support channels and triage matrix.
 
 ---
 
 ## License
 
-MIT License — free for academic and commercial use. © M. Haris Awan. See [LICENSE](LICENSE) for details.
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details. Free for academic, non-commercial, and commercial research.
 
----
-
-## Acknowledgments
-
-- **PRISMA 2020** statement authors for reporting guidelines
-- **Cochrane** for RoB 2 and GRADE methodology
-- **NCBI** for PubMed/Entrez API access
-- **Tauri 2** (Rust) for the native desktop shell
-- **React** + **TypeScript** + **Vite** for the UI
-- **Bklit UI** for the chart component library (visx + motion)
-- **.NET 8 / C# 12** (Math.NET Numerics, SkiaSharp) for the statistics engine — 100% Python-free
-
----
-
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/harisawan-bit/poolr/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/harisawan-bit/poolr/discussions)
-- **Email**: m.harisawan@icloud.com
-
----
-
-> *"Systematic reviews are the cornerstone of evidence-based practice. poolr makes them accessible to everyone."*
+© 2026 Muhammad Haris Awan.

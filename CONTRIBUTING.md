@@ -1,98 +1,111 @@
-# Contributing to poolr
+# Contributing to Poolr
 
-Thank you for your interest in contributing to **poolr** — a native desktop app
-(Tauri 2 / Rust + React/TypeScript + a C# 12 / .NET 8 engine sidecar) for
-systematic reviews and meta-analyses.
+Thank you for your interest in contributing to **Poolr**! As an open-source, no-code desktop application for systematic reviews and meta-analyses, Poolr welcomes contributions from biostatisticians, clinical researchers, frontend developers, and systems engineers.
 
-## Branch Strategy
+---
 
-We keep it simple and protected:
+## Code of Conduct
+
+All contributors and maintainers are expected to adhere to our [Code of Conduct](CODE_OF_CONDUCT.md). Please read it before participating.
+
+---
+
+## Branching Strategy & Workflow
+
+We adhere to a git-flow model with protected branches:
 
 | Branch | Purpose | Protection |
-|--------|---------|------------|
-| `main` | Production releases only | Protected — never push directly |
-| `develop` | Integration branch for the next release | Protected — PR required |
-| `feature/*` | New features / fixes | Short-lived, merge into `develop` via PR |
+|---|---|---|
+| `main` | Production releases | Protected — direct pushes disallowed. Releases are tagged from here. |
+| `develop` | Active integration branch | Protected — PR required with green CI. |
+| `feat/*` | New features / analyses | Branch from `develop`, open PR to `develop`. |
+| `fix/*` | Bug fixes / corrections | Branch from `develop`, open PR to `develop`. |
 
-**Rule:** never push directly to `main`. Always open a PR from a feature branch
-into `develop`, let CI go green, then merge. Releases are cut from `develop` → `main`
-and tagged `vX.Y.Z` (the tag triggers the 6-OS installer build).
+### Development Cycle
+1. **Fork the Repository**: Fork `harisawan-bit/poolr` to your GitHub account and clone locally.
+2. **Branch from develop**:
+   ```bash
+   git checkout -b feat/my-feature develop
+   ```
+3. **Commit with Conventional Commits**:
+   - `feat: add network meta-analysis node-splitting`
+   - `fix: correct degrees of freedom in paired t-test pooling`
+   - `docs: add citation guidelines in README`
+4. **Run Pre-Commit Verification** (see commands below).
+5. **Open a Pull Request**: Target the **`develop`** branch and complete the PR checklist.
 
-### Branch Naming
-- Features: `feature/short-description`
-- Fixes: `fix/short-description`
+---
 
-## Pull Request Process
+## Repository Architecture
 
-### 1. Before Opening a PR
-- [ ] Branch from `develop`: `git checkout -b feature/my-change develop`
-- [ ] Keep changes focused and reviewable
-- [ ] Run the checks locally (see below)
-- [ ] Update `CHANGELOG.md` / `RELEASES.md` if user-facing
+| Directory | Technology | Role |
+|---|---|---|
+| `frontend/` | React 19, TypeScript, Vite, Tailwind CSS | The 8 PRISMA stages, UI modals, Bklit vector charts |
+| `engine/` | C# 12, .NET 8, ASP.NET Core, Math.NET, SkiaSharp | High-performance statistics & SVG rendering engine |
+| `src-tauri/` | Tauri 2, Rust | Cross-platform desktop shell & native sidecar supervisor |
+| `.github/` | GitHub Actions Workflows | 10-job cross-platform CI and 6-OS installer release matrix |
 
-### 2. Opening a PR
-- Target: **`develop`**
-- Link related issues (`Fixes #123`)
-- Describe what changed and why
+For detailed topological architecture, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
-### 3. Merge
-- CI must be green (`ci.yml` + `build.yml` matrix across Windows/macOS/Linux)
-- Squash-merge feature branches; delete the branch after merge
+---
 
-## Repo Layout (what lives where)
+## Local Verification Commands
 
-| Path | Stack | Notes |
-|------|-------|-------|
-| `frontend/` | React + TypeScript (Vite) | The 8 SRMA pages + `lib/` (engine bridge, import parser) |
-| `src-tauri/` | Rust (Tauri 2) | Native shell; spawns the C# engine; bundle config in `tauri.conf.json` |
-| `engine/` | C# 12 / .NET 8 | Meta-analysis HTTP API (`:5180`). Math.NET for stats, SkiaSharp for figures |
-| `engine/Poolr.Engine.Tests/` | C# 12 / .NET 8 (xUnit) | Numerics regression suite — the CI gate that keeps the engine honest |
-| `.github/workflows/` | YAML | `ci.yml` (lint/type/test) + `build.yml` (6-OS installer matrix on tags) |
+Before opening a pull request, verify that all CI gates pass locally:
 
-## Local Checks
-
+### 1. Frontend (React & TypeScript)
 ```bash
-# Frontend type-check + production build + unit tests
-cd frontend && npm ci && npm run build && npm run test -- --run
+cd frontend
+npm ci
+npm run lint          # oxlint checks
+npm run build         # TypeScript strict compilation & Vite build
+npm test -- --run     # Vitest unit test suite
+```
 
-# Frontend lint
-cd frontend && npm run lint
-
-# Rust shell (format + clippy, both enforced in CI)
-cd src-tauri && cargo fmt --check && cargo clippy --all-targets -- -D warnings
-
-# C# engine numerics suite (the CI gate that keeps the engine honest)
+### 2. C# Statistics Engine (.NET 8)
+```bash
+# Run all mathematical and statistical regression benchmarks
 dotnet test engine/Poolr.Engine.Tests/Poolr.Engine.Tests.csproj -c Release
 
-# C# engine format gate (CI enforces --verify-no-changes)
+# Verify zero format discrepancies (enforced strictly in CI)
 dotnet format engine/Poolr.Engine.Api/Poolr.Engine.Api.csproj --verify-no-changes
-
-# Run the engine locally for manual API calls
-cd engine && dotnet run --project Poolr.Engine.Api
-# then:  curl http://127.0.0.1:5180/health
 ```
 
-## Building Installers (locally, optional)
-
+### 3. Tauri Desktop Shell (Rust)
 ```bash
-cd src-tauri && cargo tauri build        # produces msi/nsis/dmg/deb/rpm in target/
+cd src-tauri
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
 ```
 
-In CI this happens automatically when you push a `vX.Y.Z` tag.
+---
 
-## Versioning & Releases
+## Building Native Installers Locally
 
-- Semantic Versioning: `MAJOR.MINOR.PATCH`
-- Bump `version` in `frontend/package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/package.json` together
-- Update `RELEASES.md` + `CHANGELOG.md`
-- Merge `develop` → `main`, then `git tag -a vX.Y.Z -m "poolr vX.Y.Z"` and push the tag
-- `build.yml` builds and publishes the 6-OS installers to the GitHub Release
+To compile native desktop installers on your workstation:
+```bash
+cd src-tauri
+cargo tauri build
+```
+Output packages (MSI/NSIS on Windows, DMG on macOS, DEB/RPM on Linux) will be generated in `src-tauri/target/release/bundle/`.
 
-## Security
+---
 
-Do **not** open public issues for vulnerabilities. Email the maintainer directly.
-CI runs dependency scanning; never commit secrets or `.env` files.
+## Scientific & Statistical Standards
+
+When submitting changes that affect statistical calculations or figure generators:
+1. **Literature Citation**: Cite the methodology paper in your pull request description (e.g. DerSimonian & Laird 1986, Higgins 2009, Wan 2014).
+2. **Oracle Benchmark**: Test your calculation against the corresponding gold-standard R package (e.g. `metafor`, `netmeta`, `robvis`). Include numerical comparison in your PR.
+3. **Automated Test**: Add an xUnit test in `engine/Poolr.Engine.Tests/` to prevent future regressions.
+
+---
+
+## Security Inquiries
+
+Do not report security vulnerabilities via public GitHub issues. Follow the instructions in [SECURITY.md](SECURITY.md) or email **m.harisawan@icloud.com**.
+
+---
 
 ## License
 
-MIT — © M. Haris Awan. All rights reserved. See [LICENSE](LICENSE).
+By contributing to Poolr, you agree that your contributions will be licensed under the [MIT License](LICENSE).

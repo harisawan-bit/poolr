@@ -51,8 +51,10 @@ export default function Screening({ project, onChange }: { project: Project; onC
   const [notice, setNotice] = useState<string | null>(null);
   // v0.5.3 — number of independent reviewers screening (dual screening support).
   const [reviewers, setReviewers] = useState(2);
-  // v0.5.5 — active screening tab: single screening, dual screening entry, or conflict dashboard
-  const [tab, setTab] = useState<"screening" | "dual_entry" | "conflicts">("screening");
+  const [tab, setTab] = useState<"screening" | "dual_entry" | "conflicts">(() => {
+    const q = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tab") : null;
+    return (q as any) || "screening";
+  });
   // v0.5.5 — which reviewer is entering decisions in dual-entry mode
   const [activeReviewerIdx, setActiveReviewerIdx] = useState(0);
   const viewportRef = useRef<HTMLDivElement>(null);

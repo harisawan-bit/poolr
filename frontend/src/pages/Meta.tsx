@@ -53,7 +53,10 @@ export default function Meta({ project, onChange }: { project: Project; onChange
 
   // Advanced SRMA researcher additions
   const [predInterval, setPredInterval] = useState<PredictionResult | null>(null);
-  const [figTab, setFigTab] = useState<"forest" | "funnel" | "funnel_contour" | "galbraith" | "labbe" | "baujat">("forest");
+  const [figTab, setFigTab] = useState<"forest" | "funnel" | "funnel_contour" | "galbraith" | "labbe" | "baujat">(() => {
+    const q = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("fig") : null;
+    return (q as any) || "forest";
+  });
   const [diagSvg, setDiagSvg] = useState<Record<string, string>>({});
   const [diagLoading, setDiagLoading] = useState(false);
 
@@ -246,6 +249,13 @@ export default function Meta({ project, onChange }: { project: Project; onChange
       if (mounted.current) setBusy(false);
     }
   };
+
+  useEffect(() => {
+    const q = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    if (q?.get("run") === "1" && studies.length >= 2 && !resp && !busy) {
+      void run();
+    }
+  }, [studies.length, resp, busy]);
 
   // Fetch specialized diagnostic SVG when user switches figure tab
   useEffect(() => {
