@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Project, ScreeningItem, ScreenDecision } from "../lib/project";
 import { CITATION_ACCEPT, importCitationText, mergeScreeningItems, dedupeRecords } from "../lib/project";
-import { readTextFiles } from "../lib/api";
+import { readTextFiles, runPriorityScreening } from "../lib/api";
 import { Card, Pill, Input, Textarea, EmptyState } from "../components/ui";
 import FunnelChart from "../components/charts/FunnelChart";
 import TeamSelector, { REVIEWER_MEMBERS } from "../components/kokonut/TeamSelector";
@@ -141,6 +141,103 @@ export default function Screening({ project, onChange }: { project: Project; onC
       stage,
     };
     onChange({ ...project, screening: { ...project.screening, [stage]: [...items, next] } });
+  };
+
+  const promoteToFullText = () => {
+    const taIncluded = (project.screening?.title_abstract ?? []).filter((i) => i.decision === "include");
+    if (taIncluded.length === 0) {
+      flash("No records marked as 'Include' in Title/Abstract stage yet.");
+      return;
+    }
+    const ftExisting = project.screening?.full_text ?? [];
+    const ftIds = new Set(ftExisting.map((i) => i.id));
+    const ftTitles = new Set(ftExisting.map((i) => i.title.toLowerCase().trim()));
+
+    const toAdd: ScreeningItem[] = taIncluded
+      .filter((i) => !ftIds.has(i.id) && !ftTitles.has(i.title.toLowerCase().trim()))
+      .map((i) => ({
+        ...i,
+        stage: "full_text" as const,
+        decision: "unset" as const,
+      }));
+
+    if (toAdd.length === 0) {
+      flash("All included Title/Abstract records are already in Full-Text screening.");
+      return;
+    }
+
+    const nextFt = [...ftExisting, ...toAdd];
+    onChange({
+      ...project,
+      screening: {
+        ...project.screening,
+        full_text: nextFt,
+      },
+    });
+    flash(`Promoted ${toAdd.length} included record${toAdd.length === 1 ? "" : "s"} to Full-Text screening!`);
+    setStage("full_text");
+  };
+
+  const handlePrioritySort = async () => {
+    const picoTerms = [
+      project.pico?.population,
+      project.pico?.intervention,
+      project.pico?.comparator,
+      project.pico?.outcomes,
+      project.protocol?.objective,
+    ].filter(Boolean) as string[];
+
+    if (picoTerms.length === 0) {
+      flash("Please define Population or Intervention in Protocol/PICO first.");
+      return;
+    }
+
+    const payload = items.map((it) => ({
+      id: it.id,
+      title: it.title,
+      abstract: it.abstract,
+      decision: it.decision,
+    }));
+
+    try {
+      const res = await runPriorityScreening({ items: payload, picoTerms });
+      if (Array.isArray(res) && res.length > 0) {
+        const orderMap = new Map(res.map((r, idx) => [r.id, idx]));
+        const sorted = [...items].sort((a, b) => {
+          const rankA = orderMap.get(a.id) ?? 999999;
+          const rankB = orderMap.get(b.id) ?? 999999;
+          return rankA - rankB;
+        });
+        onChange({
+          ...project,
+          screening: {
+            ...project.screening,
+            [stage]: sorted,
+          },
+        });
+        flash(`Ranked ${sorted.length} records by AI priority relevance.`);
+      }
+    } catch {
+      // Deterministic client-side term frequency fallback
+      const keywords = picoTerms
+        .flatMap((p) => p.toLowerCase().split(/[\s,;]+/))
+        .filter((w) => w.length > 3);
+      const sorted = [...items].sort((a, b) => {
+        const textA = (a.title + " " + a.abstract).toLowerCase();
+        const textB = (b.title + " " + b.abstract).toLowerCase();
+        const scoreA = keywords.reduce((acc, k) => acc + (textA.includes(k) ? 1 : 0), 0);
+        const scoreB = keywords.reduce((acc, k) => acc + (textB.includes(k) ? 1 : 0), 0);
+        return scoreB - scoreA;
+      });
+      onChange({
+        ...project,
+        screening: {
+          ...project.screening,
+          [stage]: sorted,
+        },
+      });
+      flash(`Ranked ${sorted.length} records by PICO keyword relevance.`);
+    }
   };
 
   // ── Citation import: MEDLINE .txt, CSV, RIS/.nbib, EndNote .txt ──
@@ -338,6 +435,22 @@ export default function Screening({ project, onChange }: { project: Project; onC
         <Card title="Screening" right={
           <div className="flex items-center gap-2">
             <StageTabs stage={stage} setStage={(s) => { setStage(s); setSelectedId(null); }} />
+            {stage === "title_abstract" && counts.include > 0 && (
+              <button
+                className="btn-ghost !border-[var(--color-include)]/50 !text-[var(--color-include)]"
+                onClick={promoteToFullText}
+                title="Promote all included Title/Abstract records to Full-Text screening stage"
+              >
+                Promote Included ({counts.include})
+              </button>
+            )}
+            <button
+              className="btn-ghost"
+              onClick={handlePrioritySort}
+              title="Sort unreviewed records by relevance to PICO criteria (Living Review ML)"
+            >
+              Priority Sort
+            </button>
             <button className="btn-ghost" onClick={() => fileRef.current?.click()}>Import</button>
             <button className="btn-primary" onClick={addSample}>+ Add</button>
           </div>
