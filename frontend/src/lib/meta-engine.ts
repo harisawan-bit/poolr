@@ -35,6 +35,7 @@ export interface StudyResult {
   ci_upper: number;
   weight: number;
   subgroup: string;
+  se?: number;
 }
 
 export interface PooledResult {
@@ -303,17 +304,20 @@ export function runMetaAnalysis(settings: MetaSettings, inputStudies: StudyInput
 
   // Confidence interval
   const zCrit = normalPPF(0.975);
-  const ciLower = pooledEffect - zCrit * pooledSE;
-  const ciUpper = pooledEffect + zCrit * pooledSE;
+  const isRatio = measure === 'OR' || measure === 'RR';
+  const displayPooled = isRatio ? Math.exp(pooledEffect) : pooledEffect;
+  const displayCiLower = isRatio ? Math.exp(pooledEffect - zCrit * pooledSE) : pooledEffect - zCrit * pooledSE;
+  const displayCiUpper = isRatio ? Math.exp(pooledEffect + zCrit * pooledSE) : pooledEffect + zCrit * pooledSE;
 
   // Study results
   const studyResults: StudyResult[] = studies.map((s, i) => ({
     study: s.study,
-    effect: s.effect,
-    ci_lower: s.effect - zCrit * s.se,
-    ci_upper: s.effect + zCrit * s.se,
-    weight: weights[i] / sumW * 100,
+    effect: isRatio ? Math.exp(s.effect) : s.effect,
+    ci_lower: isRatio ? Math.exp(s.effect - zCrit * s.se) : s.effect - zCrit * s.se,
+    ci_upper: isRatio ? Math.exp(s.effect + zCrit * s.se) : s.effect + zCrit * s.se,
+    weight: (weights[i] / sumW) * 100,
     subgroup: s.subgroup,
+    se: s.se,
   }));
 
   // Subgroup analysis
@@ -326,7 +330,7 @@ export function runMetaAnalysis(settings: MetaSettings, inputStudies: StudyInput
   });
 
   if (subgroupsMap.size > 1) {
-    const groups: { name: string; effect: number; ci_lower: number; ci_upper: number; k: number; i2_within?: number }[] = [];
+    const groups: { name: string; effect: number; ci_lower: number; ci_upper: number; k: number; i2_within?: number; se: number }[] = [];
     subgroupsMap.forEach((sgStudies, name) => {
       const sgWeights = sgStudies.map(s => 1 / (s.se * s.se + het.tau2));
       const sgSumW = sgWeights.reduce((a, b) => a + b, 0);
@@ -335,19 +339,21 @@ export function runMetaAnalysis(settings: MetaSettings, inputStudies: StudyInput
       const sgHet = derSimonianLaird(sgStudies);
       groups.push({
         name,
-        effect: sgEffect,
-        ci_lower: sgEffect - zCrit * sgSE,
-        ci_upper: sgEffect + zCrit * sgSE,
+        effect: isRatio ? Math.exp(sgEffect) : sgEffect,
+        ci_lower: isRatio ? Math.exp(sgEffect - zCrit * sgSE) : sgEffect - zCrit * sgSE,
+        ci_upper: isRatio ? Math.exp(sgEffect + zCrit * sgSE) : sgEffect + zCrit * sgSE,
         k: sgStudies.length,
         i2_within: sgHet.i2,
+        se: sgSE,
       });
     });
 
-    // Q-between
+    // Weighted Q-between using inverse variance of subgroup estimates
     let qBetween = 0;
     groups.forEach(g => {
-      const groupEffect = g.effect;
-      qBetween += (groupEffect - pooledEffect) ** 2;
+      const gEffect = isRatio ? Math.log(g.effect) : g.effect;
+      const gWeight = g.se > 0 ? 1 / (g.se * g.se) : 1;
+      qBetween += gWeight * ((gEffect - pooledEffect) ** 2);
     });
     const dfBetween = groups.length - 1;
     const pBetween = 1 - chiSquareCDF(qBetween, dfBetween);
@@ -415,9 +421,9 @@ export function runMetaAnalysis(settings: MetaSettings, inputStudies: StudyInput
 
   return {
     pooled: {
-      effect: pooledEffect,
-      ci_lower: ciLower,
-      ci_upper: ciUpper,
+      effect: displayPooled,
+      ci_lower: displayCiLower,
+      ci_upper: displayCiUpper,
       se: pooledSE,
       z,
       p,
@@ -467,7 +473,7 @@ export function generateFunnelPlotData(result: MetaAnalysisResult): {
 } {
   const points = result.studies.map(s => ({
     effect: s.effect,
-    se: Math.sqrt((s.weight / 100) * (1 / result.pooled.se ** 2)),
+    se: s.se ?? (Math.abs(s.ci_upper - s.ci_lower) / (2 * 1.959964)),
     study: s.study,
   }));
 

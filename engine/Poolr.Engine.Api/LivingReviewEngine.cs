@@ -93,8 +93,8 @@ public static class LivingReviewEngine
         for (int i = 1; i <= sorted.Count; i++)
         {
             var subset = sorted.Take(i).ToList();
-            var effects = subset.Select(s => s.effect.Value).ToList();
-            var vars = subset.Select(s => s.se.Value * s.se.Value).ToArray();
+            var effects = subset.Select(s => s.effect!.Value).ToList();
+            var vars = subset.Select(s => s.se!.Value * s.se.Value).ToArray();
 
             double tau2 = EstimateTau2(effects.ToArray(), vars);
             var weights = vars.Select(v => 1.0 / (v + tau2)).ToList();
@@ -104,7 +104,10 @@ public static class LivingReviewEngine
             double crit = 1.959964;
 
             // Q and I²
-            double q = weights.Zip(effects, (w, e) => w * Math.Pow(e - pooled, 2)).Sum();
+            var feWeights = vars.Select(v => 1.0 / v).ToList();
+            double feSw = feWeights.Sum();
+            double fePooled = feWeights.Zip(effects, (w, e) => w * e).Sum() / feSw;
+            double q = feWeights.Zip(effects, (w, e) => w * Math.Pow(e - fePooled, 2)).Sum();
             int df = i - 1;
             double i2 = (q > df && q > 0) ? Math.Max(0, (q - df) / q * 100) : 0;
 

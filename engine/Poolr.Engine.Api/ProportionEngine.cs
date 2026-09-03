@@ -55,8 +55,8 @@ public static class ProportionEngine
         if (valid.Count < 2) throw new ArgumentException("At least 2 valid studies required");
 
         // GLMM: logit-normal random effects via Laplace approximation
-        var props = valid.Select(s => (double)s.events.Value / s.n.Value).ToList();
-        var ns = valid.Select(s => s.n.Value).ToList();
+        var props = valid.Select(s => (double)s.events!.Value / s.n!.Value).ToList();
+        var ns = valid.Select(s => s.n!.Value).ToList();
 
         // Transform to logit scale
         var logits = props.Select(p =>
@@ -107,29 +107,34 @@ public static class ProportionEngine
         // Freeman-Tukey double-arcsine transformation
         var transformed = valid.Select(s =>
         {
-            double p = (double)s.events.Value / s.n.Value;
-            double n = s.n.Value;
-            return Math.Asin(Math.Sqrt(p)) + Math.Asin(Math.Sqrt((p * n + 1) / (n + 1)));
+            double x = s.events!.Value;
+            double n = s.n!.Value;
+            return Math.Asin(Math.Sqrt(x / (n + 1.0))) + Math.Asin(Math.Sqrt((x + 1.0) / (n + 1.0)));
         }).ToList();
 
-        var vars = valid.Select(s => 1.0 / (double)s.n.Value).ToList();
+        var vars = valid.Select(s => 1.0 / (s.n!.Value + 0.5)).ToList();
 
         double tau2 = EstimateTau2(transformed.ToArray(), vars.ToArray());
         var weights = vars.Select(v => 1.0 / (v + tau2)).ToList();
         double sw = weights.Sum();
         double pooledTransformed = weights.Zip(transformed, (w, e) => w * e).Sum() / sw;
         double se = Math.Sqrt(1.0 / sw);
-
-        // Miller back-transformation
-        double pooledProp = MillerBackTransform(pooledTransformed, valid.Average(s => s.n.Value));
         double crit = 1.959964;
+
+        // Miller back-transformation on pooled value and transformed CI bounds
+        double avgN = valid.Average(s => s.n!.Value);
+        double pooledProp = MillerBackTransform(pooledTransformed, avgN);
+        double ciLoT = Math.Max(0, pooledTransformed - crit * se);
+        double ciHiT = Math.Min(Math.PI, pooledTransformed + crit * se);
+        double ciLower = MillerBackTransform(ciLoT, avgN);
+        double ciUpper = MillerBackTransform(ciHiT, avgN);
 
         return new ProportionResult
         {
             method = "Freeman-Tukey double-arcsine",
             pooledProportion = pooledProp,
-            ciLower = Math.Max(0, pooledProp - crit * se),
-            ciUpper = Math.Min(1, pooledProp + crit * se),
+            ciLower = ciLower,
+            ciUpper = ciUpper,
             se = se,
             p = 2 * (1 - Stats.NormalCdf(Math.Abs(se > 0 ? pooledTransformed / se : 0))),
             i2 = tau2 / (tau2 + vars.Average()) * 100,
@@ -147,27 +152,30 @@ public static class ProportionEngine
 
         var transformed = valid.Select(s =>
         {
-            double p = (double)s.events.Value / s.n.Value;
-            return Math.Asin(Math.Sqrt(p));
+            double p = (double)s.events!.Value / s.n!.Value;
+            return Math.Asin(Math.Sqrt(Math.Clamp(p, 0.0, 1.0)));
         }).ToList();
 
-        var vars = valid.Select(s => 1.0 / (4.0 * (double)s.n.Value)).ToList();
+        var vars = valid.Select(s => 1.0 / (4.0 * s.n!.Value)).ToList();
 
         double tau2 = EstimateTau2(transformed.ToArray(), vars.ToArray());
         var weights = vars.Select(v => 1.0 / (v + tau2)).ToList();
         double sw = weights.Sum();
         double pooledTransformed = weights.Zip(transformed, (w, e) => w * e).Sum() / sw;
         double se = Math.Sqrt(1.0 / sw);
-
-        double pooledProp = Math.Sin(pooledTransformed) * Math.Sin(pooledTransformed);
         double crit = 1.959964;
+
+        double clampedT = Math.Clamp(pooledTransformed, 0, Math.PI / 2.0);
+        double pooledProp = Math.Pow(Math.Sin(clampedT), 2);
+        double ciLoT = Math.Clamp(pooledTransformed - crit * se, 0, Math.PI / 2.0);
+        double ciHiT = Math.Clamp(pooledTransformed + crit * se, 0, Math.PI / 2.0);
 
         return new ProportionResult
         {
             method = "Single arcsine",
             pooledProportion = pooledProp,
-            ciLower = Math.Sin(pooledTransformed - crit * se) * Math.Sin(pooledTransformed - crit * se),
-            ciUpper = Math.Sin(pooledTransformed + crit * se) * Math.Sin(pooledTransformed + crit * se),
+            ciLower = Math.Pow(Math.Sin(ciLoT), 2),
+            ciUpper = Math.Pow(Math.Sin(ciHiT), 2),
             se = se,
             p = 2 * (1 - Stats.NormalCdf(Math.Abs(se > 0 ? pooledTransformed / se : 0))),
             i2 = tau2 / (tau2 + vars.Average()) * 100,

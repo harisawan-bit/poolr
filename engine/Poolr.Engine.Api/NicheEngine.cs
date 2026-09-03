@@ -41,15 +41,15 @@ public static class NicheEngine
         if (valid.Count < 2) throw new ArgumentException("At least 2 valid studies required");
 
         // Fisher z-transform
-        var zs = valid.Select(s => Math.Atanh(Math.Max(-0.9999, Math.Min(0.9999, s.r.Value)))).ToList();
-        var ns = valid.Select(s => s.n.Value).ToList();
+        var zs = valid.Select(s => Math.Atanh(Math.Max(-0.9999, Math.Min(0.9999, s.r!.Value)))).ToList();
+        var ns = valid.Select(s => s.n!.Value).ToList();
 
         // Reliability correction (Hunter-Schmidt)
         var corrected = new List<double>();
         for (int i = 0; i < zs.Count; i++)
         {
             double correction = valid[i].reliabilityX.HasValue && valid[i].reliabilityY.HasValue
-                ? Math.Sqrt(valid[i].reliabilityX.Value * valid[i].reliabilityY.Value)
+                ? Math.Sqrt(valid[i].reliabilityX!.Value * valid[i].reliabilityY!.Value)
                 : 1.0;
             corrected.Add(zs[i] / correction);
         }
@@ -117,16 +117,16 @@ public static class NicheEngine
 
         var lnCVRs = valid.Select(s =>
         {
-            double cv1 = s.sd1.Value / s.mean1.Value;
-            double cv2 = s.sd2.Value / s.mean2.Value;
+            double cv1 = s.sd1!.Value / s.mean1!.Value;
+            double cv2 = s.sd2!.Value / s.mean2!.Value;
             return Math.Log(cv1 / cv2);
         }).ToList();
 
         var vars = valid.Select(s =>
         {
-            double cv1 = s.sd1.Value / s.mean1.Value;
-            double cv2 = s.sd2.Value / s.mean2.Value;
-            return (cv1 * cv1) / (2.0 * s.n1.Value) + (cv2 * cv2) / (2.0 * s.n2.Value);
+            double cv1 = s.sd1!.Value / s.mean1!.Value;
+            double cv2 = s.sd2!.Value / s.mean2!.Value;
+            return (cv1 * cv1) / (2.0 * s.n1!.Value) + (cv2 * cv2) / (2.0 * s.n2!.Value);
         }).ToList();
 
         double tau2 = EstimateTau2(lnCVRs.ToArray(), vars.ToArray());
@@ -174,8 +174,8 @@ public static class NicheEngine
         var valid = studies.Where(s => s.tauU.HasValue).ToList();
         if (valid.Count < 2) throw new ArgumentException("At least 2 valid studies required");
 
-        var tauUs = valid.Select(s => s.tauU.Value).ToList();
-        var vars = tauUs.Select(t => (1 - t * t) / 10.0).ToList(); // approximate variance
+        var tauUs = valid.Select(s => s.tauU!.Value).ToList();
+        var vars = tauUs.Select(t => Math.Max(1.0 - t * t, 0.05) / 10.0).ToList(); // approximate variance
 
         double tau2 = EstimateTau2(tauUs.ToArray(), vars.ToArray());
         var weights = vars.Select(v => 1.0 / (v + tau2)).ToList();
@@ -218,8 +218,16 @@ public static class NicheEngine
         var valid = studies.Where(s => s.events.HasValue && s.personTime.HasValue && s.personTime.Value > 0).ToList();
         if (valid.Count < 2) throw new ArgumentException("At least 2 valid studies required");
 
-        var logRates = valid.Select(s => Math.Log((double)s.events.Value / s.personTime.Value)).ToList();
-        var vars = valid.Select(s => 1.0 / (double)s.events.Value).ToList();
+        var logRates = valid.Select(s =>
+        {
+            double ev = s.events!.Value <= 0 ? 0.5 : s.events.Value;
+            return Math.Log(ev / s.personTime!.Value);
+        }).ToList();
+        var vars = valid.Select(s =>
+        {
+            double ev = s.events!.Value <= 0 ? 0.5 : s.events.Value;
+            return 1.0 / ev;
+        }).ToList();
 
         double tau2 = EstimateTau2(logRates.ToArray(), vars.ToArray());
         var weights = vars.Select(v => 1.0 / (v + tau2)).ToList();
@@ -262,8 +270,8 @@ public static class NicheEngine
         var valid = studies.Where(s => s.kappa.HasValue && s.se.HasValue && s.se.Value > 0).ToList();
         if (valid.Count < 2) throw new ArgumentException("At least 2 valid studies required");
 
-        var kappas = valid.Select(s => s.kappa.Value).ToList();
-        var vars = valid.Select(s => s.se.Value * s.se.Value).ToList();
+        var kappas = valid.Select(s => s.kappa!.Value).ToList();
+        var vars = valid.Select(s => s.se!.Value * s.se.Value).ToList();
 
         double tau2 = EstimateTau2(kappas.ToArray(), vars.ToArray());
         var weights = vars.Select(v => 1.0 / (v + tau2)).ToList();

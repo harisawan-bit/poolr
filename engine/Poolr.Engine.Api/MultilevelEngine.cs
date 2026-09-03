@@ -85,8 +85,8 @@ public static class MultilevelEngine
         int nEffects = validStudies.Count;
         int nStudies = clusters.Count;
 
-        var effects = validStudies.Select(s => s.effect.Value).ToList();
-        var vars = validStudies.Select(s => s.se.Value * s.se.Value).ToList();
+        var effects = validStudies.Select(s => s.effect!.Value).ToList();
+        var vars = validStudies.Select(s => s.se!.Value * s.se.Value).ToList();
 
         // Level 1: sampling variance (known)
         // Level 2: within-study (multiple outcomes per study)
@@ -113,7 +113,10 @@ public static class MultilevelEngine
         double p = 2 * (1 - Stats.NormalCdf(Math.Abs(z)));
 
         // Q statistic
-        double q = weights.Zip(effects, (w, e) => w * Math.Pow(e - pooled, 2)).Sum();
+        var feWeights = vars.Select(v => 1.0 / v).ToList();
+        double feSw = feWeights.Sum();
+        double fePooled = feWeights.Zip(effects, (w, e) => w * e).Sum() / feSw;
+        double q = feWeights.Zip(effects, (w, e) => w * Math.Pow(e - fePooled, 2)).Sum();
         int df = nEffects - 1;
 
         // I² decomposition
@@ -159,10 +162,10 @@ public static class MultilevelEngine
         // Simplified REML via iterative algorithm
         for (int iter = 0; iter < 100; iter++)
         {
-            var clusterEffects = clusters.Select(c => c.Average(s => s.effect.Value)).ToList();
+            var clusterEffects = clusters.Select(c => c.Average(s => s.effect!.Value)).ToList();
             var clusterWeights = clusters.Select(c =>
             {
-                double totalVar = c.Sum(s => s.se.Value * s.se.Value) + tau2w;
+                double totalVar = c.Sum(s => s.se!.Value * s.se!.Value) + tau2w;
                 return 1.0 / totalVar;
             }).ToList();
 
@@ -172,20 +175,20 @@ public static class MultilevelEngine
             double qBetween = clusterWeights.Zip(clusterEffects, (w, e) => w * Math.Pow(e - meanEffect, 2)).Sum();
             double sw = clusterWeights.Sum();
             double c2 = sw - clusterWeights.Sum(w => w * w) / sw;
-            tau2b = Math.Max(0, (qBetween - (clusters.Count - 1)) / c2);
+            tau2b = (c2 > 1e-12 && clusters.Count > 1) ? Math.Max(0, (qBetween - (clusters.Count - 1)) / c2) : 0;
 
             // tau2_within: variance of effects within clusters
             double qWithin = 0;
             foreach (var cluster in clusters)
             {
-                var clEffects = cluster.Select(s => s.effect.Value).ToList();
-                var clVars = cluster.Select(s => s.se.Value * s.se.Value).ToList();
+                var clEffects = cluster.Select(s => s.effect!.Value).ToList();
+                var clVars = cluster.Select(s => s.se!.Value * s.se!.Value).ToList();
                 double clusterMean = clEffects.Average();
                 for (int i = 0; i < clEffects.Count; i++)
                     qWithin += Math.Pow(clEffects[i] - clusterMean, 2) / clVars[i];
             }
             int dfWithin = effects.Count - clusters.Count;
-            tau2w = Math.Max(0, (qWithin - dfWithin) / (effects.Count - clusters.Count));
+            tau2w = dfWithin > 0 ? Math.Max(0, (qWithin - dfWithin) / dfWithin) : 0;
 
             if (double.IsNaN(tau2w)) tau2w = 0;
             if (double.IsNaN(tau2b)) tau2b = 0;
@@ -213,8 +216,8 @@ public static class MultilevelEngine
         if (validStudies.Count < 2)
             throw new ArgumentException("At least 2 valid effects required");
 
-        var effects = validStudies.Select(s => s.effect.Value).ToList();
-        var vars = validStudies.Select(s => s.se.Value * s.se.Value).ToList();
+        var effects = validStudies.Select(s => s.effect!.Value).ToList();
+        var vars = validStudies.Select(s => s.se!.Value * s.se.Value).ToList();
 
         // Simplified: treat as univariate with average correlation adjustment
         // Full multivariate requires covariance matrices per study
@@ -265,20 +268,20 @@ public static class MultilevelEngine
         double rho = req.assumedRho ?? 0.5;
 
         // Compute cluster-robust standard error
-        double pooled = validStudies.Sum(s => s.effect.Value / (s.se.Value * s.se.Value)) /
-                        validStudies.Sum(s => 1.0 / (s.se.Value * s.se.Value));
+        double pooled = validStudies.Sum(s => s.effect!.Value / (s.se!.Value * s.se.Value)) /
+                        validStudies.Sum(s => 1.0 / (s.se!.Value * s.se.Value));
 
         // Meat of the sandwich: sum of cluster-wise score contributions
         var clusterScores = clusters.Select(c =>
         {
-            double score = c.Sum(s => (s.effect.Value - pooled) / (s.se.Value * s.se.Value));
+            double score = c.Sum(s => (s.effect!.Value - pooled) / (s.se!.Value * s.se.Value));
             return score;
         }).ToList();
 
         double meat = clusterScores.Sum(s => s * s);
 
         // Bread: sum of inverse variances
-        double bread = validStudies.Sum(s => 1.0 / (s.se.Value * s.se.Value));
+        double bread = validStudies.Sum(s => 1.0 / (s.se!.Value * s.se.Value));
 
         // Small-sample correction (Tipton-Pustejovsky)
         double adjustedVar = meat / (bread * bread) * nClusters / (nClusters - 1);

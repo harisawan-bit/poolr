@@ -5,6 +5,7 @@ import { cn } from '../lib/utils';
 import type { ScreeningItem } from '../lib/project';
 import type { SearchResult, SearchResponse } from '../lib/api';
 import {
+  pubmedSearch,
   clinicaltrialsSearch,
   prosperoSearch,
   scopusSearch,
@@ -31,6 +32,7 @@ interface SearchState {
 }
 
 const SEARCH_FUNCTIONS: Record<string, (query: string, apiKey?: string) => Promise<SearchResponse>> = {
+  pubmed: pubmedSearch,
   clinicaltrials: clinicaltrialsSearch,
   prospero: prosperoSearch,
   scopus: scopusSearch,

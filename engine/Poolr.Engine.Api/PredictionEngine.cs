@@ -88,7 +88,6 @@ public static class PredictionEngine
         var results = new List<ModelWeight>();
 
         double logN = Math.Log(req.effects.Count);
-        double sumW = 0;
 
         foreach (var method in methods)
         {

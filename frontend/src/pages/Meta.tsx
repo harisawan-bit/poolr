@@ -5,6 +5,7 @@ import ShimmerText from "../components/kokonut/ShimmerText";
 import ActivityState from "../components/kokonut/ActivityState";
 import { runMetaAnalysis, generateForestPlotData, generateFunnelPlotData } from "../lib/meta-engine";
 import { interpretResults } from "../lib/ai";
+import { postJson } from "../lib/api";
 import { RingChart } from "../components/charts/ring-chart";
 import { Ring } from "../components/charts/ring";
 import { RingCenter } from "../components/charts/ring-center";
@@ -58,55 +59,103 @@ export default function Meta({ project, onChange }: { project: Project; onChange
     try {
       const inputStudies = studies.map(s => ({
         study: s.study || "Unknown",
-        int_events: s.int_events || 0, int_n: s.int_n || 0,
-        ctrl_events: s.ctrl_events || 0, ctrl_n: s.ctrl_n || 0,
+        int_events: s.int_events ?? 0, int_n: s.int_n ?? 0,
+        ctrl_events: s.ctrl_events ?? 0, ctrl_n: s.ctrl_n ?? 0,
         int_mean: s.int_mean ?? undefined, int_sd: s.int_sd ?? undefined,
         ctrl_mean: s.ctrl_mean ?? undefined, ctrl_sd: s.ctrl_sd ?? undefined,
         subgroup: s.subgroup || "",
       }));
 
-      const result = runMetaAnalysis(
-        { measure: settings.measure as any, model: settings.model as any, method: "DL" },
-        inputStudies as any
-      );
+      let r: ExtendedMetaResponse;
+      let plotDataResult: any;
 
-      const r: any = {
-        model: result.pooled.ci_method || "random",
-        measure: settings.measure || "OR",
-        method: settings.method || "DL",
-        k: result.studies.length,
-        studies: result.studies.map(s => ({
-          study: s.study, effect: s.effect, ci_lower: s.ci_lower,
-          ci_upper: s.ci_upper, weight: s.weight / 100, subgroup: s.subgroup,
-        })),
-        pooled: result.pooled,
-        heterogeneity: result.heterogeneity,
-        subgroups_extended: result.subgroups ? {
-          groups: result.subgroups.groups.map((g: any) => ({
-            name: g.name, measure: settings.measure || "OR", effect: g.effect,
-            ci_lower: g.ci_lower, ci_upper: g.ci_upper, k: g.k, i2_within: g.i2_within,
-            q_within: 0, df_within: g.k - 1, tau2_within: 0,
+      try {
+        const backendResp = await postJson<ExtendedMetaResponse>("/api/meta2", {
+          model: settings.model || "random",
+          measure: settings.measure || "OR",
+          method: settings.method || "DL",
+          knapp_hartung: !!settings.knapp_hartung,
+          bias_depth: settings.bias_depth ?? "egger",
+          sensitivity: true,
+          data: inputStudies.map(s => ({
+            study: s.study,
+            int_events: s.int_events,
+            int_n: s.int_n,
+            ctrl_events: s.ctrl_events,
+            ctrl_n: s.ctrl_n,
+            int_mean: s.int_mean,
+            int_sd: s.int_sd,
+            ctrl_mean: s.ctrl_mean,
+            ctrl_sd: s.ctrl_sd,
+            subgroup: s.subgroup,
           })),
-          between: result.subgroups.between,
-        } : undefined,
-        sensitivity: result.sensitivity ? {
-          leave_one_out: result.sensitivity.leave_one_out.map((l: any) => ({
-            excluded: l.excluded, k: 0, effect: l.effect, ci_lower: l.ci_lower,
-            ci_upper: l.ci_upper, p: 0, i2: l.i2,
+        }, 5000);
+
+        r = backendResp;
+        plotDataResult = {
+          studies: r.studies.map(s => ({
+            study: s.study,
+            effect: s.effect,
+            ci_lower: s.ci_lower,
+            ci_upper: s.ci_upper,
+            weight: (s.weight || 0) <= 1 ? (s.weight || 0) * 100 : s.weight,
+            subgroup: s.subgroup || "",
+            se: Math.abs(s.ci_upper - s.ci_lower) / (2 * 1.959964),
           })),
-          cumulative: [], fixed_vs_random: null,
-          influence_max_change_pct: result.sensitivity.influence_max_change_pct,
-          most_influential: result.sensitivity.most_influential,
-        } : undefined,
-        publication_bias: result.publication_bias,
-        knapp_hartung: settings.knapp_hartung,
-      };
+          pooled: {
+            effect: r.pooled.effect,
+            ci_lower: r.pooled.ci_lower,
+            ci_upper: r.pooled.ci_upper,
+            se: r.pooled.se,
+          },
+        };
+      } catch (backendErr) {
+        console.warn("Backend /api/meta2 unavailable, using local meta-engine:", backendErr);
+        const result = runMetaAnalysis(
+          { measure: settings.measure as any, model: settings.model as any, method: (settings.method as any) || "DL" },
+          inputStudies as any
+        );
+
+        r = {
+          model: result.pooled.ci_method || "random",
+          measure: settings.measure || "OR",
+          method: settings.method || "DL",
+          k: result.studies.length,
+          studies: result.studies.map(s => ({
+            study: s.study, effect: s.effect, ci_lower: s.ci_lower,
+            ci_upper: s.ci_upper, weight: s.weight / 100, subgroup: s.subgroup,
+          })),
+          pooled: { ...result.pooled, model: settings.model || "random" },
+          heterogeneity: result.heterogeneity,
+          subgroups_extended: result.subgroups ? {
+            groups: result.subgroups.groups.map((g: any) => ({
+              name: g.name, measure: settings.measure || "OR", effect: g.effect,
+              ci_lower: g.ci_lower, ci_upper: g.ci_upper, k: g.k, i2_within: g.i2_within,
+              q_within: 0, df_within: g.k - 1, tau2_within: 0,
+            })),
+            between: result.subgroups.between,
+          } : undefined,
+          sensitivity: result.sensitivity ? {
+            leave_one_out: result.sensitivity.leave_one_out.map((l: any) => ({
+              excluded: l.excluded, k: 0, effect: l.effect, ci_lower: l.ci_lower,
+              ci_upper: l.ci_upper, p: 0, i2: l.i2,
+            })),
+            cumulative: [], fixed_vs_random: null,
+            influence_max_change_pct: result.sensitivity.influence_max_change_pct,
+            most_influential: result.sensitivity.most_influential,
+          } : undefined,
+          publication_bias: result.publication_bias,
+          knapp_hartung: settings.knapp_hartung,
+        };
+        plotDataResult = result;
+      }
 
       onChange({ ...project, meta: { ...project.meta, settings, results: r as ExtendedMetaResponse } });
 
       try {
-        setForest(generateForestSVG(generateForestPlotData(result)));
-        setFunnel(generateFunnelSVG(generateFunnelPlotData(result)));
+        const isRatioMeasure = settings.measure === "OR" || settings.measure === "RR" || settings.measure === "HR";
+        setForest(generateForestSVG(generateForestPlotData(plotDataResult), isRatioMeasure));
+        setFunnel(generateFunnelSVG(generateFunnelPlotData(plotDataResult)));
       } catch (figErr) {
         console.error("Plot generation failed:", figErr);
       }
@@ -323,12 +372,19 @@ function WeightRings({ resp }: { resp: any }) {
   );
 }
 
-function generateForestSVG(data: { studies: { study: string; effect: number; ci_lower: number; ci_upper: number; weight: number }[]; pooled: { effect: number; ci_lower: number; ci_upper: number } }): string {
+function generateForestSVG(
+  data: {
+    studies: { study: string; effect: number; ci_lower: number; ci_upper: number; weight: number }[];
+    pooled: { effect: number; ci_lower: number; ci_upper: number };
+  },
+  isRatio = false
+): string {
   const width = 400, rowHeight = 22, headerHeight = 30, footerHeight = 40;
   const height = headerHeight + data.studies.length * rowHeight + footerHeight + 20;
   const plotLeft = 100, plotRight = 300, plotWidth = plotRight - plotLeft;
   const allCIs = [...data.studies.flatMap(s => [s.ci_lower, s.ci_upper]), data.pooled.ci_lower, data.pooled.ci_upper];
-  const minVal = Math.min(...allCIs), maxVal = Math.max(...allCIs), range = maxVal - minVal || 1;
+  const nullEffect = isRatio ? 1 : 0;
+  const minVal = Math.min(...allCIs, nullEffect), maxVal = Math.max(...allCIs, nullEffect), range = maxVal - minVal || 1;
   const scale = (v: number) => plotLeft + ((v - minVal) / range) * plotWidth;
 
   let svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" style="font-family: var(--font-sans); font-size: 10px;">`;
@@ -336,7 +392,7 @@ function generateForestSVG(data: { studies: { study: string; effect: number; ci_
   svg += `<text x="10" y="20" fill="var(--color-text-muted)" font-size="9">Study</text>`;
   svg += `<text x="${plotLeft}" y="20" fill="var(--color-text-muted)" font-size="9" text-anchor="middle">Effect Size</text>`;
   svg += `<line x1="${plotLeft}" y1="${headerHeight}" x2="${plotRight}" y2="${headerHeight}" stroke="var(--color-border)" stroke-width="1"/>`;
-  svg += `<line x1="${scale(0)}" y1="${headerHeight}" x2="${scale(0)}" y2="${height - footerHeight}" stroke="var(--color-border-strong)" stroke-width="1" stroke-dasharray="3,3"/>`;
+  svg += `<line x1="${scale(nullEffect)}" y1="${headerHeight}" x2="${scale(nullEffect)}" y2="${height - footerHeight}" stroke="var(--color-border-strong)" stroke-width="1" stroke-dasharray="3,3"/>`;
 
   data.studies.forEach((s, i) => {
     const y = headerHeight + i * rowHeight + 10;
@@ -364,13 +420,13 @@ function generateForestSVG(data: { studies: { study: string; effect: number; ci_
 function generateFunnelSVG(data: { points: { effect: number; se: number; study: string }[] }): string {
   const width = 350, height = 300, plotLeft = 40, plotRight = 310, plotTop = 20, plotBottom = 280;
   const plotWidth = plotRight - plotLeft, plotHeight = plotBottom - plotTop;
-  const maxSE = Math.max(...data.points.map(p => p.se));
+  const maxSE = Math.max(...data.points.map(p => p.se)) || 1;
   const minEffect = Math.min(...data.points.map(p => p.effect));
   const maxEffect = Math.max(...data.points.map(p => p.effect));
   const effectRange = maxEffect - minEffect || 1;
   const effectMid = (minEffect + maxEffect) / 2;
   const scaleX = (effect: number) => plotLeft + ((effect - minEffect) / effectRange) * plotWidth;
-  const scaleY = (se: number) => plotBottom - (se / maxSE) * plotHeight;
+  const scaleY = (se: number) => plotTop + (se / maxSE) * plotHeight;
 
   let svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" style="font-family: var(--font-sans); font-size: 9px;">`;
   svg += `<style>.funnel-point:hover circle { r: 5; stroke: var(--color-accent); stroke-width: 2; }</style>`;

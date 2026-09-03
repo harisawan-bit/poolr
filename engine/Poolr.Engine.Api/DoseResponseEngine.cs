@@ -34,6 +34,14 @@ public static class DoseResponseEngine
         public double? ed50Prior { get; set; }
     }
 
+    public class FittedPoint
+    {
+        public double dose { get; set; }
+        public double rr { get; set; }
+        public double ciLo { get; set; }
+        public double ciHi { get; set; }
+    }
+
     public class DoseResult
     {
         public string model { get; set; } = "";
@@ -43,7 +51,7 @@ public static class DoseResponseEngine
         public double? emax { get; set; }
         public double? ed50 { get; set; }
         public double auc { get; set; }
-        public List<(double dose, double rr, double ciLo, double ciHi)> fittedCurve { get; set; } = new();
+        public List<FittedPoint> fittedCurve { get; set; } = new();
         public double q { get; set; }
         public double i2 { get; set; }
         public List<string> warnings { get; set; } = new();
@@ -71,7 +79,7 @@ public static class DoseResponseEngine
         foreach (var study in validStudies)
         {
             var cats = study.categories.OrderBy(c => c.dose).ToList();
-            var logRrs = cats.Select(c => Math.Log(c.rr.Value)).ToList();
+            var logRrs = cats.Select(c => Math.Log(c.rr!.Value)).ToList();
             var doses = cats.Select(c => c.dose).ToList();
 
             // Linear regression: log(RR) = alpha + beta * dose
@@ -87,16 +95,24 @@ public static class DoseResponseEngine
         double p = 2 * (1 - Stats.NormalCdf(Math.Abs(z)));
 
         // Fitted curve
-        var fittedCurve = new List<(double, double, double, double)>();
+        var fittedCurve = new List<FittedPoint>();
         double minDose = validStudies.SelectMany(s => s.categories).Min(c => c.dose);
         double maxDose = validStudies.SelectMany(s => s.categories).Max(c => c.dose);
-        for (double d = minDose; d <= maxDose; d += (maxDose - minDose) / 20)
+        double range = maxDose - minDose;
+        double step = range > 1e-6 ? range / 20.0 : 1.0;
+        for (double d = minDose; d <= maxDose + 1e-9; d += step)
         {
             double logRr = pooledSlope * d;
             double rr = Math.Exp(logRr);
             double ciLo = Math.Exp(logRr - 1.96 * se);
             double ciHi = Math.Exp(logRr + 1.96 * se);
-            fittedCurve.Add((d, rr, ciLo, ciHi));
+            fittedCurve.Add(new FittedPoint
+            {
+                dose = Math.Round(d, 4),
+                rr = rr,
+                ciLo = ciLo,
+                ciHi = ciHi
+            });
         }
 
         return new DoseResult
@@ -143,12 +159,19 @@ public static class DoseResponseEngine
             }
         }
 
-        var fittedCurve = new List<(double, double, double, double)>();
+        var fittedCurve = new List<FittedPoint>();
         double maxDose = validStudies.SelectMany(s => s.categories).Max(c => c.dose);
-        for (double d = 0; d <= maxDose; d += maxDose / 20)
+        double step = maxDose > 1e-6 ? maxDose / 20.0 : 1.0;
+        for (double d = 0; d <= maxDose + 1e-9; d += step)
         {
             double rr = bestEmax * d / (bestEd50 + d);
-            fittedCurve.Add((d, rr, rr * 0.9, rr * 1.1));
+            fittedCurve.Add(new FittedPoint
+            {
+                dose = Math.Round(d, 4),
+                rr = rr,
+                ciLo = rr * 0.9,
+                ciHi = rr * 1.1
+            });
         }
 
         return new DoseResult
@@ -191,7 +214,7 @@ public static class DoseResponseEngine
             return (yi - pred) * (yi - pred);
         }).Sum();
         int df = x.Count - 2;
-        se = df > 0 ? Math.Sqrt(ssRes / df / sxx) : 0;
+        se = (df > 0 && sxx > 1e-12) ? Math.Sqrt(Math.Max(ssRes / (df * sxx), 1e-6)) : 1.0;
 
         return slope;
     }

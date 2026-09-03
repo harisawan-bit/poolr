@@ -50,13 +50,18 @@ fn kill_engine(app: &tauri::AppHandle) {
 // lives in the engine project's Release build output. At least one must exist.
 fn spawn_engine_sidecar(app: &tauri::AppHandle) {
     let mut candidates: Vec<PathBuf> = Vec::new();
+    let exe_name = if cfg!(windows) {
+        "Poolr.Engine.Api.exe"
+    } else {
+        "Poolr.Engine.Api"
+    };
 
-    // Packaged layout: resourcesDir/engine/Poolr.Engine.Api.exe
+    // Packaged layout: resourcesDir/engine/<exe_name>
     if let Ok(res) = app.path().resource_dir() {
-        candidates.push(res.join("engine").join("Poolr.Engine.Api.exe"));
+        candidates.push(res.join("engine").join(exe_name));
     }
 
-    // Dev layout: <repo>/engine/Poolr.Engine.Api/bin/Release/net8.0/Poolr.Engine.Api.exe
+    // Dev layout: <repo>/engine/Poolr.Engine.Api/bin/Release/net8.0/<exe_name>
     if let Ok(cwd) = std::env::current_dir() {
         candidates.push(
             cwd.join("engine")
@@ -64,7 +69,16 @@ fn spawn_engine_sidecar(app: &tauri::AppHandle) {
                 .join("bin")
                 .join("Release")
                 .join("net8.0")
-                .join("Poolr.Engine.Api.exe"),
+                .join(exe_name),
+        );
+        candidates.push(
+            cwd.join("..")
+                .join("engine")
+                .join("Poolr.Engine.Api")
+                .join("bin")
+                .join("Release")
+                .join("net8.0")
+                .join(exe_name),
         );
     }
 

@@ -90,8 +90,8 @@ public static class CollaborationEngine
         var result = new DiffResult();
 
         // Simple JSON field-level diff
-        var json1 = JsonSerializer.Deserialize<Dictionary<string, object>>(snap1);
-        var json2 = JsonSerializer.Deserialize<Dictionary<string, object>>(snap2);
+        var json1 = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(snap1);
+        var json2 = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(snap2);
 
         if (json1 != null && json2 != null)
         {
@@ -101,7 +101,7 @@ public static class CollaborationEngine
             result.added = keys2.Except(keys1).ToList();
             result.removed = keys1.Except(keys2).ToList();
             result.modified = keys1.Intersect(keys2)
-                .Where(k => !json1[k]!.Equals(json2[k]))
+                .Where(k => json1[k].GetRawText() != json2[k].GetRawText())
                 .ToList();
         }
 

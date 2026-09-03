@@ -41,8 +41,8 @@ public static class AdvancedEngine
 
         if (validHr.Count < 2) throw new ArgumentException("At least 2 valid studies required");
 
-        var effects = validHr.Select(s => s.logHr.Value).ToList();
-        var vars = validHr.Select(s => s.se.Value * s.se.Value).ToList();
+        var effects = validHr.Select(s => s.logHr!.Value).ToList();
+        var vars = validHr.Select(s => s.se!.Value * s.se.Value).ToList();
 
         double tau2 = EstimateTau2(effects.ToArray(), vars.ToArray());
         var weights = vars.Select(v => 1.0 / (v + tau2)).ToList();
@@ -90,13 +90,19 @@ public static class AdvancedEngine
 
     public static QualitativeResult RunQualitative(List<CodeEntry> entries)
     {
+        if (entries.Count == 0)
+        {
+            return new QualitativeResult();
+        }
+
+        int totalDistinctStudies = Math.Max(entries.Select(e => e.study).Distinct().Count(), 1);
         var grouped = entries.GroupBy(e => e.code.ToLower().Trim())
             .Select(g => new CodeFrequency
             {
                 code = g.Key,
                 count = g.Sum(e => e.frequency),
                 studies = g.Select(e => e.study).Distinct().Count(),
-                prevalence = (double)g.Select(e => e.study).Distinct().Count() / entries.Select(e => e.study).Distinct().Count()
+                prevalence = (double)g.Select(e => e.study).Distinct().Count() / totalDistinctStudies
             })
             .OrderByDescending(c => c.count)
             .ToList();
@@ -223,7 +229,8 @@ public static class AdvancedEngine
         // RIS (Required Information Size)
         double zA = 1.959964; // alpha = 0.05
         double zB = 0.841621; // beta = 0.20
-        double ris = Math.Pow(zA + zB, 2) / (expectedEffect * expectedEffect);
+        double eff = Math.Abs(expectedEffect) < 1e-6 ? 0.2 : expectedEffect;
+        double ris = Math.Pow(zA + zB, 2) / (eff * eff);
 
         var zCurve = new List<ZCurvePoint>();
         double cumulativeZ = 0;
@@ -292,10 +299,11 @@ public static class AdvancedEngine
         double pooledPrev = valid.Average(s => s.prevalence!.Value);
 
         var curve = new List<DcaPoint>();
-        for (double pt = 0; pt <= 1; pt += 0.01)
+        for (double pt = 0; pt < 0.995; pt = Math.Round(pt + 0.01, 2))
         {
-            double nbModel = pooledSens * pooledPrev - (1 - pooledSpec) * (1 - pooledPrev) * (pt / (1 - pt));
-            double nbAll = pooledPrev - (1 - pooledPrev) * (pt / (1 - pt));
+            double odds = pt / Math.Max(1.0 - pt, 1e-6);
+            double nbModel = pooledSens * pooledPrev - (1 - pooledSpec) * (1 - pooledPrev) * odds;
+            double nbAll = pooledPrev - (1 - pooledPrev) * odds;
             double nbNone = 0;
 
             curve.Add(new DcaPoint

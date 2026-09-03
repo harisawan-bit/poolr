@@ -23,6 +23,14 @@ public static class SurvivalEngine
         public double tau { get; set; } = 5.0; // restriction time
     }
 
+    public class TauSensitivityPoint
+    {
+        public double tau { get; set; }
+        public double pooled { get; set; }
+        public double lo { get; set; }
+        public double hi { get; set; }
+    }
+
     public class RmstResult
     {
         public double pooledRmstDiff { get; set; }
@@ -33,7 +41,7 @@ public static class SurvivalEngine
         public double i2 { get; set; }
         public double tau2 { get; set; }
         public int nStudies { get; set; }
-        public List<(double tau, double pooled, double lo, double hi)> tauSensitivity { get; set; } = new();
+        public List<TauSensitivityPoint> tauSensitivity { get; set; } = new();
     }
 
     public class KmPoint
@@ -67,8 +75,8 @@ public static class SurvivalEngine
         var valid = req.studies.Where(s => s.rmstDiff.HasValue && s.se.HasValue && s.se.Value > 0).ToList();
         if (valid.Count < 2) throw new ArgumentException("At least 2 valid studies required");
 
-        var effects = valid.Select(s => s.rmstDiff.Value).ToList();
-        var vars = valid.Select(s => s.se.Value * s.se.Value).ToArray();
+        var effects = valid.Select(s => s.rmstDiff!.Value).ToList();
+        var vars = valid.Select(s => s.se!.Value * s.se!.Value).ToArray();
 
         double tau2 = EstimateTau2(effects.ToArray(), vars);
         var weights = vars.Select(v => 1.0 / (v + tau2)).ToList();
@@ -80,14 +88,21 @@ public static class SurvivalEngine
         double p = 2 * (1 - Stats.NormalCdf(Math.Abs(z)));
 
         // Tau sensitivity analysis
-        var tauSens = new List<(double, double, double, double)>();
+        var tauSens = new List<TauSensitivityPoint>();
+        double baseTau = req.tau > 0 ? req.tau : 1.0;
         for (double t = 1; t <= 10; t += 0.5)
         {
             // Approximate RMST difference scales with tau
-            double scaleFactor = t / req.tau;
+            double scaleFactor = t / baseTau;
             double scaledPooled = pooled * scaleFactor;
             double scaledSe = se * scaleFactor;
-            tauSens.Add((t, scaledPooled, scaledPooled - crit * scaledSe, scaledPooled + crit * scaledSe));
+            tauSens.Add(new TauSensitivityPoint
+            {
+                tau = t,
+                pooled = scaledPooled,
+                lo = scaledPooled - crit * scaledSe,
+                hi = scaledPooled + crit * scaledSe
+            });
         }
 
         return new RmstResult
@@ -119,10 +134,10 @@ public static class SurvivalEngine
         int eventsCtrl = ipdControl.Count(p => p.eventTime > 0);
 
         double oa = eventsInt + eventsCtrl;
-        double ea = (double)eventsInt * (eventsInt + eventsCtrl) / (req.totalIntervention + req.totalControl) * req.totalIntervention;
+        double ea = (double)eventsInt * (eventsInt + eventsCtrl) / Math.Max(req.totalIntervention + req.totalControl, 1) * req.totalIntervention;
 
         double logHr = Math.Log(Math.Max(eventsInt / Math.Max(ea, 0.001), 0.001));
-        double se = Math.Sqrt(1.0 / eventsInt + 1.0 / eventsCtrl);
+        double se = Math.Sqrt(1.0 / Math.Max(eventsInt, 0.5) + 1.0 / Math.Max(eventsCtrl, 0.5));
         double crit = 1.959964;
 
         return new KmReconstructionResult

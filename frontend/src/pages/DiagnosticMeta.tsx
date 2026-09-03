@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Project } from "../lib/project";
 import { Card, Input, Pill, Button } from "../components/ui";
 import { toCsv, downloadText } from "../lib/project";
+import { postJson } from "../lib/api";
 
 interface DiagnosticStudy {
   id: string;
@@ -32,18 +33,26 @@ function computeDiagnostic(studies: DiagnosticStudy[], _stage: "one" | "two"): D
     return { study: s.study, tp: s.tp, fp: s.fp, fn: s.fn, tn: s.tn, sens, spec };
   });
 
-  // Bivariate pooling (simplified)
+  // Bivariate pooling (Delta method)
   const logitSens = table.map((t) => Math.log(Math.max(t.sens, 0.001) / Math.max(1 - t.sens, 0.001)));
   const logitSpec = table.map((t) => Math.log(Math.max(t.spec, 0.001) / Math.max(1 - t.spec, 0.001)));
-  const meanLogitSens = logitSens.reduce((a, b) => a + b, 0) / logitSens.length;
-  const meanLogitSpec = logitSpec.reduce((a, b) => a + b, 0) / logitSpec.length;
+  const meanLogitSens = logitSens.reduce((a, b) => a + b, 0) / Math.max(logitSens.length, 1);
+  const meanLogitSpec = logitSpec.reduce((a, b) => a + b, 0) / Math.max(logitSpec.length, 1);
   const pooledSens = 1 / (1 + Math.exp(-meanLogitSens));
   const pooledSpec = 1 / (1 + Math.exp(-meanLogitSpec));
 
-  const seSens = 0.12;
-  const seSpec = 0.1;
-  const sensCI: [number, number] = [Math.max(0, pooledSens - 1.96 * seSens), Math.min(1, pooledSens + 1.96 * seSens)];
-  const specCI: [number, number] = [Math.max(0, pooledSpec - 1.96 * seSpec), Math.min(1, pooledSpec + 1.96 * seSpec)];
+  const varSens = logitSens.length > 0 ? 1 / logitSens.reduce((sum, _, i) => sum + 1 / (1 / (table[i].tp + 0.5) + 1 / (table[i].fn + 0.5)), 0) : 0.01;
+  const varSpec = logitSpec.length > 0 ? 1 / logitSpec.reduce((sum, _, i) => sum + 1 / (1 / (table[i].fp + 0.5) + 1 / (table[i].tn + 0.5)), 0) : 0.01;
+  const seLogitSens = Math.sqrt(varSens);
+  const seLogitSpec = Math.sqrt(varSpec);
+  const sensCI: [number, number] = [
+    1 / (1 + Math.exp(-(meanLogitSens - 1.96 * seLogitSens))),
+    1 / (1 + Math.exp(-(meanLogitSens + 1.96 * seLogitSens))),
+  ];
+  const specCI: [number, number] = [
+    1 / (1 + Math.exp(-(meanLogitSpec - 1.96 * seLogitSpec))),
+    1 / (1 + Math.exp(-(meanLogitSpec + 1.96 * seLogitSpec))),
+  ];
 
   const dor = (pooledSens * pooledSpec) / Math.max((1 - pooledSens) * (1 - pooledSpec), 0.001);
   const seLogDor = Math.sqrt(1 / Math.max(studies.reduce((s, st) => s + st.tp, 0), 1) + 1 / Math.max(studies.reduce((s, st) => s + st.fp, 0), 1) + 1 / Math.max(studies.reduce((s, st) => s + st.fn, 0), 1) + 1 / Math.max(studies.reduce((s, st) => s + st.tn, 0), 1));
@@ -109,11 +118,57 @@ export default function DiagnosticMeta({ project, onChange }: { project: Project
     persist(next, results);
   };
 
-  const runAnalysis = () => {
+  const runAnalysis = async () => {
     if (studies.length < 2) return;
-    const r = computeDiagnostic(studies, "one");
-    setResults(r);
-    persist(studies, r);
+    try {
+      const backendReq = {
+        model: model === "hsroc" ? "hsroc" : "bivariate",
+        studies: studies.map((s) => ({
+          study: s.study,
+          tp: s.tp,
+          fp: s.fp,
+          fn: s.fn,
+          tn: s.tn,
+        })),
+      };
+      const backendRes = await postJson<any>("/api/dta", backendReq, 5000);
+      const table = studies.map((s) => {
+        const sens = s.tp / Math.max(s.tp + s.fn, 1);
+        const spec = s.tn / Math.max(s.tn + s.fp, 1);
+        return { study: s.study, tp: s.tp, fp: s.fp, fn: s.fn, tn: s.tn, sens, spec };
+      });
+      const preTest = 0.2;
+      const lrPlus = backendRes.sensitivity / Math.max(1 - backendRes.specificity, 0.001);
+      const lrMinus = (1 - backendRes.sensitivity) / Math.max(backendRes.specificity, 0.001);
+      const oddsPre = preTest / (1 - preTest);
+      const postOddsPlus = oddsPre * lrPlus;
+      const postOddsMinus = oddsPre * lrMinus;
+
+      const r: DiagnosticResult = {
+        pooledSens: backendRes.sensitivity,
+        pooledSpec: backendRes.specificity,
+        sensCI: [backendRes.sensCiLower, backendRes.sensCiUpper],
+        specCI: [backendRes.specCiLower, backendRes.specCiUpper],
+        dor: backendRes.dor,
+        dorCI: [backendRes.dorCiLower, backendRes.dorCiUpper],
+        threshold: 0.5,
+        srocPoints: table.map((t) => ({ sens: t.sens, spec: t.spec, study: t.study })),
+        fagan: {
+          preTest,
+          lrPlus,
+          lrMinus,
+          postTestPlus: postOddsPlus / (1 + postOddsPlus),
+          postTestMinus: postOddsMinus / (1 + postOddsMinus),
+        },
+        table,
+      };
+      setResults(r);
+      persist(studies, r);
+    } catch {
+      const r = computeDiagnostic(studies, "one");
+      setResults(r);
+      persist(studies, r);
+    }
   };
 
   const exportResults = () => {
