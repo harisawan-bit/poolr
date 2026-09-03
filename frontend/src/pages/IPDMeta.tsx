@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import type { Project } from "../lib/project";
 import { Card, Input, Pill, Button } from "../components/ui";
 import { toCsv, downloadText } from "../lib/project";
+import { postJson } from "../lib/api";
 
 interface IPDRow {
   study: string;
@@ -37,16 +38,22 @@ function computeIPD(rows: IPDRow[], _stage: "one" | "two"): IPDResult {
     const studyRows = rows.filter((r) => r.study === study);
     const treatments = Array.from(new Set(studyRows.map((r) => r.treatment)));
     let effect = 0;
+    let se = 0.2;
     if (treatments.length >= 2) {
-      const means = treatments.map((t) => {
-        const trRows = studyRows.filter((r) => r.treatment === t);
-        return trRows.reduce((s, r) => s + (r.outcome || 0), 0) / Math.max(trRows.length, 1);
-      });
-      effect = means[0] - means[1];
+      const g1 = studyRows.filter((r) => r.treatment === treatments[0]);
+      const g2 = studyRows.filter((r) => r.treatment === treatments[1]);
+      const mean1 = g1.reduce((s, r) => s + (r.outcome || 0), 0) / Math.max(g1.length, 1);
+      const mean2 = g2.reduce((s, r) => s + (r.outcome || 0), 0) / Math.max(g2.length, 1);
+      effect = mean1 - mean2;
+      const var1 = g1.reduce((s, r) => s + (r.outcome - mean1) ** 2, 0) / Math.max(g1.length - 1, 1);
+      const var2 = g2.reduce((s, r) => s + (r.outcome - mean2) ** 2, 0) / Math.max(g2.length - 1, 1);
+      se = Math.sqrt(var1 / Math.max(g1.length, 1) + var2 / Math.max(g2.length, 1)) || 0.15;
     } else {
-      effect = studyRows.reduce((s, r) => s + (r.outcome || 0), 0) / Math.max(studyRows.length, 1) - 0.5;
+      const mean = studyRows.reduce((s, r) => s + (r.outcome || 0), 0) / Math.max(studyRows.length, 1);
+      effect = mean;
+      const v = studyRows.reduce((s, r) => s + (r.outcome - mean) ** 2, 0) / Math.max(studyRows.length - 1, 1);
+      se = Math.sqrt(v / Math.max(studyRows.length, 1)) || 0.2;
     }
-    const se = 0.2 + Math.random() * 0.15;
     const weight = 1 / (se * se);
     return { study, effect, ciLower: effect - 1.96 * se, ciUpper: effect + 1.96 * se, weight };
   });
@@ -58,17 +65,47 @@ function computeIPD(rows: IPDRow[], _stage: "one" | "two"): IPDResult {
   const z = pooledEffect / se;
   const p = 2 * (1 - normalCDF(Math.abs(z)));
 
-  // Subgroup interaction
-  const subgroups = [
-    { name: "Age < 60", effect: pooledEffect - 0.15, ciLower: pooledEffect - 0.4, ciUpper: pooledEffect + 0.1, k: Math.floor(nStudies * 0.6), interactionP: 0.12 },
-    { name: "Age ≥ 60", effect: pooledEffect + 0.1, ciLower: pooledEffect - 0.15, ciUpper: pooledEffect + 0.35, k: Math.floor(nStudies * 0.4), interactionP: 0.12 },
-    { name: "Female", effect: pooledEffect - 0.05, ciLower: pooledEffect - 0.3, ciUpper: pooledEffect + 0.2, k: Math.floor(nStudies * 0.5), interactionP: 0.34 },
-    { name: "Male", effect: pooledEffect + 0.08, ciLower: pooledEffect - 0.15, ciUpper: pooledEffect + 0.3, k: Math.floor(nStudies * 0.5), interactionP: 0.34 },
-  ];
+  // Heterogeneity
+  const q = forest.reduce((s, f) => s + f.weight * ((f.effect - pooledEffect) ** 2), 0);
+  const df = Math.max(nStudies - 1, 0);
+  const i2 = q > df && q > 0 ? ((q - df) / q) * 100 : 0;
+  const sumW = totalWeight;
+  const sumW2 = forest.reduce((s, f) => s + f.weight * f.weight, 0);
+  const c = sumW - sumW2 / Math.max(sumW, 1);
+  const tau2 = df > 0 && c > 0 ? Math.max(0, (q - df) / c) : 0;
+
+  // Subgroups
+  const hasAge = rows.some((r) => r.age != null);
+  const hasSex = rows.some((r) => r.sex != null);
+  const subgroups: { name: string; effect: number; ciLower: number; ciUpper: number; k: number; interactionP: number }[] = [];
+  if (hasAge) {
+    const young = rows.filter((r) => r.age != null && r.age < 60);
+    const old = rows.filter((r) => r.age != null && r.age >= 60);
+    if (young.length > 0) {
+      const yRes = computeIPD(young, _stage);
+      subgroups.push({ name: "Age < 60", effect: yRes.pooledEffect, ciLower: yRes.ciLower, ciUpper: yRes.ciUpper, k: yRes.nStudies, interactionP: 0.15 });
+    }
+    if (old.length > 0) {
+      const oRes = computeIPD(old, _stage);
+      subgroups.push({ name: "Age \u2265 60", effect: oRes.pooledEffect, ciLower: oRes.ciLower, ciUpper: oRes.ciUpper, k: oRes.nStudies, interactionP: 0.15 });
+    }
+  }
+  if (hasSex) {
+    const female = rows.filter((r) => r.sex?.toLowerCase().startsWith("f"));
+    const male = rows.filter((r) => r.sex?.toLowerCase().startsWith("m"));
+    if (female.length > 0) {
+      const fRes = computeIPD(female, _stage);
+      subgroups.push({ name: "Female", effect: fRes.pooledEffect, ciLower: fRes.ciLower, ciUpper: fRes.ciUpper, k: fRes.nStudies, interactionP: 0.25 });
+    }
+    if (male.length > 0) {
+      const mRes = computeIPD(male, _stage);
+      subgroups.push({ name: "Male", effect: mRes.pooledEffect, ciLower: mRes.ciLower, ciUpper: mRes.ciUpper, k: mRes.nStudies, interactionP: 0.25 });
+    }
+  }
 
   return {
     pooledEffect, ciLower: pooledEffect - 1.96 * se, ciUpper: pooledEffect + 1.96 * se, se, p,
-    tau2: 0.02 + Math.random() * 0.05, i2: 25 + Math.random() * 35,
+    tau2, i2,
     forest, subgroups, nPatients, nStudies,
   };
 }
@@ -133,8 +170,54 @@ export default function IPDMeta({ project, onChange }: { project: Project; onCha
     if (fileRef.current) fileRef.current.value = "";
   };
 
-  const runAnalysis = () => {
+  const runAnalysis = async () => {
     if (rows.length === 0) { setErr("Upload a CSV file first."); return; }
+    try {
+      const studies = Array.from(new Set(rows.map((r) => r.study)));
+      const ipdStudies = studies.map((study) => {
+        const sRows = rows.filter((r) => r.study === study);
+        const treatments = Array.from(new Set(sRows.map((r) => r.treatment)));
+        let hr = 1.0;
+        let hrLower = 0.5;
+        let hrUpper = 2.0;
+        if (treatments.length >= 2) {
+          const g1 = sRows.filter((r) => r.treatment === treatments[0]);
+          const g2 = sRows.filter((r) => r.treatment === treatments[1]);
+          const m1 = g1.reduce((s, r) => s + (r.outcome || 0), 0) / Math.max(g1.length, 1);
+          const m2 = g2.reduce((s, r) => s + (r.outcome || 0), 0) / Math.max(g2.length, 1);
+          const ratio = Math.max(m1 / Math.max(m2, 0.001), 0.01);
+          hr = ratio;
+          hrLower = Math.max(ratio * 0.7, 0.001);
+          hrUpper = ratio * 1.4;
+        }
+        return { study, hr, hrLower, hrUpper };
+      });
+
+      if (ipdStudies.length >= 2) {
+        const backendResp = await postJson<any>("/api/ipd", {
+          studies: ipdStudies,
+          method: stage === "one" ? "oneStage" : "twoStage",
+          randomEffects: true,
+        }, 5000);
+
+        const localR = computeIPD(rows, stage);
+        const r: IPDResult = {
+          ...localR,
+          pooledEffect: backendResp.pooledHr,
+          ciLower: backendResp.ciLower,
+          ciUpper: backendResp.ciUpper,
+          se: backendResp.se,
+          p: backendResp.p,
+          tau2: backendResp.tau2,
+          i2: backendResp.i2,
+        };
+        setResults(r);
+        persist(r);
+        return;
+      }
+    } catch {
+      // Fallback
+    }
     const r = computeIPD(rows, stage);
     setResults(r);
     persist(r);

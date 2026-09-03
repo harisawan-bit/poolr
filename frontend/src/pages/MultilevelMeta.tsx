@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import type { Project } from "../lib/project";
 import { Card, Input, Pill, Button } from "../components/ui";
 import { toCsv, downloadText } from "../lib/project";
+import { postJson } from "../lib/api";
 
 interface EffectEntry {
   id: string;
@@ -47,11 +48,28 @@ function computeMultilevel(entries: EffectEntry[], model: "random" | "fixed", rh
   const z = pooledEffect / se;
   const p = 2 * (1 - normalCDF(Math.abs(z)));
 
-  // Decompose tau2
-  const tau2Level3 = 0.03 + Math.random() * 0.08;
-  const tau2Level2 = 0.02 + Math.random() * 0.06;
+  // Deterministic ANOVA decomposition of variance
+  const vTyp = entries.reduce((s, e) => s + e.variance, 0) / Math.max(nEffects, 1);
+  let ssWithin = 0;
+  studies.forEach((st) => {
+    const stEntries = entries.filter((e) => e.study === st);
+    const m = stEntries.reduce((s, e) => s + e.effect, 0) / Math.max(stEntries.length, 1);
+    stEntries.forEach((e) => { ssWithin += (e.effect - m) ** 2; });
+  });
+  const dfWithin = Math.max(nEffects - studies.length, 1);
+  const tau2Level2 = Math.max(0, ssWithin / dfWithin - vTyp * 0.3);
+
+  let ssBetween = 0;
+  studies.forEach((st) => {
+    const stEntries = entries.filter((e) => e.study === st);
+    const m = stEntries.reduce((s, e) => s + e.effect, 0) / Math.max(stEntries.length, 1);
+    ssBetween += (m - pooledEffect) ** 2;
+  });
+  const dfBetween = Math.max(studies.length - 1, 1);
+  const tau2Level3 = Math.max(0, ssBetween / dfBetween - tau2Level2 * 0.5);
+
   const totalTau2 = tau2Level2 + tau2Level3;
-  const totalVar = totalTau2 + 0.05; // within-study approx
+  const totalVar = totalTau2 + vTyp;
   const i2Level2 = totalVar > 0 ? (tau2Level2 / totalVar) * 100 : 0;
   const i2Level3 = totalVar > 0 ? (tau2Level3 / totalVar) * 100 : 0;
   const totalI2 = i2Level2 + i2Level3;
@@ -115,8 +133,44 @@ export default function MultilevelMeta({ project, onChange }: { project: Project
     persist(next, results);
   };
 
-  const runAnalysis = () => {
+  const runAnalysis = async () => {
     if (entries.length === 0) return;
+    try {
+      const studiesReq = entries.map((e) => ({
+        study: e.study,
+        outcome: e.outcome,
+        effect: e.effect,
+        se: Math.sqrt(e.variance),
+      }));
+
+      const backendResp = await postJson<any>("/api/multilevel", {
+        studies: studiesReq,
+        method: "threeLevel",
+        estimator: "REML",
+        assumedRho: rho,
+      }, 5000);
+
+      const localR = computeMultilevel(entries, model, model === "random" ? rho : 0);
+      const r: MultilevelResult = {
+        ...localR,
+        pooledEffect: backendResp.pooledEffect,
+        ciLower: backendResp.ciLower,
+        ciUpper: backendResp.ciUpper,
+        se: backendResp.se,
+        p: backendResp.p,
+        tau2Level2: backendResp.tau2Within,
+        tau2Level3: backendResp.tau2Between,
+        totalTau2: backendResp.tau2Within + backendResp.tau2Between,
+        i2Level2: backendResp.i2Level2,
+        i2Level3: backendResp.i2Level3,
+        totalI2: backendResp.i2,
+      };
+      setResults(r);
+      persist(entries, r);
+      return;
+    } catch {
+      // Fallback
+    }
     const r = computeMultilevel(entries, model, model === "random" ? rho : 0);
     setResults(r);
     persist(entries, r);

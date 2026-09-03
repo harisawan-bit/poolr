@@ -231,7 +231,7 @@ footer {{ margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #eee; font-
         sb.AppendLine("end");
         sb.AppendLine();
         sb.AppendLine("gen vi = se^2");
-        sb.AppendLine("metan effect se, {measureToLower(req.measure)} {modelToLower(req.method)}");
+        sb.AppendLine($"metan effect se, {measureToLower(req.measure)} {modelToLower(req.method)}");
         sb.AppendLine();
         sb.AppendLine($"* Expected: Pooled = {req.pooledEffect:F2} [{req.ciLower:F2}, {req.ciUpper:F2}]");
         sb.AppendLine($"* I² = {req.i2:F1}%");

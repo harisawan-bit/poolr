@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.7] - 2026-09-03
+
+### Fixed
+- **C# Engine Backend**:
+  - Eliminated all 39 nullable dereference compiler warnings (`CS8629`) across 15 engine files, bringing the engine build to 0 warnings and 0 errors.
+  - Decision Curve Analysis (DCA): clamped threshold range to $p_t < 0.995$ to eliminate division-by-zero that caused HTTP 500 JSON serialization errors.
+  - Safeguarded `RunQualitative` and `RunSequential` against division-by-zero when entry counts or expected effects are zero.
+  - Serialized fitted dose-response curves and survival sensitivity points via concrete DTOs (`FittedPoint`, `TauSensitivityPoint`) replacing unkeyed ValueTuples.
+  - Corrected degrees of freedom for paired Pre-Post effect sizes to $df = n - 1$.
+  - Fixed economic evaluation cost difference pooling on the linear scale without logarithmic inversion.
+  - Corrected Freeman-Tukey double arcsine variance formula ($1/(n+0.5)$) and Miller back-transformation.
+  - Corrected Cochran's $Q$ weighting across IPD, Multilevel, and Cumulative engines to use fixed-effect inverse-variance weights.
+  - Fixed Stata syntax interpolation in `ReportingEngine.cs` and snapshot JSON element diffing in `CollaborationEngine.cs`.
+- **Frontend & Scientific Accuracy**:
+  - Eliminated all fabricated random numbers (`Math.random()`) across Network, IPD, and Multilevel meta-analysis pages.
+  - Integrated `NetworkMeta`, `IPDMeta`, `MultilevelMeta`, `DiagnosticMeta`, `ProportionsMeta`, and `QualitativeMeta` with backend C# engine APIs (`/api/nma`, `/api/ipd`, `/api/multilevel`, `/api/dta`, `/api/proportion`, `/api/advanced/qualitative`) with deterministic statistical fallbacks.
+  - Corrected Funnel Plot Y-axis orientation: precision apex ($SE = 0$) correctly positioned at top of plot.
+  - Adapted Forest Plot line of no effect to automatically distinguish ratio measures ($1.0$) from difference measures ($0.0$).
+  - Replaced fabricated literature search generator with real NCBI E-utilities (PubMed), OpenAlex, Crossref, and ClinicalTrials.gov API integrations.
+  - Registered PubMed in `UnifiedSearch.tsx` search handlers.
+  - Fixed effect size conversions (Zhang & Yu 1998, Chinn 2000) in `EffectSizeCalculator.tsx`.
+  - Persisted GRADE summary of findings table and search strategy queries into the project file.
+- **Tauri Shell**:
+  - Cross-platform executable sidecar discovery supporting dev-mode parent directories.
+
 ## [0.5.3] - 2026-08-26
 
 ### Added

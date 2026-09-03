@@ -358,11 +358,13 @@ app.MapPost("/api/survival", async (HttpRequest req) =>
         if (type == "rmst")
         {
             var rmstReq = doc.GetProperty("request").Deserialize<SurvivalEngine.RmstRequest>();
+            if (rmstReq == null) return Results.BadRequest(new { error = "Invalid RMST request body" });
             return Results.Ok(SurvivalEngine.RunRmst(rmstReq));
         }
         else if (type == "kmreconstruct")
         {
             var kmReq = doc.GetProperty("request").Deserialize<SurvivalEngine.KmReconstructionRequest>();
+            if (kmReq == null) return Results.BadRequest(new { error = "Invalid KM reconstruction request body" });
             return Results.Ok(SurvivalEngine.ReconstructIPD(kmReq));
         }
 

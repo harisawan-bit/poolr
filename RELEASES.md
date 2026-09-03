@@ -2,6 +2,47 @@
 
 ## Latest Release
 
+**poolr v0.5.7** — Comprehensive Engine & Frontend Repair
+Release date: 2026-09-03
+
+> A complete audit and repair pass establishing mathematical parity, zero C# compiler warnings, zero CI errors, deterministic statistical modeling with direct backend API integration across all advanced meta-analysis pages, and authentic literature searching with PubMed, OpenAlex, Crossref, and ClinicalTrials.gov.
+
+### What's New in v0.5.7
+
+**Engine Correctness & Parity**
+- Eliminated all 39 nullable dereference warnings (`CS8629`) across 15 engine components; `dotnet build` now runs with 0 warnings and 0 errors.
+- Decision Curve Analysis (DCA): clamped evaluation threshold $p_t < 0.995$ to prevent infinity JSON serialization crashes.
+- Safeguarded qualitative synthesis and trial sequential analysis against zero-division exceptions.
+- Fitted dose-response points and survival sensitivity steps now serialize with named DTOs (`FittedPoint`, `TauSensitivityPoint`).
+- Corrected within-subjects degrees of freedom in pre-post effect size calculation ($df = n - 1$).
+- Health economics cost difference pooling restored to linear scale without logarithmic inversion.
+- Freeman-Tukey double arcsine variance formula ($1/(n+0.5)$) and Miller back-transformation verified.
+- Fixed-effect inverse-variance weights correctly applied in Cochran's $Q$ across IPD, Multilevel, and Cumulative engines.
+- Fixed string interpolation in Stata script export and snapshot diffing in CollaborationEngine.
+- Exposed `/api/advanced/*` HTTP routes in Program.cs.
+
+**Frontend & User Experience**
+- Eradicated mock random numbers (`Math.random()`) from Network, IPD, and Multilevel meta-analysis pages.
+- Wired all advanced pages (`NetworkMeta`, `IPDMeta`, `MultilevelMeta`, `DiagnosticMeta`, `ProportionsMeta`, `QualitativeMeta`) to C# engine endpoints with rigorous offline fallbacks.
+- Corrected Funnel Plot vertical axis orientation ($SE = 0$ apex at top).
+- Adapted Forest Plot reference line to accurately position at $1$ for ratio measures and $0$ for continuous differences.
+- Replaced mock literature generator with real NCBI E-utilities (PubMed), OpenAlex, Crossref, and ClinicalTrials.gov API integrations.
+- Registered PubMed in `UnifiedSearch.tsx` search handlers.
+- Corrected effect size conversion formulas (Zhang & Yu 1998, Chinn 2000) in `EffectSizeCalculator.tsx`.
+- Auto-saved GRADE summary table and custom search strategies directly in `project.prisma.grade`.
+
+### Validation
+
+All CI gates pass:
+- `dotnet test engine/Poolr.Engine.Tests/Poolr.Engine.Tests.csproj -c Release`: 67 passed, 0 failed.
+- `dotnet format engine/Poolr.Engine.Api/Poolr.Engine.Api.csproj --verify-no-changes`: 0 warnings, verified clean.
+- `npm run lint`: 0 errors.
+- `npm run build`: verified clean.
+- `npm test -- --run`: 38 passed, 0 failed.
+- `cargo fmt --check`: verified clean.
+
+---
+
 **poolr v0.5.3** — Interface overhaul
 Release date: 2026-08-26
 

@@ -52,8 +52,8 @@ public static class IpdEngine
 
         if (validStudies.Count < 2) throw new ArgumentException("At least 2 valid studies required");
 
-        var logHrs = validStudies.Select(s => Math.Log(s.hr.Value)).ToList();
-        var ses = validStudies.Select(s => (Math.Log(s.hrUpper.Value) - Math.Log(s.hrLower.Value)) / (2 * 1.96)).ToList();
+        var logHrs = validStudies.Select(s => Math.Log(s.hr!.Value)).ToList();
+        var ses = validStudies.Select(s => (Math.Log(s.hrUpper!.Value) - Math.Log(s.hrLower!.Value)) / (2 * 1.96)).ToList();
         var vars = ses.Select(se => se * se).ToArray();
 
         double tau2 = req.randomEffects ? EstimateTau2(logHrs.ToArray(), vars) : 0;
@@ -66,7 +66,10 @@ public static class IpdEngine
         double z = se > 0 ? pooledLogHr / se : 0;
         double p = 2 * (1 - Stats.NormalCdf(Math.Abs(z)));
 
-        double q = weights.Zip(logHrs, (w, e) => w * Math.Pow(e - pooledLogHr, 2)).Sum();
+        var feWeights = vars.Select(v => 1.0 / v).ToList();
+        double feSw = feWeights.Sum();
+        double fePooled = feWeights.Zip(logHrs, (w, e) => w * e).Sum() / feSw;
+        double q = feWeights.Zip(logHrs, (w, e) => w * Math.Pow(e - fePooled, 2)).Sum();
         int df = validStudies.Count - 1;
         double i2 = (q > df && q > 0) ? Math.Max(0, (q - df) / q * 100) : 0;
 
@@ -90,10 +93,10 @@ public static class IpdEngine
         var validStudies = req.studies.Where(s => s.hr.HasValue && s.hr.Value > 0).ToList();
         if (validStudies.Count < 2) throw new ArgumentException("At least 2 valid studies required");
 
-        var logHrs = validStudies.Select(s => Math.Log(s.hr.Value)).ToList();
+        var logHrs = validStudies.Select(s => Math.Log(s.hr!.Value)).ToList();
         var ses = validStudies.Select(s =>
             s.hrLower.HasValue && s.hrUpper.HasValue
-                ? (Math.Log(s.hrUpper.Value) - Math.Log(s.hrLower.Value)) / (2 * 1.96) : 0.2).ToList();
+                ? (Math.Log(s.hrUpper!.Value) - Math.Log(s.hrLower!.Value)) / (2 * 1.96) : 0.2).ToList();
         var vars = ses.Select(se => se * se).ToArray();
 
         double frailtyVar = EstimateTau2(logHrs.ToArray(), vars);

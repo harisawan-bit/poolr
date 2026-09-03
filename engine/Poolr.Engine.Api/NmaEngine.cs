@@ -139,8 +139,8 @@ public static class NmaEngine
         var result = new Dictionary<(string, string), (double, double, int)>();
         foreach (var kv in edges)
         {
-            var effs = kv.Value.Select(s => s.effect.Value).ToList();
-            var vars = kv.Value.Select(s => s.se.Value * s.se.Value).ToList();
+            var effs = kv.Value.Select(s => s.effect!.Value).ToList();
+            var vars = kv.Value.Select(s => s.se!.Value * s.se!.Value).ToList();
             var wts = vars.Select(v => 1.0 / v).ToList();
             double sw = wts.Sum();
             double pooled = wts.Zip(effs, (w, e) => w * e).Sum() / sw;
@@ -173,8 +173,8 @@ public static class NmaEngine
             int idx2 = treatments.IndexOf(s.treatment2);
             if (idx1 > 0) X[i][idx1 - 1] = 1.0;
             if (idx2 > 0) X[i][idx2 - 1] = -1.0;
-            y[i] = s.effect.Value;
-            w[i] = 1.0 / (s.se.Value * s.se.Value);
+            y[i] = s.effect!.Value;
+            w[i] = 1.0 / (s.se!.Value * s.se!.Value);
         }
 
         var XtW = new double[p][];
@@ -304,8 +304,8 @@ public static class NmaEngine
             int idx2 = treatments.IndexOf(s.treatment2);
             if (idx1 > 0) X[i][idx1 - 1] = 1.0;
             if (idx2 > 0) X[i][idx2 - 1] = -1.0;
-            y[i] = s.effect.Value;
-            sigma[i] = s.se.Value;
+            y[i] = s.effect!.Value;
+            sigma[i] = s.se!.Value;
         }
 
         int iter = req.mcmcIter;

@@ -43,11 +43,23 @@ export default function Search({ project, onChange }: { project: Project; onChan
     setSelectedDatabases([]);
   };
 
+  const [strategies, setStrategies] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    const { population, intervention, comparator, outcomes } = project.pico || {};
+    const parts = [population, intervention, comparator].filter(Boolean).map(s => `("${s?.trim()}")`);
+    const base = parts.join(' AND ');
+    const query = outcomes ? `${base} AND (${outcomes.trim()})` : base;
+    DATABASES.forEach(db => {
+      initial[db.id] = query;
+    });
+    return initial;
+  });
+
   const exportStrategy = () => {
     const lines = DATABASES
       .filter(db => selectedDatabases.includes(db.id))
-      .map(db => `${db.name}\nSearch strategy for ${db.name} will be generated from PICO\n`);
-    downloadText("poolr_search_strategy.txt", `poolr search strategy\n\n${lines.join('\n')}`);
+      .map(db => `=== ${db.name} ===\n${strategies[db.id] || "No query defined"}\n`);
+    downloadText("poolr_search_strategy.txt", `Poolr Systematic Review Search Strategies\nGenerated: ${new Date().toISOString()}\n\n${lines.join('\n')}`);
   };
 
   return (
@@ -147,12 +159,8 @@ export default function Search({ project, onChange }: { project: Project; onChan
                       className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 font-mono text-[11.5px] text-[var(--color-text)] placeholder:text-[var(--placeholder-fg)] focus-visible:border-[var(--color-border-strong)] focus-visible:outline-none"
                       rows={3}
                       placeholder={`Enter ${db.name} search query...`}
-                      defaultValue={(() => {
-                        const { population, intervention, comparator, outcomes } = project.pico;
-                        const parts = [population, intervention, comparator].filter(Boolean).map(s => `("${s?.trim()}")`);
-                        const base = parts.join(' AND ');
-                        return outcomes ? `${base} AND (${outcomes.trim()})` : base;
-                      })()}
+                      value={strategies[db.id] ?? ""}
+                      onChange={(e) => setStrategies({ ...strategies, [db.id]: e.target.value })}
                     />
                   </div>
                 ))}

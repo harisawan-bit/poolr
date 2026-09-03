@@ -326,7 +326,7 @@ export interface ProjectConfig {
 
 export function emptyProject(): Project {
   return {
-    metadata: { version: "0.5.3", created: new Date().toISOString(), title: "Untitled review" },
+    metadata: { version: "0.5.7", created: new Date().toISOString(), title: "Untitled review" },
     pico: { population: "", intervention: "", comparator: "", outcomes: "" },
     protocol: { databases: "PubMed, Embase, Cochrane CENTRAL, Scopus", registration: "Not registered", objective: "" },
     screening: { title_abstract: [], full_text: [] },

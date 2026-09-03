@@ -80,8 +80,8 @@ public static class DtaEngine
         var studyResults = new List<DtaStudyResult>();
         foreach (var s in validStudies)
         {
-            double sens = (double)s.tp.Value / (s.tp.Value + s.fn.Value);
-            double spec = (double)s.tn.Value / (s.fp.Value + s.tn.Value);
+            double sens = (double)s.tp!.Value / (s.tp.Value + s.fn!.Value);
+            double spec = (double)s.tn!.Value / (s.fp!.Value + s.tn.Value);
 
             // Haldane-Anscombe correction for zeros
             double pSens = (s.tp.Value + 0.5) / (s.tp.Value + s.fn.Value + 1);
@@ -183,8 +183,8 @@ public static class DtaEngine
         var studyResults = new List<DtaStudyResult>();
         foreach (var s in validStudies)
         {
-            double pSens = (s.tp.Value + 0.5) / (s.tp.Value + s.fn.Value + 1);
-            double pSpec = (s.tn.Value + 0.5) / (s.fp.Value + s.tn.Value + 1);
+            double pSens = (s.tp!.Value + 0.5) / (s.tp.Value + s.fn!.Value + 1);
+            double pSpec = (s.tn!.Value + 0.5) / (s.fp!.Value + s.tn.Value + 1);
             double logitSens = Math.Log(pSens / (1 - pSens));
             double logitSpec = Math.Log(pSpec / (1 - pSpec));
 

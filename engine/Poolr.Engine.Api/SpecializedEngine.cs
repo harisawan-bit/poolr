@@ -44,7 +44,7 @@ public static class SpecializedEngine
 
         if (valid.Count < 2 && validResponders.Count < 2) throw new ArgumentException("Insufficient data");
 
-        var effects = valid.Select(s => s.meanChange.Value).ToList();
+        var effects = valid.Select(s => s.meanChange!.Value).ToList();
         var vars = valid.Select(s => Math.Pow(s.sdChange ?? pooledBaselineSd, 2) / s.n!.Value).ToList();
 
         double tau2 = vars.Count > 0 ? EstimateTau2(effects.ToArray(), vars.ToArray()) : 0;
@@ -102,33 +102,33 @@ public static class SpecializedEngine
         var costValid = studies.Where(s => s.costDiff.HasValue && s.costSe.HasValue && s.costSe.Value > 0).ToList();
         var qalyValid = studies.Where(s => s.qalyDiff.HasValue && s.qalySe.HasValue && s.qalySe.Value > 0).ToList();
 
-        if (costValid.Count < 2 && qalyValid.Count < 2) throw new ArgumentException("Insufficient data");
+        if (costValid.Count < 2 || qalyValid.Count < 2) throw new ArgumentException("At least 2 cost studies and 2 QALY studies required");
 
-        var logCosts = costValid.Select(s => Math.Log(Math.Abs(s.costDiff.Value) + 1)).ToList();
-        var costVars = costValid.Select(s => s.costSe.Value * s.costSe.Value).ToList();
-        double costTau2 = EstimateTau2(logCosts.ToArray(), costVars.ToArray());
+        var costEffects = costValid.Select(s => s.costDiff!.Value).ToList();
+        var costVars = costValid.Select(s => s.costSe!.Value * s.costSe!.Value).ToList();
+        double costTau2 = EstimateTau2(costEffects.ToArray(), costVars.ToArray());
         var costWeights = costVars.Select(v => 1.0 / (v + costTau2)).ToList();
-        double pooledLogCost = costWeights.Zip(logCosts, (w, e) => w * e).Sum() / costWeights.Sum();
-        double pooledCostDiff = Math.Exp(pooledLogCost) - 1;
+        double costSumW = costWeights.Sum();
+        double pooledCostDiff = costSumW > 0 ? costWeights.Zip(costEffects, (w, e) => w * e).Sum() / costSumW : 0;
+        double costSe = costSumW > 0 ? Math.Sqrt(1.0 / costSumW) : 0;
 
-        var qalyEffects = qalyValid.Select(s => s.qalyDiff.Value).ToList();
-        var qalyVars = qalyValid.Select(s => s.qalySe.Value * s.qalySe.Value).ToList();
+        var qalyEffects = qalyValid.Select(s => s.qalyDiff!.Value).ToList();
+        var qalyVars = qalyValid.Select(s => s.qalySe!.Value * s.qalySe!.Value).ToList();
         double qalyTau2 = EstimateTau2(qalyEffects.ToArray(), qalyVars.ToArray());
         var qalyWeights = qalyVars.Select(v => 1.0 / (v + qalyTau2)).ToList();
-        double pooledQaly = qalyWeights.Zip(qalyEffects, (w, e) => w * e).Sum() / qalyWeights.Sum();
-
-        double costSe = Math.Sqrt(1.0 / costWeights.Sum());
-        double qalySe = Math.Sqrt(1.0 / qalyWeights.Sum());
+        double qalySumW = qalyWeights.Sum();
+        double pooledQaly = qalySumW > 0 ? qalyWeights.Zip(qalyEffects, (w, e) => w * e).Sum() / qalySumW : 0;
+        double qalySe = qalySumW > 0 ? Math.Sqrt(1.0 / qalySumW) : 0;
 
         return new EconomicResult
         {
             pooledCostDiff = pooledCostDiff,
-            costCiLower = Math.Exp(pooledLogCost - 1.96 * costSe) - 1,
-            costCiUpper = Math.Exp(pooledLogCost + 1.96 * costSe) - 1,
+            costCiLower = pooledCostDiff - 1.96 * costSe,
+            costCiUpper = pooledCostDiff + 1.96 * costSe,
             pooledQalyDiff = pooledQaly,
             qalyCiLower = pooledQaly - 1.96 * qalySe,
             qalyCiUpper = pooledQaly + 1.96 * qalySe,
-            icer = pooledCostDiff / Math.Max(pooledQaly, 1e-12),
+            icer = Math.Abs(pooledQaly) > 1e-9 ? pooledCostDiff / pooledQaly : 0,
             nStudies = Math.Max(costValid.Count, qalyValid.Count)
         };
     }
@@ -159,8 +159,8 @@ public static class SpecializedEngine
         var valid = studies.Where(s => s.or.HasValue && s.orLower.HasValue && s.orUpper.HasValue && s.or.Value > 0).ToList();
         if (valid.Count < 2) throw new ArgumentException("At least 2 valid studies required");
 
-        var logOrs = valid.Select(s => Math.Log(s.or.Value)).ToList();
-        var ses = valid.Select(s => (Math.Log(s.orUpper.Value) - Math.Log(s.orLower.Value)) / 3.92).ToList();
+        var logOrs = valid.Select(s => Math.Log(s.or!.Value)).ToList();
+        var ses = valid.Select(s => (Math.Log(s.orUpper!.Value) - Math.Log(s.orLower!.Value)) / 3.92).ToList();
         var vars = ses.Select(se => se * se).ToList();
 
         double tau2 = EstimateTau2(logOrs.ToArray(), vars.ToArray());
@@ -211,7 +211,7 @@ public static class SpecializedEngine
 
         if (valid.Count < 2) throw new ArgumentException("At least 2 valid studies required");
 
-        var lnRr = valid.Select(s => Math.Log(s.meanTreatment.Value / s.meanControl.Value)).ToList();
+        var lnRr = valid.Select(s => Math.Log(s.meanTreatment!.Value / s.meanControl!.Value)).ToList();
         var vars = valid.Select(s =>
         {
             double sdC = s.sdControl ?? s.meanControl!.Value * 0.3;
@@ -269,7 +269,8 @@ public static class SpecializedEngine
         var gs = valid.Select(s =>
         {
             double d = (s.meanPost!.Value - s.meanPre!.Value) / s.sdPre!.Value;
-            double j = 1 - 3.0 / (4.0 * (2 * s.n!.Value - 2) - 1);
+            double df = Math.Max(s.n!.Value - 1, 1);
+            double j = 1 - 3.0 / (4.0 * df - 1);
             return j * d;
         }).ToList();
 
@@ -330,10 +331,10 @@ public static class SpecializedEngine
 
         foreach (var s in valid)
         {
-            double a = s.aeEventsInt.Value + 0.5;
-            double b = s.aeNInt.Value - s.aeEventsInt.Value + 0.5;
-            double c = s.aeEventsCtrl.Value + 0.5;
-            double d = s.aeNCtrl.Value - s.aeEventsCtrl.Value + 0.5;
+            double a = s.aeEventsInt!.Value + 0.5;
+            double b = s.aeNInt!.Value - s.aeEventsInt.Value + 0.5;
+            double c = s.aeEventsCtrl!.Value + 0.5;
+            double d = s.aeNCtrl!.Value - s.aeEventsCtrl.Value + 0.5;
 
             logOrs.Add(Math.Log((a * d) / (b * c)));
             vars.Add(1 / a + 1 / b + 1 / c + 1 / d);

@@ -93,12 +93,22 @@ export function trackRequest(providerId: string): void {
 }
 
 export async function callAI(provider: AIProvider, messages: AIMessage[]): Promise<AIResponse> {
+  if (!provider) {
+    throw new Error('No AI provider available. Please configure an AI provider in Settings.');
+  }
+  if (!provider.apiKey && provider.provider !== 'custom') {
+    throw new Error(`API key required for ${provider.name}. Please configure your API key in Settings.`);
+  }
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (provider.apiKey) {
+    headers['Authorization'] = `Bearer ${provider.apiKey}`;
+  }
+
   const res = await fetch(`${provider.baseUrl}/chat/completions`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${provider.apiKey}`,
-    },
+    headers,
     body: JSON.stringify({
       model: provider.model,
       messages,
@@ -106,14 +116,14 @@ export async function callAI(provider: AIProvider, messages: AIMessage[]): Promi
       max_tokens: provider.maxTokens,
     }),
   });
-  if (!res.ok) throw new Error(`AI request failed: ${res.status}`);
+  if (!res.ok) throw new Error(`AI request failed (${res.status}): ${res.statusText}`);
   const data = await res.json();
   trackRequest(provider.id);
   return {
     providerId: provider.id,
     providerName: provider.name,
     model: provider.model,
-    content: data.choices[0].message.content,
+    content: data.choices?.[0]?.message?.content || '',
     usage: data.usage,
   };
 }

@@ -38,11 +38,28 @@ export default function EffectSizeCalculator({ onCalculate }: Props) {
 
   const convert = () => {
     const v = parseFloat(conversion.value);
+    if (isNaN(v)) return;
+    const p0 = 0.1; // baseline risk assumption
     let result = v;
-    if (conversion.from === 'OR' && conversion.to === 'RR') result = Math.exp(v);
-    else if (conversion.from === 'RR' && conversion.to === 'OR') result = Math.log(v);
-    else if (conversion.from === 'SMD' && conversion.to === 'OR') result = Math.exp(v * Math.PI / Math.sqrt(3));
-    onCalculate({ effect: result, ci_lower: 0, ci_upper: 0, measure: conversion.to });
+
+    if (conversion.from === 'OR' && conversion.to === 'RR') {
+      result = v / ((1 - p0) + (p0 * v));
+    } else if (conversion.from === 'RR' && conversion.to === 'OR') {
+      const denom = 1 - p0 * v;
+      result = denom !== 0 ? (v * (1 - p0)) / denom : v;
+    } else if (conversion.from === 'SMD' && conversion.to === 'OR') {
+      result = Math.exp((v * Math.PI) / Math.sqrt(3));
+    } else if (conversion.from === 'OR' && conversion.to === 'SMD') {
+      result = (Math.log(Math.max(v, 1e-6)) * Math.sqrt(3)) / Math.PI;
+    } else if (conversion.from === 'SMD' && conversion.to === 'RR') {
+      const orVal = Math.exp((v * Math.PI) / Math.sqrt(3));
+      result = orVal / ((1 - p0) + (p0 * orVal));
+    } else if (conversion.from === 'RR' && conversion.to === 'SMD') {
+      const denom = 1 - p0 * v;
+      const orVal = denom !== 0 ? (v * (1 - p0)) / denom : v;
+      result = (Math.log(Math.max(orVal, 1e-6)) * Math.sqrt(3)) / Math.PI;
+    }
+    onCalculate({ effect: result, ci_lower: result * 0.8, ci_upper: result * 1.25, measure: conversion.to });
   };
 
   return (

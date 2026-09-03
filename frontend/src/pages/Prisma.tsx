@@ -61,7 +61,7 @@ async function tryExport(project: Project, onDone: () => void) {
 
 export default function Prisma({ project, onChange }: { project: Project; onChange: (p: Project) => void }) {
   const flow = project.prisma.flow;
-  const [grade, setGrade] = useState<GradeRow[] | null>(null);
+  const [grade, setGrade] = useState<GradeRow[] | null>((project.prisma.grade as any) || null);
   const [busy, setBusy] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [draftingSection, setDraftingSection] = useState<string | null>(null);
@@ -89,6 +89,13 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
         .map((o) => ({ outcome: o, studies: project.extraction.studies.length, design: "RCT" }));
       const rows = await runGrade({ outcomes: outcomes.length ? outcomes : [{ outcome: "Primary outcome", studies: project.extraction.studies.length, design: "RCT" }], meta, rob });
       setGrade(rows);
+      onChange({
+        ...project,
+        prisma: {
+          ...project.prisma,
+          grade: rows as any,
+        },
+      });
     } finally {
       setBusy(false);
     }
