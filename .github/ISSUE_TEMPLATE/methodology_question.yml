@@ -1,0 +1,38 @@
+name: Methodology & Statistical Inquiry
+description: Ask a methodological question about meta-analysis equations, PRISMA standards, or model choice
+title: "[Methodology] "
+labels: ["question", "area: statistics"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for inquiries regarding meta-analysis modeling choices (e.g. DL vs. REML, Knapp-Hartung adjustments, Peto odds ratios, or GRADE criteria).
+  - type: textarea
+    id: question
+    attributes:
+      label: What is your statistical or methodological question?
+      description: State the specific methodology, outcome type, or modeling decision you are evaluating.
+      placeholder: "When should I prefer the Knapp-Hartung adjustment over standard DerSimonian-Laird confidence intervals?"
+    validations:
+      required: true
+  - type: dropdown
+    id: topic
+    attributes:
+      label: Area of Inquiry
+      options:
+        - Effect Measures (OR, RR, RD, MD, SMD, HR, Proportions)
+        - Heterogeneity & Prediction Intervals (Tau^2, I^2, Q)
+        - Publication Bias (Egger, Begg, Trim & Fill, Contour Funnel)
+        - Risk of Bias Assessment (RoB 2, ROBINS-I, QUADAS-2)
+        - GRADE Evidence Grading (Certainty, Imprecision, OIS)
+        - Advanced Models (Network, IPD, Multilevel, Survival RMST, Dose-Response)
+        - Reporting & PRISMA 2020 Compliance
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context / Dataset Characteristics
+      description: Provide details regarding sample sizes, study count (k), or clinical context if applicable.
+    validations:
+      required: false

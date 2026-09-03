@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.7] - 2026-09-03
 
+### Added
+- **Interactive Figure Studio (`Meta.tsx`)**:
+  - Full vector graphics studio with real-time SVG rendering and 1-click SVG download.
+  - Contour-Enhanced Funnel plots displaying $p < 0.10, p < 0.05, p < 0.01$ statistical significance zones for distinguishing publication bias from small-study effects (Peters et al. 2008).
+  - Galbraith / Radial plots ($z$-score vs. precision) for rapid graphical detection of outlier studies.
+  - L'Abbé plots comparing experimental vs. control event rates for binary outcomes.
+  - Baujat plots evaluating individual study contributions to overall Cochran's $Q$ heterogeneity vs. influence on pooled effect size.
+- **Cochrane robvis Risk of Bias Visualizations (`Rob.tsx`)**:
+  - Real-time Traffic Light and Weighted Summary Bar vector plots adhering strictly to the McGuinness & Higgins (2021) *robvis* specification.
+  - 1-click publication-ready SVG figure export.
+- **Advanced Statistical Rigor (`Meta.tsx`)**:
+  - Higgins (2009) & IntHout (2016) random-effects 95% Prediction Interval ($PI = \hat{\theta} \pm t_{k-2} \sqrt{SE^2 + \tau^2}$) prominently displayed alongside pooled effects.
+  - Trial Sequential Analysis (TSA): calculates Required Information Size (RIS), cumulative $Z$-curve, and O'Brien-Fleming monitoring boundary crossing status (`/api/advanced/sequential`).
+  - Multimodel Inference (Model Averaging): computes AICc-weighted pooled estimates across 6 between-study variance estimators (DerSimonian-Laird, REML, Paule-Mandel, Empirical Bayes, Hunter-Schmidt, Sidik-Jonkman) (`/api/modelaverage`).
+- **Specialized Analyses Hub (`SpecializedAnalysesModal.tsx`)**:
+  - Accessible from the top header and Command Palette (`Ctrl+K`).
+  - Dose-Response Meta-Analysis: Greenland & Longnecker linear and Emax spline models (`/api/dose`).
+  - Survival RMST Meta-Analysis: Restricted Mean Survival Time difference pooling up to horizon $\tau$ (`/api/survival`).
+  - Health Economic Evaluation: Bivariate cost-effectiveness, ICER, and INMB vs. willingness-to-pay threshold $\lambda$ (`/api/specialized/economic`).
+  - Adverse Events & Peto: Peto odds ratios, zero-event continuity corrections, and Number Needed to Harm (NNH) (`/api/specialized/adverse`).
+  - Decision Curve Analysis (DCA): Net Benefit curves across clinical threshold probabilities $p_t$ (`/api/advanced/dca`).
+- **Screening & Inter-Rater Reliability (`Screening.tsx`, `ConflictDashboard.tsx`)**:
+  - 1-click **Promote Included (N)** button advancing included Title/Abstract citations to Full-Text screening.
+  - Machine-learning priority screening (`/api/living/priority`) ranking unreviewed citations against PICO criteria.
+  - Automated $2 \times 2$ inter-rater reliability calculation: observed agreement $P_o$, Cohen's Kappa $\kappa$, standard error, 95% confidence intervals, and Landis & Koch strength of agreement classifications.
+  - 1-click **Copy Methods Statement** button generating ready-to-publish academic methodology text.
+- **Data Extraction (`Extraction.tsx`)**:
+  - 1-click **Import from Screening** populating study extraction records directly from full-text screening inclusions.
+  - CSV/TSV dataset importer with automated column header mapping.
+  - Formatted continuous studies to display `Mean ± SD (n)` instead of null placeholders.
+- **PRISMA 2020 Flow & Cochrane Summary of Findings (`Prisma.tsx`)**:
+  - 1-click **Auto-Sync Flow** pulling record counts across identification, screening, and extraction directly into the PRISMA 2020 Sankey flow diagram.
+  - Integrated `/api/grade/sof` for automated Summary of Findings table generation with Optimal Information Size (OIS) imprecision downgrading and copyable Markdown.
+- **Universal Export Center (`ExportCenterModal.tsx`)**:
+  - Accessible via header button and `Ctrl+E`.
+  - Microsoft Word PRISMA 2020 Manuscript (`.docx`)
+  - LaTeX Journal Template (`.tex`)
+  - Standalone Interactive HTML Report (`.html`)
+  - R (`metafor`) Replication Script (`.R`)
+  - Stata Replication Script (`.do`)
+  - Python Script (`.py`)
+  - BibTeX (`.bib`) and RIS (`.ris`) bibliographies.
+
 ### Fixed
 - **C# Engine Backend**:
   - Eliminated all 39 nullable dereference compiler warnings (`CS8629`) across 15 engine files, bringing the engine build to 0 warnings and 0 errors.
