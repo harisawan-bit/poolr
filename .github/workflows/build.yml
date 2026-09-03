@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       - run: dotnet test engine/Poolr.Engine.Tests/Poolr.Engine.Tests.csproj -c Release
@@ -47,7 +47,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
@@ -127,7 +127,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
