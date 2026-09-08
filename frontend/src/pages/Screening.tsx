@@ -566,7 +566,7 @@ export default function Screening({ project, onChange }: { project: Project; onC
 }
 
 function dotClass(d: ScreenDecision) {
-  return d === "include" ? "bg-[var(--color-include)]" : d === "exclude" ? "bg-[var(--color-exclude)]" : d === "unsure" ? "bg-[var(--color-unsure)]" : "bg-[#5a5c63]";
+  return d === "include" ? "bg-[var(--color-include)]" : d === "exclude" ? "bg-[var(--color-exclude)]" : d === "unsure" ? "bg-[var(--color-unsure)]" : "bg-[var(--color-text-muted)]";
 }
 function decisionColor(d: ScreenDecision) {
   return d === "include" ? "var(--color-include)" : d === "exclude" ? "var(--color-exclude)" : d === "unsure" ? "var(--color-unsure)" : "#e6e7ea";

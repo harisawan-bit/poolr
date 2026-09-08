@@ -65,7 +65,7 @@ const DECISION_COLOR: Record<ScreenDecision, string> = {
   include: "var(--color-include)",
   exclude: "var(--color-exclude)",
   unsure: "var(--color-unsure)",
-  unset: "#5a5c63",
+  unset: "var(--color-text-muted)",
 };
 
 /* ── helpers ── */
