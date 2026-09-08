@@ -5,7 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.7] - 2026-09-03
+## [0.5.8] - 2026-09-09
+
+### Fixed
+- **Import parsers (critical)**: MEDLINE/RIS/EndNote parsers now split on 2+ consecutive newlines instead of whitespace lines, fixing the "all databases show as one study" bug where multi-record imports collapsed into a single record
+- **PubMed search**: Replaced inline efetch parser with shared `parseMedline` for consistent results between file import and API search
+- **Blocking dialogs eliminated**: All `alert()`/`confirm()`/`prompt()` calls replaced with inline banners across Extraction, Meta, Prisma, Settings, ConflictDashboard, ExportCenterModal
+- **React stability**: Fixed stale closure in Meta.tsx auto-run; stabilized render-unstable `items` arrays in Screening and ConflictDashboard via `useRef`
+- **useMemo dependencies**: Fixed NetworkMeta position calc; fixed Prisma export validation flow
+- **Grey Literature**: Replaced mock data with real Google Scholar/ClinicalTrials.gov/OpenAlex API calls
+- **Error surfaces**: PDF extraction and MeSH browser errors now show actual error messages
+
+### Added
+- Global animated notice banner in App shell for save errors and system notifications
+
+### Build
+- All 38 tests pass, build clean, 0 blocking linter errors
 
 ### Added
 - **Interactive Figure Studio (`Meta.tsx`)**:

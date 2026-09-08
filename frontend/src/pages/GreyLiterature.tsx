@@ -46,12 +46,61 @@ export default function GreyLiterature() {
       };
       setSearchHistory(prev => [historyItem, ...prev.slice(0, 19)]);
 
-      // In production, this would call the engine's grey literature endpoints
-      setResults([
-        { title: `${query} — A systematic review`, authors: 'Smith et al.', year: 2024, source: source },
-        { title: `The impact of ${query} on patient outcomes`, authors: 'Johnson et al.', year: 2023, source: source },
-        { title: `${query} in clinical practice: a meta-analysis`, authors: 'Williams et al.', year: 2024, source: source },
-      ]);
+      let newResults: any[] = [];
+      
+      if (source === 'google_scholar') {
+        // Use Google Scholar search via engine
+        try {
+          const { googleScholarSearch } = await import('../lib/api');
+          const response = await googleScholarSearch(query);
+          newResults = response.results.map(r => ({
+            title: r.title,
+            authors: r.authors,
+            year: r.year,
+            source: r.source,
+            abstract: r.abstract,
+            url: r.url,
+          }));
+        } catch {
+          // Fallback: show a message that Scholar requires engine
+          newResults = [];
+        }
+      } else if (source === 'clinicaltrials') {
+        try {
+          const { clinicaltrialsSearch } = await import('../lib/api');
+          const response = await clinicaltrialsSearch(query);
+          newResults = response.results.map(r => ({
+            title: r.title,
+            authors: r.authors || 'ClinicalTrials.gov',
+            year: r.year,
+            source: 'ClinicalTrials.gov',
+            abstract: r.abstract,
+            url: r.url,
+          }));
+        } catch {
+          newResults = [];
+        }
+      } else if (source === 'opengrey') {
+        try {
+          const { openalexSearch } = await import('../lib/api');
+          const response = await openalexSearch(`grey literature ${query}`);
+          newResults = response.results.map(r => ({
+            title: r.title,
+            authors: r.authors,
+            year: r.year,
+            source: 'OpenAlex (Grey)',
+            abstract: r.abstract,
+            url: r.url,
+          }));
+        } catch {
+          newResults = [];
+        }
+      } else {
+        // ProQuest - no free API available
+        newResults = [];
+      }
+      
+      setResults(newResults);
     } finally {
       setLoading(false);
     }
