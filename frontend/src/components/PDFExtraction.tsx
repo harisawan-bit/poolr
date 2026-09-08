@@ -50,7 +50,7 @@ ${text.substring(0, 5000)}`;
         setError('Failed to parse AI response. Please extract manually.');
       }
     } catch (e) {
-      setError('Failed to process PDF. Ensure AI provider is configured.');
+      setError(`Failed to process PDF: ${e instanceof Error ? e.message : 'unknown error'}`);
     } finally {
       setProcessing(false);
     }

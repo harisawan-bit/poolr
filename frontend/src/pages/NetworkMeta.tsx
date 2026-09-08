@@ -464,7 +464,7 @@ function NetworkSVG({ treatments, comparisons }: { treatments: string[]; compari
       pos[t] = { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
     });
     return pos;
-  }, [treatments, size]);
+  }, [treatments, cx, cy, r]);
 
   if (treatments.length < 2) {
     return <EmptyState>Add at least 2 treatments to visualize the network.</EmptyState>;

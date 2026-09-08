@@ -28,7 +28,7 @@ interface IPDResult {
   nStudies: number;
 }
 
-function computeIPD(rows: IPDRow[], _stage: "one" | "two"): IPDResult {
+function computeIPD(rows: IPDRow[]): IPDResult {
   const studies = Array.from(new Set(rows.map((r) => r.study)));
   const nPatients = rows.length;
   const nStudies = studies.length;
@@ -82,11 +82,11 @@ function computeIPD(rows: IPDRow[], _stage: "one" | "two"): IPDResult {
     const young = rows.filter((r) => r.age != null && r.age < 60);
     const old = rows.filter((r) => r.age != null && r.age >= 60);
     if (young.length > 0) {
-      const yRes = computeIPD(young, _stage);
+      const yRes = computeIPD(young);
       subgroups.push({ name: "Age < 60", effect: yRes.pooledEffect, ciLower: yRes.ciLower, ciUpper: yRes.ciUpper, k: yRes.nStudies, interactionP: 0.15 });
     }
     if (old.length > 0) {
-      const oRes = computeIPD(old, _stage);
+      const oRes = computeIPD(old);
       subgroups.push({ name: "Age \u2265 60", effect: oRes.pooledEffect, ciLower: oRes.ciLower, ciUpper: oRes.ciUpper, k: oRes.nStudies, interactionP: 0.15 });
     }
   }
@@ -94,11 +94,11 @@ function computeIPD(rows: IPDRow[], _stage: "one" | "two"): IPDResult {
     const female = rows.filter((r) => r.sex?.toLowerCase().startsWith("f"));
     const male = rows.filter((r) => r.sex?.toLowerCase().startsWith("m"));
     if (female.length > 0) {
-      const fRes = computeIPD(female, _stage);
+      const fRes = computeIPD(female);
       subgroups.push({ name: "Female", effect: fRes.pooledEffect, ciLower: fRes.ciLower, ciUpper: fRes.ciUpper, k: fRes.nStudies, interactionP: 0.25 });
     }
     if (male.length > 0) {
-      const mRes = computeIPD(male, _stage);
+      const mRes = computeIPD(male);
       subgroups.push({ name: "Male", effect: mRes.pooledEffect, ciLower: mRes.ciLower, ciUpper: mRes.ciUpper, k: mRes.nStudies, interactionP: 0.25 });
     }
   }
@@ -200,7 +200,7 @@ export default function IPDMeta({ project, onChange }: { project: Project; onCha
           randomEffects: true,
         }, 5000);
 
-        const localR = computeIPD(rows, stage);
+        const localR = computeIPD(rows);
         const r: IPDResult = {
           ...localR,
           pooledEffect: backendResp.pooledHr,
@@ -218,7 +218,7 @@ export default function IPDMeta({ project, onChange }: { project: Project; onCha
     } catch {
       // Fallback
     }
-    const r = computeIPD(rows, stage);
+    const r = computeIPD(rows);
     setResults(r);
     persist(r);
   };

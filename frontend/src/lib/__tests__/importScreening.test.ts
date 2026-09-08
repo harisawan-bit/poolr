@@ -72,9 +72,29 @@ describe("parseMedline", () => {
     expect(recs[0].format).toBe("medline");
   });
 
-  it("parses multiple records separated by blank lines", () => {
-    const text = "TI  - First\n\nTI  - Second\n\nTI  - Third\n";
-    expect(parseMedline(text)).toHaveLength(3);
+  it("parses multiple MEDLINE records with correct separation", () => {
+    const text = [
+      "PMID- 12345678",
+      "TI  - First study title",
+      "AB  - First study abstract",
+      "",
+      "PMID- 87654321",
+      "TI  - Second study title",
+      "AB  - Second study abstract",
+      "",
+      "PMID- 11111111",
+      "TI  - Third study title",
+      "AB  - Third study abstract",
+      "",
+    ].join("\n");
+    const recs = parseMedline(text);
+    expect(recs).toHaveLength(3);
+    expect(recs[0].title).toBe("First study title");
+    expect(recs[0].abstract).toBe("First study abstract");
+    expect(recs[1].title).toBe("Second study title");
+    expect(recs[1].abstract).toBe("Second study abstract");
+    expect(recs[2].title).toBe("Third study title");
+    expect(recs[2].abstract).toBe("Third study abstract");
   });
 
   it("skips untagged blocks", () => {

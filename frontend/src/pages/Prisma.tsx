@@ -50,24 +50,35 @@ const FLOW_FIELDS: { key: keyof PrismaFlow; label: string; hint: string }[] = [
   { key: "included", label: "Studies included", hint: "in synthesis" },
 ];
 
-async function tryExport(project: Project, onDone: () => void) {
-  try {
-    await exportProject(project, "docx");
-    onDone();
-  } catch (e) {
-    console.error(e);
-  }
-}
-
 export default function Prisma({ project, onChange }: { project: Project; onChange: (p: Project) => void }) {
   const flow = project.prisma.flow;
   const [grade, setGrade] = useState<GradeRow[] | null>((project.prisma.grade as any) || null);
   const [busy, setBusy] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [draftingSection, setDraftingSection] = useState<string | null>(null);
   const [manuscriptDrafts, setManuscriptDrafts] = useState<Record<string, string>>({});
   const [sofMarkdown, setSofMarkdown] = useState<string | null>(null);
   const [copiedSof, setCopiedSof] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  async function tryExport(onDone: () => void) {
+    if (!project.meta.results) {
+      setNotice("Run a meta-analysis before exporting.");
+      return;
+    }
+    setExporting(true);
+    try {
+      await exportProject(project, "docx");
+      onDone();
+      setNotice("Report exported successfully. Check your Downloads folder.");
+    } catch (e) {
+      console.error(e);
+      setNotice(`Export failed: ${e instanceof Error ? e.message : 'Unknown error'}. The engine may be offline.`);
+    } finally {
+      setExporting(false);
+    }
+  }
 
   // v0.5.1 — checklist state lives on the project (auto-saved): prisma.checklist[itemNumber]=true
   type Checklist = Record<string, boolean>;
@@ -200,6 +211,12 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
 
   return (
     <div className="space-y-3">
+      {notice && (
+        <div className="flex items-start gap-2 rounded-[3px] border border-[var(--color-border)] bg-white/[0.04] px-2.5 py-1.5 text-[12px] text-[var(--color-text)]">
+          <span className="flex-1">{notice}</span>
+          <button className="shrink-0 text-[var(--color-text-muted)] hover:text-[var(--color-text)]" onClick={() => setNotice(null)} aria-label="Dismiss">✕</button>
+        </div>
+      )}
       {/* v0.5.3 — PRISMA flow diagram + options drawer */}
       <Card title="PRISMA 2020 flow diagram">
         <SankeyChart data={sankeyData} />
@@ -235,7 +252,7 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
             Auto-GRADE (SoF)
           </Button>
-          <Button variant="default" size="sm" onClick={() => tryExport(project, () => setShowDisclaimer(true))}>
+          <Button variant="default" size="sm" disabled={exporting} onClick={() => { void tryExport(() => setShowDisclaimer(true)); }}>
             Export Report
           </Button>
         </div>

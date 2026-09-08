@@ -49,43 +49,34 @@ export default function Screening({ project, onChange }: { project: Project; onC
   const [scrollTop, setScrollTop] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const noticeTimer = useRef<number | null>(null);
+
+  useEffect(() => () => { if (noticeTimer.current != null) window.clearTimeout(noticeTimer.current); }, []);
   // v0.5.3 — number of independent reviewers screening (dual screening support).
   const [reviewers, setReviewers] = useState(2);
-  const [tab, setTab] = useState<"screening" | "dual_entry" | "conflicts">(() => {
-    const q = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tab") : null;
-    return (q as any) || "screening";
-  });
-  // v0.5.5 — which reviewer is entering decisions in dual-entry mode
+  const [tab, setTab] = useState<"screening" | "dual_entry" | "conflicts">("screening");
   const [activeReviewerIdx, setActiveReviewerIdx] = useState(0);
   const viewportRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const noticeTimer = useRef<number | null>(null);
 
   const items = project.screening?.[stage] ?? [];
-
-  useEffect(() => () => { if (noticeTimer.current != null) window.clearTimeout(noticeTimer.current); }, []);
-
-  const flash = (msg: string) => {
-    setNotice(msg);
-    if (noticeTimer.current != null) window.clearTimeout(noticeTimer.current);
-    noticeTimer.current = window.setTimeout(() => setNotice(null), 6000);
-  };
-
+  const itemsRef = useRef(items);
+  if (items !== itemsRef.current) itemsRef.current = items;
   const visible = useMemo(() => {
-    let list = items;
+    let list = itemsRef.current;
     if (filter !== "all") list = list.filter((i) => i.decision === filter);
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter((i) => i.title.toLowerCase().includes(q) || i.abstract.toLowerCase().includes(q));
     }
     return list;
-  }, [items, filter, query]);
+  }, [filter, query]);
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { all: items.length, include: 0, exclude: 0, unsure: 0, unset: 0 };
-    for (const it of items) c[it.decision]++;
+    const c: Record<string, number> = { all: itemsRef.current.length, include: 0, exclude: 0, unsure: 0, unset: 0 };
+    for (const it of itemsRef.current) c[it.decision]++;
     return c;
-  }, [items]);
+  }, []);
 
   const setDecision = (id: string, decision: ScreenDecision) => {
     const next = items.map((it) => (it.id === id ? { ...it, decision } : it));
@@ -148,7 +139,7 @@ export default function Screening({ project, onChange }: { project: Project; onC
   const promoteToFullText = () => {
     const taIncluded = (project.screening?.title_abstract ?? []).filter((i) => i.decision === "include");
     if (taIncluded.length === 0) {
-      flash("No records marked as 'Include' in Title/Abstract stage yet.");
+      setNotice("No records marked as 'Include' in Title/Abstract stage yet.");
       return;
     }
     const ftExisting = project.screening?.full_text ?? [];
@@ -164,7 +155,7 @@ export default function Screening({ project, onChange }: { project: Project; onC
       }));
 
     if (toAdd.length === 0) {
-      flash("All included Title/Abstract records are already in Full-Text screening.");
+      setNotice("All included Title/Abstract records are already in Full-Text screening.");
       return;
     }
 
@@ -176,7 +167,7 @@ export default function Screening({ project, onChange }: { project: Project; onC
         full_text: nextFt,
       },
     });
-    flash(`Promoted ${toAdd.length} included record${toAdd.length === 1 ? "" : "s"} to Full-Text screening!`);
+    setNotice(`Promoted ${toAdd.length} included record${toAdd.length === 1 ? "" : "s"} to Full-Text screening!`);
     setStage("full_text");
   };
 
@@ -190,7 +181,7 @@ export default function Screening({ project, onChange }: { project: Project; onC
     ].filter(Boolean) as string[];
 
     if (picoTerms.length === 0) {
-      flash("Please define Population or Intervention in Protocol/PICO first.");
+      setNotice("Please define Population or Intervention in Protocol/PICO first.");
       return;
     }
 
@@ -217,7 +208,7 @@ export default function Screening({ project, onChange }: { project: Project; onC
             [stage]: sorted,
           },
         });
-        flash(`Ranked ${sorted.length} records by AI priority relevance.`);
+        setNotice(`Ranked ${sorted.length} records by AI priority relevance.`);
       }
     } catch {
       // Deterministic client-side term frequency fallback
@@ -238,7 +229,7 @@ export default function Screening({ project, onChange }: { project: Project; onC
           [stage]: sorted,
         },
       });
-      flash(`Ranked ${sorted.length} records by PICO keyword relevance.`);
+      setNotice(`Ranked ${sorted.length} records by PICO keyword relevance.`);
     }
   };
 
@@ -267,7 +258,7 @@ export default function Screening({ project, onChange }: { project: Project; onC
     if (imported > 0) onChange(next);
     const fmt = formats.size > 0 ? ` (${Array.from(formats).join(", ")})` : "";
     const dupeNote = dupes > 0 ? ` — ${dupes} duplicate${dupes === 1 ? "" : "s"} removed automatically` : "";
-    flash(imported > 0 ? `Imported ${imported} records${fmt}${dupeNote}` : "Imported 0 records — no citations recognised");
+    setNotice(imported > 0 ? `Imported ${imported} records${fmt}${dupeNote}` : "Imported 0 records — no citations recognised");
   };
 
   // Resolve the selected record id to its position in the current visible list.

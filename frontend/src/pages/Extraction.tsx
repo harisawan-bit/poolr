@@ -23,13 +23,16 @@ export default function Extraction({ project, onChange }: { project: Project; on
   const set = (patch: Partial<ExtractedStudy>) => setForm({ ...form, ...patch });
   const num = (v: string) => (v === "" ? null : Number(v));
 
+  const [notice, setNotice] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+
   const importStudiesFromScreening = () => {
     const ftIncluded = (project.screening?.full_text ?? []).filter((s) => s.decision === "include");
     const taIncluded = (project.screening?.title_abstract ?? []).filter((s) => s.decision === "include");
     const source = ftIncluded.length > 0 ? ftIncluded : taIncluded;
 
     if (source.length === 0) {
-      alert("No studies marked as 'Include' in screening yet.");
+      setNotice("No studies marked as 'Include' in screening yet. Screen some records first.");
       return;
     }
 
@@ -62,7 +65,7 @@ export default function Extraction({ project, onChange }: { project: Project; on
     }
 
     if (newStudies.length === 0) {
-      alert("All included screening studies are already in the extraction table.");
+      setNotice("All included screening studies are already in the extraction table.");
       return;
     }
 
@@ -72,6 +75,7 @@ export default function Extraction({ project, onChange }: { project: Project; on
       extraction: { studies: next },
       meta: { ...project.meta, settings: { ...project.meta.settings, data: next } },
     });
+    setNotice(`Imported ${newStudies.length} studies from screening.`);
   };
 
   const handleCsvFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,11 +147,15 @@ export default function Extraction({ project, onChange }: { project: Project; on
   };
 
   const remove = (i: number) => {
-      const studyName = studies[i]?.study || 'this study';
-      if (!confirm(`Remove "${studyName}"? This cannot be undone.`)) return;
-      const next = studies.filter((_, idx) => idx !== i);
-      onChange({ ...project, extraction: { studies: next }, meta: { ...project.meta, settings: { ...project.meta.settings, data: next } } });
-    };
+    setConfirmDelete(i);
+  };
+
+  const confirmRemove = () => {
+    if (confirmDelete == null) return;
+    const next = studies.filter((_, idx) => idx !== confirmDelete);
+    onChange({ ...project, extraction: { studies: next }, meta: { ...project.meta, settings: { ...project.meta.settings, data: next } } });
+    setConfirmDelete(null);
+  };
 
   const extractFromPDF = async () => {
     if (!pdfText.trim()) return;
@@ -220,6 +228,19 @@ export default function Extraction({ project, onChange }: { project: Project; on
 
   return (
     <div className="space-y-3">
+      {notice && (
+        <div className="flex items-start gap-2 rounded-[3px] border border-[var(--color-border)] bg-white/[0.04] px-2.5 py-1.5 text-[12px] text-[var(--color-text)]">
+          <span className="flex-1">{notice}</span>
+          <button className="shrink-0 text-[var(--color-text-muted)] hover:text-[var(--color-text)]" onClick={() => setNotice(null)} aria-label="Dismiss">✕</button>
+        </div>
+      )}
+      {confirmDelete != null && (
+        <div className="flex items-center gap-2 rounded-[3px] border border-[var(--color-exclude)]/30 bg-[var(--color-exclude)]/10 px-2.5 py-1.5 text-[12px] text-[var(--color-exclude)]">
+          <span className="flex-1">Remove "{studies[confirmDelete]?.study ?? 'this study'}"?</span>
+          <button className="shrink-0 rounded border border-[var(--color-exclude)]/50 px-2 py-0.5 text-[var(--color-exclude)] hover:bg-[var(--color-exclude)]/20" onClick={confirmRemove}>Remove</button>
+          <button className="shrink-0 text-[var(--color-text-muted)] hover:text-[var(--color-text)]" onClick={() => setConfirmDelete(null)}>Cancel</button>
+        </div>
+      )}
       <Card title="Data extraction" right={
         <div className="flex items-center gap-2">
           <Pill tone="neutral">{studies.length} studies</Pill>

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   CheckCircle2,
@@ -103,8 +103,13 @@ export default function ConflictDashboard(props: Props) {
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [filter, setFilter] = useState<"all" | "pending" | "resolved" | "ai_adjudicated" | "discuss">("all");
+  const [copied, setCopied] = useState(false);
 
-  const items = project.screening?.[stage] ?? [];
+  const rawItems = project.screening?.[stage] ?? [];
+  const itemsRef = useRef(rawItems);
+  if (rawItems !== itemsRef.current) itemsRef.current = rawItems;
+  const items = itemsRef.current;
+
   const conflictRecords = useMemo(() => detectConflicts(items), [items]);
 
   const filtered = useMemo(() => {
@@ -255,7 +260,7 @@ export default function ConflictDashboard(props: Props) {
             decision,
           });
         }
-      } catch (_e) {
+      } catch {
         // skip on failure — non-fatal
       }
     }
@@ -363,10 +368,11 @@ export default function ConflictDashboard(props: Props) {
             onClick={() => {
               const stmt = `Screening was conducted independently in duplicate by two reviewers. Inter-rater agreement was ${kappaStats.interpretation.toLowerCase()} (Cohen's kappa = ${kappaStats.kappa}, 95% CI ${kappaStats.ciLower} to ${kappaStats.ciUpper}; ${kappaStats.po}% observed agreement across ${kappaStats.n} evaluated citations). Discrepancies were resolved by consensus or third-party adjudication.`;
               void navigator.clipboard.writeText(stmt);
-              alert("Copied methods statement to clipboard!");
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
             }}
           >
-            Copy Methods Statement
+            {copied ? "Copied!" : "Copy Methods Statement"}
           </Button>
         </div>
       )}

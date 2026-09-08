@@ -3,6 +3,8 @@
 // to hidden <input type=file> for Open and a blob download for Export so the UI
 // still works during `npm run dev`.
 
+import { parseMedline } from "./importScreening";
+
 export const ENGINE_URL = "http://127.0.0.1:5180";
 
 /** Human-readable reason a request never reached the engine. */
@@ -203,51 +205,20 @@ export async function exportProject(
         const medlineRes = await fetch(medlineUrl);
         if (medlineRes.ok) {
           const text = await medlineRes.text();
-          const records = text.split(/(?:^|\n)PMID-\s+/).filter(Boolean);
+          // Use the shared MEDLINE parser for consistent results
+          const records = parseMedline(text);
           const results: SearchResult[] = records.map((rec) => {
-            const lines = rec.split("\n");
-            const pmid = lines[0]?.trim() || "";
-            let title = "";
-            const authors: string[] = [];
-            let abstract = "";
-            let journal = "";
-            let year = new Date().getFullYear();
-            let doi = "";
-            let currentField = "";
-
-            for (let i = 1; i < lines.length; i++) {
-              const line = lines[i];
-              const tag = line.slice(0, 4).trim();
-              const val = line.slice(6);
-              if (line.startsWith("    ") || line.startsWith("\t")) {
-                if (currentField === "TI") title += " " + line.trim();
-                else if (currentField === "AB") abstract += " " + line.trim();
-              } else if (tag) {
-                currentField = tag;
-                if (tag === "TI") title = val.trim();
-                else if (tag === "AB") abstract = val.trim();
-                else if (tag === "AU" || tag === "FAU") authors.push(val.trim());
-                else if (tag === "JT" || tag === "TA") journal = val.trim();
-                else if (tag === "DP") {
-                  const y = parseInt(val.trim().slice(0, 4), 10);
-                  if (!isNaN(y)) year = y;
-                } else if (tag === "LID" || tag === "AID") {
-                  if (val.includes("[doi]")) {
-                    doi = val.replace(/\[doi\].*$/, "").trim();
-                  }
-                }
-              }
-            }
+            const pmid = rec.title.match(/^(\d+)$/)?.[1] || "";
             return {
               id: `pubmed-${pmid}`,
-              title: title || "Untitled",
-              authors: authors.slice(0, 5).join(", ") + (authors.length > 5 ? " et al." : "") || "Unknown authors",
-              year,
-              source: journal || "PubMed",
-              abstract: abstract || "",
-              doi: doi || undefined,
+              title: rec.title || "Untitled",
+              authors: "",
+              year: new Date().getFullYear(),
+              source: "PubMed",
+              abstract: rec.abstract || "",
+              doi: undefined,
               pmid,
-              url: `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`,
+              url: pmid ? `https://pubmed.ncbi.nlm.nih.gov/${pmid}/` : "",
               database: "PubMed",
             };
           });

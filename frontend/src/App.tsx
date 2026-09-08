@@ -195,7 +195,10 @@ class PageBoundary extends Component<{ pageKey: string; children: ReactNode }, {
   static getDerivedStateFromError(error: Error) { return { error }; }
   componentDidCatch(error: Error, info: ErrorInfo) { console.error("page crashed", error, info); }
   componentDidUpdate(prev: { pageKey: string }) {
-    if (prev.pageKey !== this.props.pageKey && this.state.error) this.setState({ error: null });
+    if (prev.pageKey !== this.props.pageKey && this.state.error) {
+      // Reset error when switching pages (intentional setState in componentDidUpdate for error boundary)
+      this.setState({ error: null });
+    }
   }
   render() {
     if (!this.state.error) return this.props.children;
@@ -228,6 +231,7 @@ function Shell() {
   const [project, setProject] = useState<Project | null>(null);
   const [projectPath, setProjectPath] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [banner, setBanner] = useState<string | null>(null);
 
@@ -317,6 +321,7 @@ function Shell() {
       } catch (e) {
         if (!mounted.current || seq !== saveSeq.current) return;
         setSaveState("error"); setBanner(errText(e));
+        setNotice(`Save error: ${errText(e)}`);
       }
     }, 300);
   };
@@ -378,8 +383,10 @@ function Shell() {
     }
   };
 
+  // Load demo project if requested via URL param
+  const queryParamsRef = useRef(queryParams);
   useEffect(() => {
-    if (queryParams?.get("demo") === "1") {
+    if (queryParamsRef.current?.get("demo") === "1") {
       void loadDemo();
     }
   }, []);
@@ -630,6 +637,29 @@ function Shell() {
             >
               <CommandSearch actions={paletteActions} hint="↑↓ navigate · Enter select · Ctrl+K toggle" placeholder="Jump to a page or run a command…" />
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Notice banner ── */}
+      <AnimatePresence>
+        {notice && (
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            initial={{ opacity: 0, y: 4 }}
+            className="fixed left-1/2 top-20 z-40 -translate-x-1/2 rounded-lg border border-[var(--color-border)] bg-[var(--color-chrome)] px-4 py-2 text-[12px] text-[var(--color-text)] shadow-lg"
+            role="status"
+            transition={{ duration: 0.2 }}
+          >
+            <span>{notice}</span>
+            <button
+              className="ml-3 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+              onClick={() => setNotice(null)}
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

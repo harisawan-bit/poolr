@@ -64,7 +64,7 @@ export default function MeSHBrowser({ onSelect }: { onSelect: (term: string) => 
 
       setResults(meshResults);
       setConnectionStatus('connected');
-    } catch (err) {
+    } catch {
       setError('Failed to search MeSH. Check your internet connection.');
       setConnectionStatus('error');
       setResults([]);

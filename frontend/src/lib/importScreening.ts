@@ -73,7 +73,9 @@ const MEDLINE_TAG = /^([A-Z][A-Z0-9]{0,3})\s*-\s?(.*)$/;
 
 export function parseMedline(text: string): CitationRecord[] {
   const out: CitationRecord[] = [];
-  const blocks = stripBom(text).split(/\r?\n\s*\r?\n/);
+  // Split on 2+ consecutive newlines (blank-line record separator).
+  // Do NOT split on single newlines — MEDLINE continuation lines start with 6 spaces.
+  const blocks = stripBom(text).split(/(?:\r?\n){2,}/);
 
   for (const block of blocks) {
     if (!block.trim()) continue;
@@ -163,7 +165,7 @@ const ENDNOTE_TAG = /^%([A-Z0-9])\s?(.*)$/;
 
 export function parseEndnote(text: string): CitationRecord[] {
   const out: CitationRecord[] = [];
-  const blocks = stripBom(text).split(/\r?\n\s*\r?\n/);
+  const blocks = stripBom(text).split(/(?:\r?\n){2,}/);
 
   for (const block of blocks) {
     if (!block.trim()) continue;

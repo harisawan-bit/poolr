@@ -69,15 +69,19 @@ export default function Settings() {
     saveProviders(next);
   };
 
+  const [testStatus, setTestStatus] = useState<Record<string, "idle" | "ok" | "fail">>({});
+
   const testConnection = async (provider: AIProvider) => {
+    setTestStatus(prev => ({ ...prev, [provider.id]: "idle" }));
     try {
       const res = await fetch(`${provider.baseUrl}/models`, {
         headers: { 'Authorization': `Bearer ${provider.apiKey}` },
       });
-      if (res.ok) alert(`✓ Connected to ${provider.name}`);
-      else alert(`✗ Failed: ${res.status}`);
-    } catch (e) {
-      alert(`✗ Connection failed`);
+      setTestStatus(prev => ({ ...prev, [provider.id]: res.ok ? "ok" : "fail" }));
+      setTimeout(() => setTestStatus(prev => ({ ...prev, [provider.id]: "idle" })), 3000);
+    } catch {
+      setTestStatus(prev => ({ ...prev, [provider.id]: "fail" }));
+      setTimeout(() => setTestStatus(prev => ({ ...prev, [provider.id]: "idle" })), 3000);
     }
   };
 
@@ -130,7 +134,9 @@ export default function Settings() {
                     {p.freeTier && <Pill tone="neutral">Free Tier</Pill>}
                   </div>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => testConnection(p)}>Test</Button>
+                    <Button variant="ghost" size="sm" onClick={() => testConnection(p)}>
+                      {testStatus[p.id] === "ok" ? "✓ Connected" : testStatus[p.id] === "fail" ? "✗ Failed" : "Test"}
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => removeProvider(p.id)}>Remove</Button>
                   </div>
                 </div>

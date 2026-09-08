@@ -250,14 +250,22 @@ export default function Meta({ project, onChange }: { project: Project; onChange
     }
   };
 
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const runRef = useRef(run);
+  runRef.current = run;
+
   useEffect(() => {
     const q = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
     if (q?.get("run") === "1" && studies.length >= 2 && !resp && !busy) {
-      void run();
+      void runRef.current();
     }
   }, [studies.length, resp, busy]);
 
   // Fetch specialized diagnostic SVG when user switches figure tab
+  const studiesRef = useRef(studies);
+  if (studies !== studiesRef.current) studiesRef.current = studies;
+
   useEffect(() => {
     if (!resp || !["funnel_contour", "galbraith", "labbe", "baujat"].includes(figTab)) return;
     if (diagSvg[figTab]) return;
@@ -271,7 +279,7 @@ export default function Meta({ project, onChange }: { project: Project; onChange
         const se = (s as any).se || Math.abs(s.ci_upper - s.ci_lower) / 3.92;
         return Math.max(1e-6, se * se);
       }),
-      raw_data: studies.map((s) => ({
+      raw_data: studiesRef.current.map((s) => ({
         study: s.study,
         int_events: s.int_events,
         int_n: s.int_n,
@@ -318,7 +326,7 @@ export default function Meta({ project, onChange }: { project: Project; onChange
       setTsaResult(res);
     } catch (e) {
       console.error("TSA failed:", e);
-      alert("Trial Sequential Analysis requires the backend engine.");
+      setNotice("Trial Sequential Analysis requires the backend engine.");
     } finally {
       setTsaLoading(false);
     }
@@ -337,7 +345,7 @@ export default function Meta({ project, onChange }: { project: Project; onChange
       setMaResult(res);
     } catch (e) {
       console.error("Model averaging failed:", e);
-      alert("Model Averaging requires the backend engine.");
+      setNotice("Model Averaging requires the backend engine.");
     } finally {
       setMaLoading(false);
     }
@@ -400,6 +408,12 @@ export default function Meta({ project, onChange }: { project: Project; onChange
 
   return (
     <div className="space-y-3">
+      {notice && (
+        <div className="flex items-start gap-2 rounded-[3px] border border-[var(--color-exclude)]/30 bg-[var(--color-exclude)]/10 px-2.5 py-1.5 text-[12px] text-[var(--color-exclude)]">
+          <span className="flex-1">{notice}</span>
+          <button className="shrink-0 text-[var(--color-exclude)]/70 hover:text-[var(--color-exclude)]" onClick={() => setNotice(null)} aria-label="Dismiss">✕</button>
+        </div>
+      )}
       <Card title="Meta-analysis settings" right={
         <div className="flex items-center gap-2">
           <Pill tone="neutral">{studies.length} studies</Pill>

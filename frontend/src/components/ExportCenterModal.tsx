@@ -28,6 +28,7 @@ export default function ExportCenterModal({ open, onClose, project }: Props) {
   const [exporting, setExporting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [previewContent, setPreviewContent] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   if (!open) return null;
 
@@ -92,7 +93,8 @@ export default function ExportCenterModal({ open, onClose, project }: Props) {
         a.click();
         URL.revokeObjectURL(url);
       } catch (e: any) {
-        alert("DOCX export failed: " + e.message);
+        setNotice(`DOCX export failed: ${e.message ?? 'Unknown error'}`);
+        return;
       }
       return;
     }
@@ -145,6 +147,14 @@ export default function ExportCenterModal({ open, onClose, project }: Props) {
             <X className="h-5 w-5" />
           </button>
         </div>
+
+        {/* Notice banner */}
+        {notice && (
+          <div className="flex items-center gap-2 border-b border-[var(--color-border)] bg-[var(--color-exclude)]/10 px-6 py-2 text-[12px] text-[var(--color-exclude)]">
+            <span className="flex-1">{notice}</span>
+            <button className="shrink-0 text-[var(--color-exclude)]/70 hover:text-[var(--color-exclude)]" onClick={() => setNotice(null)} aria-label="Dismiss">✕</button>
+          </div>
+        )}
 
         {/* Format Selector Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 border-b border-[var(--color-border)] bg-[var(--color-surface)] p-4">
