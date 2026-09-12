@@ -3,7 +3,7 @@ import type { Project, ExtendedMetaRequest, ExtendedMetaResponse } from "../lib/
 import { Card, Select, Pill, EmptyState, Button } from "../components/ui";
 import ShimmerText from "../components/kokonut/ShimmerText";
 import ActivityState from "../components/kokonut/ActivityState";
-import { runMetaAnalysis, generateForestPlotData, generateFunnelPlotData, trimAndFill, beggsTest, cumulativeMetaAnalysis, metaRegression, rosenthalFailsafe, orwinFailsafe, labbePlotData, harbordTest, petersTest, i2Interpretation, type StudyInput } from "../lib/meta-engine";
+import { runMetaAnalysis, generateForestPlotData, generateFunnelPlotData, trimAndFill, beggsTest, cumulativeMetaAnalysis, metaRegression, rosenthalFailsafe, orwinFailsafe, labbePlotData, harbordTest, petersTest, i2Interpretation, bubblePlotData, type StudyInput } from "../lib/meta-engine";
 import { interpretResults } from "../lib/ai";
 import {
   postJson,
@@ -969,7 +969,7 @@ function generateFunnelSVG(data: { points: { effect: number; se: number; study: 
 
 // ── v0.5.8 Power Tools: Publication Bias, Trim-Fill, Begg's, Cumulative, Meta-Regression ──
 function PowerToolsBlock({ resp, studies }: { resp: any; studies: StudyInput[] }) {
-  const [pbTab, setPbTab] = useState<"trimfill" | "begg" | "cumulative" | "metareg" | "failsafe" | "labbe">("trimfill");
+  const [pbTab, setPbTab] = useState<"trimfill" | "begg" | "cumulative" | "metareg" | "failsafe" | "labbe" | "bubble">("trimfill");
   const [tfResult, setTfResult] = useState<ReturnType<typeof trimAndFill> | null>(null);
   const [beggResult, setBeggResult] = useState<ReturnType<typeof beggsTest> | null>(null);
   const [cumResult, setCumResult] = useState<ReturnType<typeof cumulativeMetaAnalysis> | null>(null);
@@ -980,6 +980,7 @@ function PowerToolsBlock({ resp, studies }: { resp: any; studies: StudyInput[] }
   const [harbordResult, setHarbordResult] = useState<ReturnType<typeof harbordTest> | null>(null);
   const [petersResult, setPetersResult] = useState<ReturnType<typeof petersTest> | null>(null);
   const [labbeData, setLabbeData] = useState<ReturnType<typeof labbePlotData> | null>(null);
+  const [bubbleData, setBubbleData] = useState<ReturnType<typeof bubblePlotData> | null>(null);
 
   const stdStudies: { study: string; effect: number; se: number }[] = resp?.studies?.map((s: any) => ({
     study: s.study,
@@ -991,11 +992,11 @@ function PowerToolsBlock({ resp, studies }: { resp: any; studies: StudyInput[] }
 
   return (
     <div className="mt-4 border-t border-[var(--color-border)] pt-3">
-      <div className="mb-2 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Power Tools — Bias, Cumulative, Meta-Regression, Failsafe, L'Abbé</div>
+      <div className="mb-2 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Power Tools — Publication Bias, Cumulative, Meta-Regression, Failsafe, L'Abbé</div>
       <div className="mb-2 flex flex-wrap items-center gap-1">
-        {(["trimfill", "begg", "cumulative", "metareg", "failsafe", "labbe"] as const).map(t => (
+        {(["trimfill", "begg", "cumulative", "metareg", "failsafe", "labbe", "bubble"] as const).map(t => (
           <button key={t} className={`btn-ghost ${pbTab === t ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`} onClick={() => setPbTab(t)}>
-            {t === "trimfill" ? "Trim & Fill" : t === "begg" ? "Begg's Test" : t === "cumulative" ? "Cumulative MA" : t === "metareg" ? "Meta-Regression" : t === "failsafe" ? "Failsafe N" : "L'Abbé Plot"}
+            {t === "trimfill" ? "Trim & Fill" : t === "begg" ? "Bias Tests" : t === "cumulative" ? "Cumulative MA" : t === "metareg" ? "Meta-Regression" : t === "failsafe" ? "Failsafe N" : t === "labbe" ? "L'Abbé" : "Bubble Plot"}
           </button>
         ))}
       </div>
@@ -1147,6 +1148,31 @@ function PowerToolsBlock({ resp, studies }: { resp: any; studies: StudyInput[] }
                       <td className="px-2 py-1">{r.study}</td>
                       <td className="px-2 py-1 font-mono">{(r.intRate * 100).toFixed(1)}%</td>
                       <td className="px-2 py-1 font-mono">{(r.ctrlRate * 100).toFixed(1)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {pbTab === "bubble" && (
+        <div>
+          <Button variant="outline" size="sm" onClick={() => setBubbleData(bubblePlotData(stdStudies.map((s: any) => ({ ...s, n_total: 100 }))))}>Generate Bubble Data</Button>
+          {bubbleData && (
+            <div className="mt-2 max-h-40 overflow-y-auto rounded border border-[var(--color-border)]">
+              <table className="w-full text-[11px]">
+                <thead className="text-[var(--color-text-muted)]">
+                  <tr className="border-b border-[var(--color-border)]"><th className="px-2 py-1 text-left">Study</th><th className="px-2 py-1 text-left">Effect</th><th className="px-2 py-1 text-left">SE</th><th className="px-2 py-1 text-left">N</th></tr>
+                </thead>
+                <tbody>
+                  {bubbleData.map((r, i) => (
+                    <tr key={i} className="border-b border-[var(--color-border)]">
+                      <td className="px-2 py-1">{r.study}</td>
+                      <td className="px-2 py-1 font-mono">{fmt(r.effect)}</td>
+                      <td className="px-2 py-1 font-mono">{fmt(r.se, 4)}</td>
+                      <td className="px-2 py-1 font-mono">{r.n}</td>
                     </tr>
                   ))}
                 </tbody>
