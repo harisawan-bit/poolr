@@ -3,7 +3,7 @@ import type { Project, ExtendedMetaRequest, ExtendedMetaResponse } from "../lib/
 import { Card, Select, Pill, EmptyState, Button } from "../components/ui";
 import ShimmerText from "../components/kokonut/ShimmerText";
 import ActivityState from "../components/kokonut/ActivityState";
-import { runMetaAnalysis, generateForestPlotData, generateFunnelPlotData, trimAndFill, beggsTest, cumulativeMetaAnalysis, metaRegression, rosenthalFailsafe, orwinFailsafe, labbePlotData, type StudyInput } from "../lib/meta-engine";
+import { runMetaAnalysis, generateForestPlotData, generateFunnelPlotData, trimAndFill, beggsTest, cumulativeMetaAnalysis, metaRegression, rosenthalFailsafe, orwinFailsafe, labbePlotData, harbordTest, petersTest, type StudyInput } from "../lib/meta-engine";
 import { interpretResults } from "../lib/ai";
 import {
   postJson,
@@ -977,9 +977,11 @@ function PowerToolsBlock({ resp, studies }: { resp: any; studies: StudyInput[] }
   const [mrResult, setMrResult] = useState<ReturnType<typeof metaRegression> | null>(null);
   const [rosResult, setRosResult] = useState<ReturnType<typeof rosenthalFailsafe> | null>(null);
   const [orwResult, setOrwResult] = useState<ReturnType<typeof orwinFailsafe> | null>(null);
+  const [harbordResult, setHarbordResult] = useState<ReturnType<typeof harbordTest> | null>(null);
+  const [petersResult, setPetersResult] = useState<ReturnType<typeof petersTest> | null>(null);
   const [labbeData, setLabbeData] = useState<ReturnType<typeof labbePlotData> | null>(null);
 
-  const stdStudies = resp?.studies?.map((s: any) => ({
+  const stdStudies: { study: string; effect: number; se: number }[] = resp?.studies?.map((s: any) => ({
     study: s.study,
     effect: s.effect,
     se: s.se ?? Math.abs(s.ci_upper - s.ci_lower) / 3.92,
@@ -1014,12 +1016,30 @@ function PowerToolsBlock({ resp, studies }: { resp: any; studies: StudyInput[] }
 
       {pbTab === "begg" && (
         <div>
-          <Button variant="outline" size="sm" onClick={() => setBeggResult(beggsTest(stdStudies))}>Run Begg's Test</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setBeggResult(beggsTest(stdStudies))}>Run Begg's Test</Button>
+            <Button variant="outline" size="sm" onClick={() => setHarbordResult(harbordTest(stdStudies.map((s: any) => ({ ...s, n_total: 100 }))))}>Harbord Test</Button>
+            <Button variant="outline" size="sm" onClick={() => setPetersResult(petersTest(stdStudies.map((s: any) => ({ ...s, n_total: 100 }))))}>Peters' Test</Button>
+          </div>
           {beggResult && (
             <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
               <Stat k="Kendall's τ" v={fmt(beggResult.tau)} />
               <Stat k="p-value" v={fmt(beggResult.pValue, 4)} />
               <MRStat k="Significant?" v={beggResult.significant ? "Yes" : "No"} tone={beggResult.significant ? "bad" : "good"} />
+            </div>
+          )}
+          {harbordResult && (
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <Stat k="t-statistic" v={fmt(harbordResult.statistic, 3)} />
+              <Stat k="p-value" v={fmt(harbordResult.pValue, 4)} />
+              <MRStat k="Significant?" v={harbordResult.significant ? "Yes" : "No"} tone={harbordResult.significant ? "bad" : "good"} />
+            </div>
+          )}
+          {petersResult && (
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <Stat k="t-statistic" v={fmt(petersResult.statistic, 3)} />
+              <Stat k="p-value" v={fmt(petersResult.pValue, 4)} />
+              <MRStat k="Significant?" v={petersResult.significant ? "Yes" : "No"} tone={petersResult.significant ? "bad" : "good"} />
             </div>
           )}
         </div>
