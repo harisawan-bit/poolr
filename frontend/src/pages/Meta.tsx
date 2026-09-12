@@ -3,7 +3,7 @@ import type { Project, ExtendedMetaRequest, ExtendedMetaResponse } from "../lib/
 import { Card, Select, Pill, EmptyState, Button } from "../components/ui";
 import ShimmerText from "../components/kokonut/ShimmerText";
 import ActivityState from "../components/kokonut/ActivityState";
-import { runMetaAnalysis, generateForestPlotData, generateFunnelPlotData, trimAndFill, beggsTest, cumulativeMetaAnalysis, metaRegression, type StudyInput } from "../lib/meta-engine";
+import { runMetaAnalysis, generateForestPlotData, generateFunnelPlotData, trimAndFill, beggsTest, cumulativeMetaAnalysis, metaRegression, rosenthalFailsafe, orwinFailsafe, labbePlotData, type StudyInput } from "../lib/meta-engine";
 import { interpretResults } from "../lib/ai";
 import {
   postJson,
@@ -969,12 +969,15 @@ function generateFunnelSVG(data: { points: { effect: number; se: number; study: 
 
 // ── v0.5.8 Power Tools: Publication Bias, Trim-Fill, Begg's, Cumulative, Meta-Regression ──
 function PowerToolsBlock({ resp, studies }: { resp: any; studies: StudyInput[] }) {
-  const [pbTab, setPbTab] = useState<"trimfill" | "begg" | "cumulative" | "metareg">("trimfill");
+  const [pbTab, setPbTab] = useState<"trimfill" | "begg" | "cumulative" | "metareg" | "failsafe" | "labbe">("trimfill");
   const [tfResult, setTfResult] = useState<ReturnType<typeof trimAndFill> | null>(null);
   const [beggResult, setBeggResult] = useState<ReturnType<typeof beggsTest> | null>(null);
   const [cumResult, setCumResult] = useState<ReturnType<typeof cumulativeMetaAnalysis> | null>(null);
   const [mrCovariate, setMrCovariate] = useState<"year" | "int_n" | "custom">("year");
   const [mrResult, setMrResult] = useState<ReturnType<typeof metaRegression> | null>(null);
+  const [rosResult, setRosResult] = useState<ReturnType<typeof rosenthalFailsafe> | null>(null);
+  const [orwResult, setOrwResult] = useState<ReturnType<typeof orwinFailsafe> | null>(null);
+  const [labbeData, setLabbeData] = useState<ReturnType<typeof labbePlotData> | null>(null);
 
   const stdStudies = resp?.studies?.map((s: any) => ({
     study: s.study,
@@ -986,11 +989,11 @@ function PowerToolsBlock({ resp, studies }: { resp: any; studies: StudyInput[] }
 
   return (
     <div className="mt-4 border-t border-[var(--color-border)] pt-3">
-      <div className="mb-2 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Power Tools — Bias, Cumulative, Meta-Regression</div>
-      <div className="mb-2 flex items-center gap-1">
-        {(["trimfill", "begg", "cumulative", "metareg"] as const).map(t => (
+      <div className="mb-2 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Power Tools — Bias, Cumulative, Meta-Regression, Failsafe, L'Abbé</div>
+      <div className="mb-2 flex flex-wrap items-center gap-1">
+        {(["trimfill", "begg", "cumulative", "metareg", "failsafe", "labbe"] as const).map(t => (
           <button key={t} className={`btn-ghost ${pbTab === t ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`} onClick={() => setPbTab(t)}>
-            {t === "trimfill" ? "Trim & Fill" : t === "begg" ? "Begg's Test" : t === "cumulative" ? "Cumulative MA" : "Meta-Regression"}
+            {t === "trimfill" ? "Trim & Fill" : t === "begg" ? "Begg's Test" : t === "cumulative" ? "Cumulative MA" : t === "metareg" ? "Meta-Regression" : t === "failsafe" ? "Failsafe N" : "L'Abbé Plot"}
           </button>
         ))}
       </div>
@@ -1074,6 +1077,62 @@ function PowerToolsBlock({ resp, studies }: { resp: any; studies: StudyInput[] }
             </div>
           )}
           {!mrResult && <p className="text-[11px] text-[var(--color-text-muted)]">Requires studies with year or sample size data.</p>}
+        </div>
+      )}
+
+      {pbTab === "failsafe" && (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setRosResult(rosenthalFailsafe(stdStudies))}>Rosenthal's Failsafe</Button>
+            <Button variant="outline" size="sm" onClick={() => setOrwResult(orwinFailsafe(stdStudies, 0.1))}>Orwin's Failsafe (ES&lt;0.1)</Button>
+          </div>
+          {rosResult && (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <MRStat k="Failsafe N" v={String(rosResult.failsafeN)} tone={rosResult.failsafeN > 5 * stdStudies.length + 10 ? "good" : "warn"} />
+              <Stat k="Mean Z" v={fmt(rosResult.meanZ, 3)} />
+              <Stat k="Target Z (α=0.05)" v={fmt(rosResult.targetZ, 3)} />
+            </div>
+          )}
+          {orwResult && (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <Stat k="Current effect" v={fmt(orwResult.currentEffect)} />
+              <MRStat k="Failsafe N" v={String(orwResult.failsafeN)} tone={orwResult.failsafeN > 5 * stdStudies.length + 10 ? "good" : "warn"} />
+              <Stat k="Trivial threshold" v={String(orwResult.trivialEffect)} />
+            </div>
+          )}
+          {(rosResult || orwResult) && (
+            <p className="text-[10.5px] text-[var(--color-text-muted)]">
+              {rosResult && rosResult.failsafeN > 5 * stdStudies.length + 10
+                ? "Rosenthal: result is robust (failsafe N exceeds 5k+10 threshold)."
+                : rosResult && rosResult.failsafeN <= 5 * stdStudies.length + 10
+                ? "Rosenthal: result may be sensitive to unpublished null studies."
+                : ""}
+            </p>
+          )}
+        </div>
+      )}
+
+      {pbTab === "labbe" && (
+        <div>
+          <Button variant="outline" size="sm" onClick={() => setLabbeData(labbePlotData(studies as any))}>Generate L'Abbé Data</Button>
+          {labbeData && (
+            <div className="mt-2 max-h-40 overflow-y-auto rounded border border-[var(--color-border)]">
+              <table className="w-full text-[11px]">
+                <thead className="text-[var(--color-text-muted)]">
+                  <tr className="border-b border-[var(--color-border)]"><th className="px-2 py-1 text-left">Study</th><th className="px-2 py-1 text-left">Int. Rate</th><th className="px-2 py-1 text-left">Ctrl Rate</th></tr>
+                </thead>
+                <tbody>
+                  {labbeData.map((r, i) => (
+                    <tr key={i} className="border-b border-[var(--color-border)]">
+                      <td className="px-2 py-1">{r.study}</td>
+                      <td className="px-2 py-1 font-mono">{(r.intRate * 100).toFixed(1)}%</td>
+                      <td className="px-2 py-1 font-mono">{(r.ctrlRate * 100).toFixed(1)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>

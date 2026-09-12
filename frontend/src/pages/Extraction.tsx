@@ -2,7 +2,8 @@ import { useRef, useState } from "react";
 import type { Project, ExtractedStudy } from "../lib/project";
 import { Card, Input, Select, Pill, EmptyState, Button, Textarea } from "../components/ui";
 import { toCsv, downloadText } from "../lib/project";
-import { Sparkles, Loader2, Calculator, FileUp, Download, UserCheck } from "lucide-react";
+import { validateStudyData } from "../lib/meta-engine";
+import { Sparkles, Loader2, Calculator, FileUp, Download, UserCheck, ShieldAlert } from "lucide-react";
 import EffectSizeCalculator from "../components/EffectSizeCalculator";
 
 const TYPES: ExtractedStudy["type"][] = ["binary", "continuous", "survival"];
@@ -18,6 +19,7 @@ export default function Extraction({ project, onChange }: { project: Project; on
   const [busy, setBusy] = useState(false);
   const [pdfText, setPdfText] = useState("");
   const [showCalculator, setShowCalculator] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
   const csvInputRef = useRef<HTMLInputElement>(null);
 
   const set = (patch: Partial<ExtractedStudy>) => setForm({ ...form, ...patch });
@@ -263,6 +265,10 @@ export default function Extraction({ project, onChange }: { project: Project; on
             <Download className="h-3.5 w-3.5 mr-1" />
             Export CSV
           </Button>
+          <Button variant="ghost" size="sm" onClick={() => setShowValidation(!showValidation)} title="Toggle data validation panel">
+            <ShieldAlert className="h-3.5 w-3.5 mr-1" />
+            {showValidation ? 'Hide' : 'Show'} Validation
+          </Button>
         </div>
       }>
         {studies.length === 0 ? (
@@ -303,6 +309,25 @@ export default function Extraction({ project, onChange }: { project: Project; on
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+        {showValidation && studies.length > 0 && (
+          <div className="mt-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
+            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Data Quality Report</div>
+            <div className="max-h-32 overflow-y-auto space-y-1">
+              {studies.map((s, i) => {
+                const issues = validateStudyData(s as any);
+                return issues.length > 0 ? (
+                  <div key={i} className="flex items-start gap-2 text-[11px]">
+                    <span className="text-[var(--color-exclude)] mt-0.5">●</span>
+                    <span className="text-[var(--color-text)]"><strong className="text-[var(--color-text-muted)]">{s.study || `Study ${i+1}`}</strong>: {issues.join('; ')}</span>
+                  </div>
+                ) : null;
+              })}
+              {studies.every(s => validateStudyData(s as any).length === 0) && (
+                <div className="text-[11px] text-[var(--color-include)]">All {studies.length} studies pass data validation.</div>
+              )}
+            </div>
           </div>
         )}
       </Card>
