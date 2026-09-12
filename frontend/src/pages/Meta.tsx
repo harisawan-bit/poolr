@@ -3,7 +3,7 @@ import type { Project, ExtendedMetaRequest, ExtendedMetaResponse } from "../lib/
 import { Card, Select, Pill, EmptyState, Button } from "../components/ui";
 import ShimmerText from "../components/kokonut/ShimmerText";
 import ActivityState from "../components/kokonut/ActivityState";
-import { runMetaAnalysis, generateForestPlotData, generateFunnelPlotData, trimAndFill, beggsTest, cumulativeMetaAnalysis, metaRegression, rosenthalFailsafe, orwinFailsafe, labbePlotData, harbordTest, petersTest, type StudyInput } from "../lib/meta-engine";
+import { runMetaAnalysis, generateForestPlotData, generateFunnelPlotData, trimAndFill, beggsTest, cumulativeMetaAnalysis, metaRegression, rosenthalFailsafe, orwinFailsafe, labbePlotData, harbordTest, petersTest, i2Interpretation, type StudyInput } from "../lib/meta-engine";
 import { interpretResults } from "../lib/ai";
 import {
   postJson,
@@ -471,7 +471,7 @@ export default function Meta({ project, onChange }: { project: Project; onChange
                 v={predInterval ? `${fmtE(predInterval.piLower)} – ${fmtE(predInterval.piUpper)}` : "—"}
               />
               <Stat k="p-value" v={fmtN(pooled?.p, 4)} />
-              <Stat k="I²" v={het ? `${fmtN(het.i2, 1)}%` : "—"} />
+              <Stat k="I²" v={het ? `${fmtN(het.i2, 1)}%` : "—"} accent={het ? i2Interpretation(het.i2).color === 'var(--color-exclude)' : false} />
               {typeof het?.i2_lower === "number" && typeof het?.i2_upper === "number" && (
                 <Stat k="I² 95% CI" v={`${fmtN(het.i2_lower, 0)} – ${fmtN(het.i2_upper, 0)}%`} />
               )}
