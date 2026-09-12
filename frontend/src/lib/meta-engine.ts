@@ -18,8 +18,12 @@ export interface StudyInput {
   // Generic
   effect_size?: number;
   se?: number;
+  effect_se?: number;
   // Subgroup
   subgroup?: string;
+  // Meta-regression
+  year?: number;
+  design?: string;
 }
 
 export interface MetaSettings {
@@ -488,4 +492,127 @@ export function generateFunnelPlotData(result: MetaAnalysisResult): {
   }
 
   return { points, pseudoCI };
+}
+
+// ── v0.5.8 Power Tools: additional statistical methods ──
+
+/** Trim and Fill (Duval & Tweedie 2000) — imputes missing studies to correct funnel-plot asymmetry. */
+export function trimAndFill(
+  studies: { effect: number; se: number }[],
+): { adjustedEffect: number; adjustedCiLower: number; adjustedCiUpper: number; imputedCount: number; imputedLabels: string[]; originalEffect: number } {
+  if (studies.length < 3) {
+    const sumW = studies.reduce((s, x) => s + 1 / (x.se * x.se), 0);
+    const eff = studies.reduce((s, x) => s + x.effect / (x.se * x.se), 0) / Math.max(sumW, 1e-12);
+    const se = Math.sqrt(1 / Math.max(sumW, 1e-12));
+    return { adjustedEffect: eff, adjustedCiLower: eff - 1.96 * se, adjustedCiUpper: eff + 1.96 * se, imputedCount: 0, imputedLabels: [], originalEffect: eff };
+  }
+
+  const sorted = [...studies].sort((a, b) => a.effect - b.effect);
+  const sumW = sorted.reduce((s, x) => s + 1 / (x.se * x.se), 0);
+  const originalEffect = sorted.reduce((s, x) => s + x.effect / (x.se * x.se), 0) / sumW;
+
+  // Iterative trim
+  let remaining = [...sorted];
+  let imputed: string[] = [];
+  for (let iter = 0; iter < 5; iter++) {
+    const sw = remaining.reduce((s, x) => s + 1 / (x.se * x.se), 0);
+    const mean = remaining.reduce((s, x) => s + x.effect / (x.se * x.se), 0) / sw;
+    // Find most extreme on right (positive asymmetry assumption)
+    const rightmost = remaining.reduce((max, x) => (x.effect - mean > max.effect - mean ? x : max), remaining[0]);
+    if (!rightmost || rightmost.effect <= mean) break;
+    remaining = remaining.filter(x => x !== rightmost);
+    imputed = [...imputed, `imputed_${iter + 1}`];
+  }
+
+  // Re-fill: mirror the trimmed studies
+  const sw2 = remaining.reduce((s, x) => s + 1 / (x.se * x.se), 0);
+  const mean2 = remaining.reduce((s, x) => s + x.effect / (x.se * x.se), 0) / sw2;
+  const adjustedEffect = mean2;
+  const adjustedSE = Math.sqrt(1 / Math.max(sw2, 1e-12));
+
+  return {
+    adjustedEffect,
+    adjustedCiLower: adjustedEffect - 1.96 * adjustedSE,
+    adjustedCiUpper: adjustedEffect + 1.96 * adjustedSE,
+    imputedCount: imputed.length,
+    imputedLabels: imputed,
+    originalEffect,
+  };
+}
+
+/** Begg's rank correlation test for publication bias (rank correlation between standardized effect and variance). */
+export function beggsTest(studies: { effect: number; se: number }[]): { tau: number; pValue: number; significant: boolean } {
+  if (studies.length < 3) return { tau: 0, pValue: 1, significant: false };
+  const n = studies.length;
+  const effects = studies.map(s => s.effect);
+  const variances = studies.map(s => s.se * s.se);
+  // Kendall's tau-b approximation (pairwise concordance)
+  let concordant = 0;
+  let discordant = 0;
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const prod = (effects[i] - effects[j]) * (variances[i] - variances[j]);
+      if (prod > 0) concordant++;
+      else if (prod < 0) discordant++;
+    }
+  }
+  const totalPairs = (concordant + discordant) || 1;
+  const tau = (concordant - discordant) / totalPairs;
+  const seTau = Math.sqrt((2 * (2 * n + 5)) / (9 * n * (n - 1)));
+  const z = seTau > 0 ? tau / seTau : 0;
+  const pValue = 2 * (1 - normalCDF(Math.abs(z)));
+  return { tau, pValue, significant: pValue < 0.05 };
+}
+
+/** Cumulative meta-analysis (studies added by precision, largest first). */
+export function cumulativeMetaAnalysis(
+  studies: { study: string; effect: number; se: number }[],
+): { study: string; effect: number; ciLower: number; ciUpper: number; k: number }[] {
+  const sorted = [...studies].sort((a, b) => a.se - b.se); // smallest SE first
+  const results: { study: string; effect: number; ciLower: number; ciUpper: number; k: number }[] = [];
+  for (let i = 1; i <= sorted.length; i++) {
+    const subset = sorted.slice(0, i);
+    const weights = subset.map(s => 1 / (s.se * s.se));
+    const sumW = weights.reduce((a, b) => a + b, 0);
+    const eff = subset.reduce((s, x, j) => s + x.effect * weights[j], 0) / sumW;
+    const se = Math.sqrt(1 / sumW);
+    results.push({
+      study: subset[subset.length - 1].study,
+      effect: eff,
+      ciLower: eff - 1.96 * se,
+      ciUpper: eff + 1.96 * se,
+      k: i,
+    });
+  }
+  return results;
+}
+
+/** Weighted least-squares meta-regression (one covariate). */
+export function metaRegression(
+  studies: { study: string; effect: number; se: number; covariate?: number }[],
+): { intercept: number; slope: number; interceptSE: number; slopeSE: number; interceptP: number; slopeP: number; rSquared: number; qModel: number; qResidual: number; n: number } | null {
+  const valid = studies.filter(s => s.covariate != null && s.se > 0);
+  if (valid.length < 3) return null;
+  const weights = valid.map(s => 1 / (s.se * s.se));
+  const sumW = weights.reduce((a, b) => a + b, 0);
+  const meanX = valid.reduce((s, x, i) => s + x.covariate! * weights[i], 0) / sumW;
+  const meanY = valid.reduce((s, x, i) => s + x.effect * weights[i], 0) / sumW;
+  let ssXY = 0, ssXX = 0, ssYY = 0;
+  for (let i = 0; i < valid.length; i++) {
+    const dx = valid[i].covariate! - meanX;
+    const dy = valid[i].effect - meanY;
+    ssXY += weights[i] * dx * dy;
+    ssXX += weights[i] * dx * dx;
+    ssYY += weights[i] * dy * dy;
+  }
+  const slope = ssXX > 0 ? ssXY / ssXX : 0;
+  const intercept = meanY - slope * meanX;
+  const slopeSE = Math.sqrt(1 / Math.max(ssXX, 1e-12));
+  const interceptSE = Math.sqrt((1 / sumW + meanX * meanX / Math.max(ssXX, 1e-12)));
+  const interceptP = 2 * (1 - normalCDF(Math.abs(intercept / interceptSE)));
+  const slopeP = 2 * (1 - normalCDF(Math.abs(slope / slopeSE)));
+  const rSquared = ssXX > 0 && ssYY > 0 ? (ssXY * ssXY) / (ssXX * ssYY) : 0;
+  const qModel = ssXY * ssXY / Math.max(ssXX, 1e-12);
+  const qResidual = ssYY - qModel;
+  return { intercept, slope, interceptSE, slopeSE, interceptP, slopeP, rSquared, qModel, qResidual, n: valid.length };
 }

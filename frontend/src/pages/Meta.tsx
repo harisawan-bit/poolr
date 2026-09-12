@@ -3,7 +3,7 @@ import type { Project, ExtendedMetaRequest, ExtendedMetaResponse } from "../lib/
 import { Card, Select, Pill, EmptyState, Button } from "../components/ui";
 import ShimmerText from "../components/kokonut/ShimmerText";
 import ActivityState from "../components/kokonut/ActivityState";
-import { runMetaAnalysis, generateForestPlotData, generateFunnelPlotData } from "../lib/meta-engine";
+import { runMetaAnalysis, generateForestPlotData, generateFunnelPlotData, trimAndFill, beggsTest, cumulativeMetaAnalysis, metaRegression, type StudyInput } from "../lib/meta-engine";
 import { interpretResults } from "../lib/ai";
 import {
   postJson,
@@ -524,7 +524,8 @@ export default function Meta({ project, onChange }: { project: Project; onChange
             )}
             <SubgroupsBlock resp={resp} fmtE={fmtE} fmtN={fmtN} />
             <SensitivityBlock resp={resp} fmtE={fmtE} fmtN={fmtN} />
-          </Card>
+            <PowerToolsBlock resp={resp} studies={studies as unknown as StudyInput[]} />
+            </Card>
 
           <Card title="Study weights"><WeightRings resp={resp} /></Card>
 
@@ -964,4 +965,127 @@ function generateFunnelSVG(data: { points: { effect: number; se: number; study: 
   svg += `<text x="10" y="${plotTop + 10}" fill="var(--color-text-muted)" transform="rotate(-90, 10, ${plotTop + 10})">Standard Error</text>`;
   svg += `</svg>`;
   return svg;
+}
+
+// ── v0.5.8 Power Tools: Publication Bias, Trim-Fill, Begg's, Cumulative, Meta-Regression ──
+function PowerToolsBlock({ resp, studies }: { resp: any; studies: StudyInput[] }) {
+  const [pbTab, setPbTab] = useState<"trimfill" | "begg" | "cumulative" | "metareg">("trimfill");
+  const [tfResult, setTfResult] = useState<ReturnType<typeof trimAndFill> | null>(null);
+  const [beggResult, setBeggResult] = useState<ReturnType<typeof beggsTest> | null>(null);
+  const [cumResult, setCumResult] = useState<ReturnType<typeof cumulativeMetaAnalysis> | null>(null);
+  const [mrCovariate, setMrCovariate] = useState<"year" | "int_n" | "custom">("year");
+  const [mrResult, setMrResult] = useState<ReturnType<typeof metaRegression> | null>(null);
+
+  const stdStudies = resp?.studies?.map((s: any) => ({
+    study: s.study,
+    effect: s.effect,
+    se: s.se ?? Math.abs(s.ci_upper - s.ci_lower) / 3.92,
+  })) ?? [];
+
+  const fmt = (v: unknown, d = 3) => (typeof v === "number" && Number.isFinite(v) ? v.toFixed(d) : "—");
+
+  return (
+    <div className="mt-4 border-t border-[var(--color-border)] pt-3">
+      <div className="mb-2 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Power Tools — Bias, Cumulative, Meta-Regression</div>
+      <div className="mb-2 flex items-center gap-1">
+        {(["trimfill", "begg", "cumulative", "metareg"] as const).map(t => (
+          <button key={t} className={`btn-ghost ${pbTab === t ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`} onClick={() => setPbTab(t)}>
+            {t === "trimfill" ? "Trim & Fill" : t === "begg" ? "Begg's Test" : t === "cumulative" ? "Cumulative MA" : "Meta-Regression"}
+          </button>
+        ))}
+      </div>
+
+      {pbTab === "trimfill" && (
+        <div>
+          <Button variant="outline" size="sm" onClick={() => setTfResult(trimAndFill(stdStudies))}>Run Trim & Fill</Button>
+          {tfResult && (
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <Stat k="Original effect" v={fmt(tfResult.originalEffect)} />
+              <Stat k="Adjusted effect" v={fmt(tfResult.adjustedEffect)} accent />
+              <Stat k="Adjusted 95% CI" v={`${fmt(tfResult.adjustedCiLower)} – ${fmt(tfResult.adjustedCiUpper)}`} />
+              <MRStat k="Studies imputed" v={String(tfResult.imputedCount)} tone={tfResult.imputedCount > 0 ? "warn" : "good"} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {pbTab === "begg" && (
+        <div>
+          <Button variant="outline" size="sm" onClick={() => setBeggResult(beggsTest(stdStudies))}>Run Begg's Test</Button>
+          {beggResult && (
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <Stat k="Kendall's τ" v={fmt(beggResult.tau)} />
+              <Stat k="p-value" v={fmt(beggResult.pValue, 4)} />
+              <MRStat k="Significant?" v={beggResult.significant ? "Yes" : "No"} tone={beggResult.significant ? "bad" : "good"} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {pbTab === "cumulative" && (
+        <div>
+          <Button variant="outline" size="sm" onClick={() => setCumResult(cumulativeMetaAnalysis(stdStudies))}>Run Cumulative MA</Button>
+          {cumResult && (
+            <div className="mt-2 max-h-40 overflow-y-auto rounded border border-[var(--color-border)]">
+              <table className="w-full text-[11px]">
+                <thead className="text-[var(--color-text-muted)]">
+                  <tr className="border-b border-[var(--color-border)]"><th className="px-2 py-1 text-left">Added</th><th className="px-2 py-1 text-left">k</th><th className="px-2 py-1 text-left">Effect</th><th className="px-2 py-1 text-left">95% CI</th></tr>
+                </thead>
+                <tbody>
+                  {cumResult.map((r, i) => (
+                    <tr key={i} className="border-b border-[var(--color-border)]">
+                      <td className="px-2 py-1">{r.study}</td>
+                      <td className="px-2 py-1 font-mono">{r.k}</td>
+                      <td className="px-2 py-1 font-mono">{fmt(r.effect)}</td>
+                      <td className="px-2 py-1 font-mono">[{fmt(r.ciLower)}, {fmt(r.ciUpper)}]</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {pbTab === "metareg" && (
+        <div>
+          <div className="mb-2 flex items-center gap-2">
+            <span className="text-[11px] text-[var(--color-text-muted)]">Covariate:</span>
+            <select className="select w-auto" value={mrCovariate} onChange={e => setMrCovariate(e.target.value as any)}>
+              <option value="year">Year</option>
+              <option value="int_n">Sample size (int_n)</option>
+            </select>
+            <Button variant="outline" size="sm" onClick={() => {
+              const covStudies = studies.filter(s => s.year || s.int_n).map(s => ({
+                study: s.study,
+                effect: Math.log(Math.max(1e-6, s.effect_size ?? 1)),
+                se: s.effect_se ?? 0.3,
+                covariate: mrCovariate === "year" ? (s.year ?? 2020) : (s.int_n ?? 0),
+              }));
+              setMrResult(metaRegression(covStudies));
+            }}>Run Meta-Regression</Button>
+          </div>
+          {mrResult && (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <Stat k="Intercept" v={fmt(mrResult.intercept)} />
+              <Stat k="Slope" v={fmt(mrResult.slope, 4)} />
+              <MRStat k="Slope p-value" v={fmt(mrResult.slopeP, 4)} tone={mrResult.slopeP < 0.05 ? "good" : "neutral"} />
+              <Stat k="R²" v={fmt(mrResult.rSquared, 3)} />
+            </div>
+          )}
+          {!mrResult && <p className="text-[11px] text-[var(--color-text-muted)]">Requires studies with year or sample size data.</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MRStat({ k, v, accent, tone }: { k: string; v: string; accent?: boolean; tone?: "good" | "bad" | "warn" | "neutral" }) {
+  const color = tone === "good" ? "text-[var(--color-include)]" : tone === "bad" ? "text-[var(--color-exclude)]" : tone === "warn" ? "text-[var(--color-unsure)]" : accent ? "text-[var(--color-accent)]" : "text-[var(--color-text)]";
+  return (
+    <div className="card p-2">
+      <div className={`text-[16px] font-semibold tabular-nums font-mono ${color}`}>{v}</div>
+      <div className="text-[10px] text-[var(--color-text-muted)]">{k}</div>
+    </div>
+  );
 }
