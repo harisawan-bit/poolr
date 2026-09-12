@@ -201,6 +201,35 @@ export default function QualitativeMeta({ project, onChange }: { project: Projec
               <Input placeholder="New theme name (e.g. Socioeconomic factors)" value={newTheme.name} onChange={(e) => setNewTheme({ ...newTheme, name: e.target.value })} />
               <button className="btn-secondary" onClick={addTheme}>+ Add Theme</button>
             </div>
+            {themes.length > 0 && codes.length > 0 && (
+              <div className="mt-2 flex gap-2">
+                <button className="btn-ghost text-[11px]" onClick={() => {
+                  const blob = new Blob([JSON.stringify({ codes, themes }, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'qualitative_coding.json';
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}>Export Coding JSON</button>
+                <button className="btn-ghost text-[11px]" onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = '.json';
+                  input.onchange = async (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (!file) return;
+                    try {
+                      const data = JSON.parse(await file.text());
+                      if (data.codes) setCodes(data.codes);
+                      if (data.themes) setThemes(data.themes);
+                      if (data.codes) persist(data.codes, data.themes || [], narrative, results);
+                    } catch { /* ignore bad file */ }
+                  };
+                  input.click();
+                }}>Import Coding</button>
+              </div>
+            )}
             {themes.length > 0 && (
               <div className="mt-2 space-y-2">
                 {themes.map((t) => (

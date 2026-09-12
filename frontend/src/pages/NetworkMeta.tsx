@@ -283,12 +283,18 @@ export default function NetworkMeta({ project, onChange }: { project: Project; o
               <button className="ml-1.5 text-[10px] opacity-60 hover:opacity-100" onClick={() => removeTreatment(t)}>×</button>
             </Pill>
           ))}
-        </div>
-        <div className="flex gap-2">
+          </div>
+          {treatments.length === 0 && (
+          <p className="text-[11px] text-[var(--color-text-muted)]">No treatments yet. Add at least 2 to run a network meta-analysis.</p>
+          )}
+          <div className="flex gap-2">
           <Input value={newTreatment} onChange={(e) => setNewTreatment(e.target.value)} placeholder="Add treatment name..." onKeyDown={(e) => e.key === "Enter" && addTreatment()} />
           <Button variant="outline" size="sm" onClick={addTreatment}>Add</Button>
-        </div>
-      </Card>
+          {treatments.length >= 2 && (
+            <Button variant="ghost" size="sm" onClick={() => setTreatments(DEFAULT_TREATMENTS)}>Reset Defaults</Button>
+          )}
+          </div>
+          </Card>
 
       <Card title="Network Geometry">
         <NetworkSVG treatments={treatments} comparisons={comparisons} />
@@ -317,6 +323,12 @@ export default function NetworkMeta({ project, onChange }: { project: Project; o
                     {c.studies.length} stud{c.studies.length === 1 ? "y" : "ies"}
                   </span>
                   <button className="btn-ghost ml-auto text-[11px]" onClick={() => removeComparison(i)}>remove</button>
+                  <button className="btn-ghost text-[11px]" onClick={() => {
+                    const dup = { ...c, treatmentA: c.treatmentB, treatmentB: c.treatmentA };
+                    const next = [...comparisons, dup];
+                    setComparisons(next);
+                    persist(treatments, next, results);
+                  }} title="Duplicate with A/B swapped">swap</button>
                 </div>
                 {extractionStudies.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">

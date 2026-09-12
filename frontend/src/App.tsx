@@ -301,6 +301,16 @@ function Shell() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // v0.5.8 — cross-page navigation via CustomEvent (Dashboard quick-action buttons).
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const page = (e as CustomEvent<string>).detail;
+      if (page && typeof page === "string") setPage(page as PageKey);
+    };
+    window.addEventListener("poolr:gopage", handler);
+    return () => window.removeEventListener("poolr:gopage", handler);
+  }, []);
+
   const cancelPendingSave = () => {
     if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
     saveSeq.current++;

@@ -44,17 +44,32 @@ export default function Dashboard({ project }: { project: Project; onChange: (p:
           {project.protocol.objective || "No objective defined yet — set one in Protocol."} PICO:{" "}
           <span className="text-[var(--color-text)]">{project.pico.population || "—"} / {project.pico.intervention || "—"} / {project.pico.comparator || "—"} / {project.pico.outcomes || "—"}.</span>
         </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {!project.pico.population && (
+            <button className="btn-ghost text-[11px]" onClick={() => window.dispatchEvent(new CustomEvent('poolr:gopage', { detail: 'protocol' }))}>Define PICO</button>
+          )}
+          {!project.meta.results && project.extraction.studies.length >= 2 && (
+            <button className="btn-ghost text-[11px]" onClick={() => window.dispatchEvent(new CustomEvent('poolr:gopage', { detail: 'meta' }))}>Run Meta-Analysis</button>
+          )}
+          {project.extraction.studies.length === 0 && (
+            <button className="btn-ghost text-[11px]" onClick={() => window.dispatchEvent(new CustomEvent('poolr:gopage', { detail: 'extraction' }))}>Add Studies</button>
+          )}
+        </div>
       </Card>
 
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
               {kpis.map((kpi) => {
-                const isGood = kpi.k === "Screening incl." || kpi.k === "RoB done" || kpi.k === "PICO";
-                                const isBad = kpi.k === "Screening excl.";
-                                const valueColor = isGood && kpi.v !== "0" && kpi.v !== "empty" 
-                                  ? "text-[var(--color-include)]" 
-                                  : isBad && kpi.v !== "0" 
-                                    ? "text-[var(--color-exclude)]" 
-                                    : "text-[var(--color-text)]";
+                const isGood = kpi.k === "Screening incl." || kpi.k === "RoB done";
+                const isNeutral = kpi.k === "Studies (extracted)" || kpi.k === "Pooled effect" || kpi.k === "95% CI" || kpi.k === "I²";
+                const isBad = kpi.k === "Screening excl.";
+                const isEmpty = kpi.v === "—" || kpi.v === "empty" || kpi.v === "0";
+                const valueColor = isGood && !isEmpty
+                  ? "text-[var(--color-include)]"
+                  : isBad && !isEmpty
+                    ? "text-[var(--color-exclude)]"
+                    : isNeutral && isEmpty
+                      ? "text-[var(--color-text-muted)]"
+                      : "text-[var(--color-text)]";
                 return (
                   <div key={kpi.k} className="card p-3">
                     <div className={`text-[20px] font-semibold tabular-nums ${valueColor}`}>{kpi.v}</div>

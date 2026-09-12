@@ -28,6 +28,7 @@ import {
   Check,
   Activity,
   Layers,
+  RotateCcw,
 } from "lucide-react";
 
 const MEASURES: string[] = ["OR", "RR", "RD", "MD", "SMD", "HR", "MH_OR", "PETO", "GLASS", "LOGIT_PROP", "ARS_PROP", "IRR", "IRD", "Z_CORR", "GEN_IV"];
@@ -417,6 +418,24 @@ export default function Meta({ project, onChange }: { project: Project; onChange
       <Card title="Meta-analysis settings" right={
         <div className="flex items-center gap-2">
           <Pill tone="neutral">{studies.length} studies</Pill>
+          {resp && (
+            <Button variant="ghost" size="sm" onClick={() => {
+              setBusy(false);
+              setErr(null);
+              setForest(null);
+              setFunnel(null);
+              setInterpretation(null);
+              setPredInterval(null);
+              setTsaResult(null);
+              setMaResult(null);
+              setDiagSvg({});
+              setReplCode({});
+              onChange({ ...project, meta: { ...project.meta, results: null } });
+            }} title="Clear all results to re-run">
+              <RotateCcw className="h-3.5 w-3.5 mr-1" />
+              Reset
+            </Button>
+          )}
           <button className="btn-primary min-w-[120px]" onClick={run} disabled={busy}>
             {busy ? <span className="flex h-6 items-center"><ShimmerText className="!p-0 !text-sm" text="Pooling…" /></span> : "Run"}
           </button>
@@ -460,21 +479,37 @@ export default function Meta({ project, onChange }: { project: Project; onChange
               <Stat k="Q (df)" v={het ? `${fmtN(het.q, 2)} (${het.df ?? "—"}), p ${fmtN(het?.q_p, 3)}` : "—"} />
               {typeof het?.h2 === "number" && <Stat k="H²" v={fmtN(het.h2, 2)} />}
             </div>
-            {pooled?.ci_method && (
-              <div className="mt-3 text-[12px] text-[var(--color-text-muted)]">
-                CI method: {pooled.ci_method}{resp.knapp_hartung ? " — wider, uncertainty-aware intervals" : ""}
-              </div>
-            )}
-            {predInterval && (
-              <div className="mt-1 text-[11.5px] text-[var(--color-text-muted)]">
-                95% Prediction Interval (Higgins 2009 / IntHout 2016): expected true treatment effect in an identical future trial (t = {fmtN(predInterval.piT, 2)}, df = {predInterval.piDf}).
-              </div>
-            )}
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => {
+                const lines = [
+                  `Pooled effect: ${fmtE(pooled?.effect)}`,
+                  `95% CI: ${fmtE(pooled?.ci_lower)} – ${fmtE(pooled?.ci_upper)}`,
+                  predInterval ? `95% PI: ${fmtE(predInterval.piLower)} – ${fmtE(predInterval.piUpper)}` : null,
+                  `I²: ${fmtN(het?.i2, 1)}%`,
+                  `τ²: ${fmtN(het?.tau2, 4)}`,
+                  `Heterogeneity Q: ${fmtN(het?.q, 2)} (df ${het?.df ?? "—"}), p ${fmtN(het?.q_p, 3)}`,
+                ].filter(Boolean).join("\n");
+                void navigator.clipboard.writeText(lines);
+              }}>
+                <Copy className="h-3.5 w-3.5 mr-1" />
+                Copy Stats
+              </Button>
               <Button variant="outline" size="sm" onClick={handleInterpret} disabled={interpreting}>
                 {interpreting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
                 {interpreting ? "Interpreting…" : "Interpret Results"}
               </Button>
+              {forest && (
+                <Button variant="ghost" size="sm" onClick={() => downloadText("forest_plot.svg", forest, "image/svg+xml")}>
+                  <Download className="h-3.5 w-3.5 mr-1" />
+                  Forest SVG
+                </Button>
+              )}
+              {funnel && (
+                <Button variant="ghost" size="sm" onClick={() => downloadText("funnel_plot.svg", funnel, "image/svg+xml")}>
+                  <Download className="h-3.5 w-3.5 mr-1" />
+                  Funnel SVG
+                </Button>
+              )}
             </div>
             {interpretation && (
               <div className="mt-3 rounded-[3px] border border-[var(--color-border)] bg-white/[0.04] p-3 text-[12px] text-[var(--color-text)]">
