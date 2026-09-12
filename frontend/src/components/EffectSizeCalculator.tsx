@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Card, Input, Button, Select } from './ui';
+import { effectSizeConverter } from '../lib/meta-engine';
 import { Calculator } from 'lucide-react';
 
 interface Props {
@@ -39,27 +40,10 @@ export default function EffectSizeCalculator({ onCalculate }: Props) {
   const convert = () => {
     const v = parseFloat(conversion.value);
     if (isNaN(v)) return;
-    const p0 = 0.1; // baseline risk assumption
-    let result = v;
-
-    if (conversion.from === 'OR' && conversion.to === 'RR') {
-      result = v / ((1 - p0) + (p0 * v));
-    } else if (conversion.from === 'RR' && conversion.to === 'OR') {
-      const denom = 1 - p0 * v;
-      result = denom !== 0 ? (v * (1 - p0)) / denom : v;
-    } else if (conversion.from === 'SMD' && conversion.to === 'OR') {
-      result = Math.exp((v * Math.PI) / Math.sqrt(3));
-    } else if (conversion.from === 'OR' && conversion.to === 'SMD') {
-      result = (Math.log(Math.max(v, 1e-6)) * Math.sqrt(3)) / Math.PI;
-    } else if (conversion.from === 'SMD' && conversion.to === 'RR') {
-      const orVal = Math.exp((v * Math.PI) / Math.sqrt(3));
-      result = orVal / ((1 - p0) + (p0 * orVal));
-    } else if (conversion.from === 'RR' && conversion.to === 'SMD') {
-      const denom = 1 - p0 * v;
-      const orVal = denom !== 0 ? (v * (1 - p0)) / denom : v;
-      result = (Math.log(Math.max(orVal, 1e-6)) * Math.sqrt(3)) / Math.PI;
-    }
-    onCalculate({ effect: result, ci_lower: result * 0.8, ci_upper: result * 1.25, measure: conversion.to });
+    const result = effectSizeConverter(v, conversion.from as any, conversion.to as any);
+    if (result === null) return;
+    const se = Math.abs(result * 0.1);
+    onCalculate({ effect: result, ci_lower: result - 1.96 * se, ci_upper: result + 1.96 * se, measure: conversion.to });
   };
 
   return (
