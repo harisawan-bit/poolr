@@ -7,6 +7,7 @@ import FunnelChart from "../components/charts/FunnelChart";
 import TeamSelector, { REVIEWER_MEMBERS } from "../components/kokonut/TeamSelector";
 import AIScreeningPanel from "../components/ai/AIScreeningPanel";
 import ConflictDashboard from "../components/ConflictDashboard";
+import LivingReviews from "../components/LivingReviews";
 
 const DECISIONS: ScreenDecision[] = ["include", "exclude", "unsure"];
 const DEC_LABEL: Record<ScreenDecision, string> = { include: "Include", exclude: "Exclude", unsure: "Unsure", unset: "Unset" };
@@ -54,7 +55,7 @@ export default function Screening({ project, onChange }: { project: Project; onC
   useEffect(() => () => { if (noticeTimer.current != null) window.clearTimeout(noticeTimer.current); }, []);
   // v0.5.3 — number of independent reviewers screening (dual screening support).
   const [reviewers, setReviewers] = useState(2);
-  const [tab, setTab] = useState<"screening" | "dual_entry" | "conflicts">("screening");
+  const [tab, setTab] = useState<"screening" | "dual_entry" | "conflicts" | "living_review">("screening");
   const [activeReviewerIdx, setActiveReviewerIdx] = useState(0);
   const viewportRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -323,6 +324,12 @@ export default function Screening({ project, onChange }: { project: Project; onC
           Single Screening
         </button>
         <button
+          className={`btn-ghost ${tab === "living_review" ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
+          onClick={() => setTab("living_review")}
+        >
+          Living Review
+        </button>
+        <button
           className={`btn-ghost ${tab === "dual_entry" ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
           onClick={() => setTab("dual_entry")}
         >
@@ -560,6 +567,11 @@ export default function Screening({ project, onChange }: { project: Project; onC
             </div>
           )}
         </Card>
+      )}
+
+      {/* v0.5.8 — Living Review Update Detection */}
+      {tab === "living_review" && (
+        <LivingReviews />
       )}
     </div>
   );

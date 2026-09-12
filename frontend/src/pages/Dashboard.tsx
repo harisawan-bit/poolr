@@ -54,6 +54,9 @@ export default function Dashboard({ project }: { project: Project; onChange: (p:
           {project.extraction.studies.length === 0 && (
             <button className="btn-ghost text-[11px]" onClick={() => window.dispatchEvent(new CustomEvent('poolr:gopage', { detail: 'extraction' }))}>Add Studies</button>
           )}
+          {!project.meta.results && project.extraction.studies.length >= 2 && (
+            <button className="btn-ghost text-[11px]" onClick={() => window.dispatchEvent(new CustomEvent('poolr:gopage', { detail: 'interpret' }))}>Interpret Results</button>
+          )}
         </div>
       </Card>
 
