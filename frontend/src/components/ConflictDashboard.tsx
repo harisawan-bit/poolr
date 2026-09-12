@@ -18,6 +18,7 @@ import {
 import { Card, Pill, Button, EmptyState } from "./ui";
 import { getActiveProviders, callAIMultiProvider } from "../lib/ai";
 import { downloadText, toCsv } from "../lib/project";
+import { cohensKappa } from "../lib/meta-engine";
 import type { Project, ScreeningItem, ScreenDecision } from "../lib/project";
 
 /* ── types ── */
@@ -128,53 +129,27 @@ export default function ConflictDashboard(props: Props) {
   }, [conflictRecords]);
 
   const kappaStats = useMemo(() => {
-    let bothInc = 0;
-    let r1IncR2Exc = 0;
-    let r2IncR1Exc = 0;
-    let bothExc = 0;
+    const decisionsA: ScreenDecision[] = [];
+    const decisionsB: ScreenDecision[] = [];
 
     for (const r of conflictRecords) {
       if (!r.decisions || r.decisions.length < 2) continue;
       const d1 = r.decisions[0]?.decision;
       const d2 = r.decisions[1]?.decision;
-      if (!d1 || !d2 || d1 === "unset" || d2 === "unset") continue;
-
-      const inc1 = d1 === "include";
-      const inc2 = d2 === "include";
-
-      if (inc1 && inc2) bothInc++;
-      else if (inc1 && !inc2) r1IncR2Exc++;
-      else if (!inc1 && inc2) r2IncR1Exc++;
-      else bothExc++;
+      if (!d1 || !d2 || d1 === 'unset' || d2 === 'unset') continue;
+      decisionsA.push(d1);
+      decisionsB.push(d2);
     }
 
-    const n = bothInc + r1IncR2Exc + r2IncR1Exc + bothExc;
-    if (n < 2) return null;
-
-    const po = (bothInc + bothExc) / n;
-    const p1 = (bothInc + r1IncR2Exc) / n;
-    const p2 = (bothInc + r2IncR1Exc) / n;
-    const pe = p1 * p2 + (1 - p1) * (1 - p2);
-
-    const kappa = pe < 1 ? (po - pe) / (1 - pe) : 1.0;
-    const se = Math.sqrt(Math.max(0, po * (1 - po)) / Math.max(1, n * Math.pow(1 - pe, 2)));
-    const ciLower = Math.max(-1, kappa - 1.96 * se);
-    const ciUpper = Math.min(1, kappa + 1.96 * se);
-
-    let interpretation = "Poor";
-    if (kappa >= 0.81) interpretation = "Almost Perfect";
-    else if (kappa >= 0.61) interpretation = "Substantial";
-    else if (kappa >= 0.41) interpretation = "Moderate";
-    else if (kappa >= 0.21) interpretation = "Fair";
-    else if (kappa >= 0.0) interpretation = "Slight";
-
+    if (decisionsA.length < 2) return null;
+    const result = cohensKappa(decisionsA, decisionsB);
     return {
-      n,
-      po: Math.round(po * 100),
-      kappa: Number(kappa.toFixed(3)),
-      ciLower: Number(ciLower.toFixed(3)),
-      ciUpper: Number(ciUpper.toFixed(3)),
-      interpretation,
+      n: decisionsA.length,
+      po: Math.round(result.agreement * 100),
+      kappa: Number(result.kappa.toFixed(3)),
+      ciLower: Number(Math.max(-1, result.kappa - 1.96 * result.se).toFixed(3)),
+      ciUpper: Number(Math.min(1, result.kappa + 1.96 * result.se).toFixed(3)),
+      interpretation: result.interpretation,
     };
   }, [conflictRecords]);
 
