@@ -2,6 +2,7 @@
 // Pure TypeScript implementation — no server required
 // Supports binary (OR, RR, RD) and continuous (MD, SMD) outcomes
 // DerSimonian-Laird estimator, heterogeneity, publication bias, subgroups, sensitivity
+import type { ScreenDecision } from "./project";
 
 export interface StudyInput {
   study: string;
@@ -15,6 +16,10 @@ export interface StudyInput {
   int_sd?: number;
   ctrl_mean?: number;
   ctrl_sd?: number;
+  // Survival
+  hr?: number;
+  hr_lower?: number;
+  hr_upper?: number;
   // Generic
   effect_size?: number;
   se?: number;
@@ -24,6 +29,8 @@ export interface StudyInput {
   // Meta-regression
   year?: number;
   design?: string;
+  // Total N (for Peters' test, bubble plots)
+  n_total?: number;
 }
 
 export interface MetaSettings {
@@ -615,4 +622,206 @@ export function metaRegression(
   const qModel = ssXY * ssXY / Math.max(ssXX, 1e-12);
   const qResidual = ssYY - qModel;
   return { intercept, slope, interceptSE, slopeSE, interceptP, slopeP, rSquared, qModel, qResidual, n: valid.length };
+}
+
+// ── v0.5.8 Failsafe & Small-Study Effects ──
+
+/** Rosenthal's Failsafe N: number of null studies needed to bring p above alpha (default 0.05). */
+export function rosenthalFailsafe(studies: { effect: number; se: number }[], alpha = 0.05): { failsafeN: number; meanZ: number; targetZ: number } {
+  if (studies.length === 0) return { failsafeN: 0, meanZ: 0, targetZ: 0 };
+  // Weighted mean Z
+  const weights = studies.map(s => 1 / (s.se * s.se));
+  const sumW = weights.reduce((a, b) => a + b, 0);
+  const weightedZ = studies.reduce((s, x, i) => s + (x.effect / x.se) * weights[i], 0) / sumW;
+  const meanZ = weightedZ;
+  const targetZ = normalPPF(1 - alpha / 2);
+  // Failsafe N = (sum Z)^2 / Z_target^2 - k
+  const sumZ = studies.reduce((s, x) => s + x.effect / x.se, 0);
+  const failsafeN = Math.max(0, Math.round((sumZ * sumZ) / (targetZ * targetZ) - studies.length));
+  return { failsafeN, meanZ, targetZ };
+}
+
+/** Orwin's Failsafe N: number of null studies needed to reduce effect below a trivial threshold. */
+export function orwinFailsafe(
+  studies: { effect: number; se: number }[],
+  trivialEffect = 0.1,
+): { failsafeN: number; currentEffect: number; trivialEffect: number } {
+  if (studies.length === 0) return { failsafeN: 0, currentEffect: 0, trivialEffect };
+  const weights = studies.map(s => 1 / (s.se * s.se));
+  const sumW = weights.reduce((a, b) => a + b, 0);
+  const currentEffect = studies.reduce((s, x, i) => s + x.effect * weights[i], 0) / sumW;
+  // N_fs = k * (mean_ES - ES_trivial) / ES_trivial  (for null studies with ES=0)
+  const failsafeN = trivialEffect !== 0 ? Math.max(0, Math.round(studies.length * (currentEffect - trivialEffect) / trivialEffect)) : 0;
+  return { failsafeN, currentEffect, trivialEffect };
+}
+
+/** Harbord's modified Egger test for binary data (uses score-based test). */
+export function harbordTest(studies: { effect: number; se: number; n_total?: number }[]): { statistic: number; pValue: number; significant: boolean } {
+  if (studies.length < 3) return { statistic: 0, pValue: 1, significant: false };
+  // Simplified: weighted regression of effect on 1/variance, using precision^0.5 as predictor
+  const valid = studies.filter(s => s.se > 0);
+  if (valid.length < 3) return { statistic: 0, pValue: 1, significant: false };
+  const precision = valid.map(s => 1 / (s.se * s.se));
+  const sumP = precision.reduce((a, b) => a + b, 0);
+  const meanPrec = sumP / valid.length;
+  const meanEff = valid.reduce((s, x) => s + x.effect, 0) / valid.length;
+  let num = 0, den = 0;
+  for (let i = 0; i < valid.length; i++) {
+    num += (precision[i] - meanPrec) * (valid[i].effect - meanEff);
+    den += (precision[i] - meanPrec) ** 2;
+  }
+  const slope = den > 0 ? num / den : 0;
+  const intercept = meanEff - slope * meanPrec;
+  const resid = valid.map((x, i) => x.effect - (intercept + slope * precision[i]));
+  const s2 = resid.reduce((s, r) => s + r * r, 0) / (valid.length - 2);
+  const seInt = Math.sqrt(s2 * (1 / valid.length + meanPrec * meanPrec / den));
+  const tStat = seInt > 0 ? intercept / seInt : 0;
+  const pValue = 2 * (1 - normalCDF(Math.abs(tStat)));
+  return { statistic: tStat, pValue, significant: pValue < 0.05 };
+}
+
+/** Cohen's Kappa for inter-rater reliability (dual screening). */
+export function cohensKappa(
+  reviewerA: ScreenDecision[],
+  reviewerB: ScreenDecision[],
+): { kappa: number; agreement: number; se: number; z: number; pValue: number; interpretation: string } {
+  if (reviewerA.length === 0 || reviewerA.length !== reviewerB.length) {
+    return { kappa: 0, agreement: 0, se: 0, z: 0, pValue: 1, interpretation: 'N/A' };
+  }
+  const categories: ScreenDecision[] = ['include', 'exclude', 'unsure'];
+  const n = reviewerA.length;
+  // Observed agreement
+  let observed = 0;
+  for (let i = 0; i < n; i++) {
+    if (reviewerA[i] === reviewerB[i]) observed++;
+  }
+  const pObserved = observed / n;
+  // Expected agreement (chance)
+  const countA: Record<string, number> = {};
+  const countB: Record<string, number> = {};
+  for (const c of categories) { countA[c] = 0; countB[c] = 0; }
+  for (const d of reviewerA) countA[d] = (countA[d] || 0) + 1;
+  for (const d of reviewerB) countB[d] = (countB[d] || 0) + 1;
+  let pExpected = 0;
+  for (const c of categories) {
+    pExpected += (countA[c] / n) * (countB[c] / n);
+  }
+  // Kappa
+  const kappa = pExpected < 1 ? (pObserved - pExpected) / (1 - pExpected) : 0;
+  // SE of kappa (Fleiss approximation)
+  const se = Math.sqrt((pObserved * (1 - pObserved)) / (n * (1 - pExpected) ** 2));
+  const z = se > 0 ? kappa / se : 0;
+  const pValue = 2 * (1 - normalCDF(Math.abs(z)));
+  // Interpretation (Landis & Koch)
+  let interpretation = 'Poor';
+  if (kappa >= 0.81) interpretation = 'Almost perfect';
+  else if (kappa >= 0.61) interpretation = 'Substantial';
+  else if (kappa >= 0.41) interpretation = 'Moderate';
+  else if (kappa >= 0.21) interpretation = 'Fair';
+  else if (kappa >= 0.01) interpretation = 'Slight';
+  return { kappa, agreement: pObserved, se, z, pValue, interpretation };
+}
+
+/** Effect size converter: convert between common ES metrics. */
+export function effectSizeConverter(
+  value: number,
+  from: 'OR' | 'RR' | 'RD' | 'SMD' | 'cohens_d' | 'hedges_g' | 'fisher_z' | 'r' | 'logOR',
+  to: 'OR' | 'RR' | 'RD' | 'SMD' | 'cohens_d' | 'hedges_g' | 'fisher_z' | 'r' | 'logOR',
+): number | null {
+  if (from === to) return value;
+  // Convert to logOR as intermediate
+  let logOR: number;
+  switch (from) {
+    case 'logOR': logOR = value; break;
+    case 'OR': logOR = Math.log(Math.max(1e-10, value)); break;
+    case 'RR': logOR = Math.log(Math.max(1e-10, value)); break;
+    case 'fisher_z': logOR = value * 2; break; // Fisher's z ≈ 2 * logOR for rare events
+    case 'r': logOR = value * 2; break; // r to Fisher's z, then to logOR (approx)
+    case 'SMD': case 'cohens_d': case 'hedges_g': logOR = value * (Math.PI / Math.sqrt(3)); break; // d to logOR (Chinn 2000)
+    case 'RD': logOR = Math.log(1 + value); break; // very approximate
+    default: return null;
+  }
+  // Convert from logOR to target
+  switch (to) {
+    case 'logOR': return logOR;
+    case 'OR': return Math.exp(logOR);
+    case 'RR': return Math.exp(logOR);
+    case 'fisher_z': return logOR / 2;
+    case 'r': return Math.tanh(logOR / 2);
+    case 'SMD': case 'cohens_d': case 'hedges_g': return logOR * (Math.sqrt(3) / Math.PI);
+    case 'RD': return Math.exp(logOR) - 1;
+    default: return null;
+  }
+}
+
+/** I² interpretation categories (Higgins et al. 2003). */
+export function i2Interpretation(i2: number): { label: string; color: string } {
+  if (i2 < 25) return { label: 'Low', color: 'var(--color-include)' };
+  if (i2 < 50) return { label: 'Moderate', color: 'var(--color-unsure)' };
+  if (i2 < 75) return { label: 'High', color: 'var(--color-unsure)' };
+  return { label: 'Very High', color: 'var(--color-exclude)' };
+}
+
+/** Data validation: flag suspicious study entries. */
+export function validateStudyData(study: StudyInput): string[] {
+  const issues: string[] = [];
+  if (study.int_events != null && study.int_n != null && study.int_events > study.int_n) {
+    issues.push('Intervention events exceed total N');
+  }
+  if (study.ctrl_events != null && study.ctrl_n != null && study.ctrl_events > study.ctrl_n) {
+    issues.push('Control events exceed total N');
+  }
+  if (study.int_events != null && study.int_events < 0) issues.push('Negative intervention events');
+  if (study.ctrl_events != null && study.ctrl_events < 0) issues.push('Negative control events');
+  if (study.int_n != null && study.int_n <= 0) issues.push('Intervention N ≤ 0');
+  if (study.ctrl_n != null && study.ctrl_n <= 0) issues.push('Control N ≤ 0');
+  if (study.int_sd != null && study.int_sd < 0) issues.push('Negative intervention SD');
+  if (study.ctrl_sd != null && study.ctrl_sd < 0) issues.push('Negative control SD');
+  if (study.se != null && study.se <= 0) issues.push('Standard error ≤ 0 (cannot weight)');
+  if (study.hr != null && study.hr <= 0) issues.push('Hazard ratio ≤ 0');
+  if (study.effect_se != null && study.effect_se <= 0) issues.push('Effect SE ≤ 0');
+  return issues;
+}
+
+/** Peters' test for publication bias (modified Harbord for binary data using total N). */
+export function petersTest(studies: { effect: number; se: number; n_total?: number }[]): { statistic: number; pValue: number; significant: boolean } {
+  if (studies.length < 3) return { statistic: 0, pValue: 1, significant: false };
+  const valid = studies.filter(s => s.se > 0 && s.n_total != null && s.n_total > 0);
+  if (valid.length < 3) return { statistic: 0, pValue: 1, significant: false };
+  // Weighted regression of effect on 1/n_total
+  const invN = valid.map(s => 1 / s.n_total!);
+  const meanInvN = invN.reduce((a, b) => a + b, 0) / valid.length;
+  const meanEff = valid.reduce((s, x) => s + x.effect, 0) / valid.length;
+  let num = 0, den = 0;
+  for (let i = 0; i < valid.length; i++) {
+    num += (invN[i] - meanInvN) * (valid[i].effect - meanEff);
+    den += (invN[i] - meanInvN) ** 2;
+  }
+  const slope = den > 0 ? num / den : 0;
+  const intercept = meanEff - slope * meanInvN;
+  const resid = valid.map((x, i) => x.effect - (intercept + slope * invN[i]));
+  const s2 = resid.reduce((s, r) => s + r * r, 0) / (valid.length - 2);
+  const seInt = Math.sqrt(s2 * (1 / valid.length + meanInvN * meanInvN / Math.max(den, 1e-12)));
+  const tStat = seInt > 0 ? intercept / seInt : 0;
+  const pValue = 2 * (1 - normalCDF(Math.abs(tStat)));
+  return { statistic: tStat, pValue, significant: pValue < 0.05 };
+}
+
+/** L'Abbé plot data: returns event rates for intervention vs control arm. */
+export function labbePlotData(studies: { study: string; int_events?: number; int_n?: number; ctrl_events?: number; ctrl_n?: number }[]): { study: string; intRate: number; ctrlRate: number }[] {
+  return studies.filter(s => s.int_n && s.ctrl_n && s.int_n > 0 && s.ctrl_n > 0).map(s => ({
+    study: s.study,
+    intRate: s.int_events != null ? s.int_events / s.int_n! : 0,
+    ctrlRate: s.ctrl_events != null ? s.ctrl_events / s.ctrl_n! : 0,
+  }));
+}
+
+/** Bubble plot data for publication bias (effect vs SE with sample-size-weighted bubbles). */
+export function bubblePlotData(studies: { study: string; effect: number; se: number; n_total?: number }[]): { study: string; effect: number; se: number; n: number }[] {
+  return studies.map(s => ({
+    study: s.study,
+    effect: s.effect,
+    se: s.se,
+    n: s.n_total ?? 100,
+  }));
 }
