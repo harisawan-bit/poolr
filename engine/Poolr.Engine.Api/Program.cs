@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -612,6 +613,48 @@ app.MapPost("/api/clusterrobust", ([FromBody] ClusterRobustEngine.ClusterRobustR
     {
         return Results.BadRequest(new { error = ex.Message });
     }
+});
+
+// v0.6.0 — RevMan 5 Import/Export
+app.MapPost("/api/revman/import", async (HttpRequest req) =>
+{
+    try
+    {
+        using var sr = new StreamReader(req.Body);
+        var raw = await sr.ReadToEndAsync();
+        var json = System.Text.Json.JsonSerializer.Deserialize<RevManImportRequest>(raw,
+            new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+            ?? new RevManImportRequest();
+
+        RevManEngine.RevManProject project;
+        if (json.format == "csv")
+        {
+            project = RevManEngine.ReadRm5Csv(json.content ?? "");
+        }
+        else
+        {
+            var tmp = Path.GetTempFileName();
+            File.WriteAllText(tmp, json.content ?? string.Empty, Encoding.UTF8);
+            project = RevManEngine.ReadRm5(tmp);
+            File.Delete(tmp);
+        }
+        return Results.Ok(project);
+    }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+app.MapPost("/api/revman/export", async (HttpRequest req) =>
+{
+    try
+    {
+        using var sr = new StreamReader(req.Body);
+        var raw = await sr.ReadToEndAsync();
+        var revManReq = System.Text.Json.JsonSerializer.Deserialize<RevManEngine.RevManProject>(raw,
+            new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        var csv = RevManEngine.WriteRm5Csv(revManReq ?? new RevManEngine.RevManProject());
+        return Results.File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv", "revman_export.csv");
+    }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
 app.Run();
