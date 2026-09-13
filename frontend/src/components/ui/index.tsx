@@ -224,3 +224,20 @@ const DropdownMenuSeparator = React.forwardRef<
 DropdownMenuSeparator.displayName = "DropdownMenuSeparator";
 
 export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator };
+
+/* ── Shared Data Display Primitives (Phase 1) ─────────────────────── */
+
+export { StatCard } from "./StatCard";
+export type { StatCardProps } from "./StatCard";
+
+export { DataTable } from "./DataTable";
+export type { DataTableProps, ColumnDef } from "./DataTable";
+
+export { FilterBar } from "./FilterBar";
+export type { FilterBarProps, FilterOption } from "./FilterBar";
+
+export { ResultCard } from "./ResultCard";
+export type { ResultCardProps } from "./ResultCard";
+
+export { PlotContainer } from "./PlotContainer";
+export type { PlotContainerProps } from "./PlotContainer";

@@ -1,5 +1,5 @@
 import type { Project } from './project';
-import { effectSizeConverter } from './meta-engine';
+import { effectSizeConverter } from './meta';
 
 /**
  * Generate plain-language interpretation of meta-analysis results.

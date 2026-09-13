@@ -1,5 +1,6 @@
-// Re-export shim — preserves backward compatibility for existing imports.
-// All code now lives in ./api/* modules.
+// Barrel re-exports for the API layer.
+// Import from "../lib/api" for any API function.
+
 export {
   ENGINE_URL,
   offlineMessage,
@@ -10,9 +11,9 @@ export {
   openProjectDialog,
   readTextFiles,
   exportProject,
-} from './api/client';
+} from "./client";
 
-export type { DialogResult, PickedFile } from './api/client';
+export type { DialogResult, PickedFile } from "./client";
 
 export {
   computePredictionInterval,
@@ -24,7 +25,7 @@ export {
   runEconomicMeta,
   runAdverseEventsMeta,
   runDcaMeta,
-} from './api/meta';
+} from "./meta";
 
 export type {
   PredictionRequest,
@@ -34,14 +35,14 @@ export type {
   SequentialStudy,
   SequentialResult,
   SofResponse,
-} from './api/meta';
+} from "./meta";
 
 export {
   fetchRobFigure,
   fetchDiagnosticFigure,
-} from './api/figures';
+} from "./figures";
 
-export type { RobFigureRequest, DiagnosticPlotInput } from './api/figures';
+export type { RobFigureRequest, DiagnosticPlotInput } from "./figures";
 
 export {
   pubmedSearch,
@@ -55,11 +56,11 @@ export {
   prosperoSearch,
   googleScholarSearch,
   runPriorityScreening,
-} from './api/search';
+} from "./search";
 
-export type { SearchResult, SearchResponse } from './api/search';
+export type { SearchResult, SearchResponse } from "./search";
 
 export {
   exportReplicationCode,
   exportCitations,
-} from './api/export';
+} from "./export";

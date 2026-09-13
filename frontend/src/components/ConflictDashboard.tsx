@@ -18,7 +18,7 @@ import {
 import { Card, Pill, Button, EmptyState } from "./ui";
 import { getActiveProviders, callAIMultiProvider } from "../lib/ai";
 import { downloadText, toCsv } from "../lib/project";
-import { cohensKappa } from "../lib/meta-engine";
+import { cohensKappa } from "../lib/meta";
 import type { Project, ScreeningItem, ScreenDecision } from "../lib/project";
 
 /* ── types ── */

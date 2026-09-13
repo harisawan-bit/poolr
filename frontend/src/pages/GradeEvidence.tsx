@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import type { Project } from '../lib/project';
-import type { StudyInput } from '../lib/meta-engine';
+import type { StudyInput } from '../lib/meta';
 import { Card, Pill, EmptyState, Input } from '../components/ui';
 import { assessCertainty, gradeToMarkdown, getDowngradeReasons, type GradeOutcomeResult } from '../lib/grade-engine';
 import { ShieldCheck, Info, Download, Sparkles } from 'lucide-react';

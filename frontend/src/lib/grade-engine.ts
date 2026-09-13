@@ -1,4 +1,4 @@
-import type { StudyInput } from './meta-engine';
+import type { StudyInput } from './meta';
 
 export interface GradeDomainAssessment {
   domain: string;

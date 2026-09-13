@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import type { Project, ExtractedStudy } from "../lib/project";
 import { Card, Input, Select, Pill, EmptyState, Button, Textarea } from "../components/ui";
 import { toCsv, downloadText } from "../lib/project";
-import { validateStudyData } from "../lib/meta-engine";
+import { validateStudyData } from "../lib/meta";
 import { Sparkles, Loader2, Calculator, FileUp, Download, UserCheck, ShieldAlert } from "lucide-react";
 import EffectSizeCalculator from "../components/EffectSizeCalculator";
 

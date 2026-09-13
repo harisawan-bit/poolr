@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card, Input, Button, Select } from './ui';
-import { effectSizeConverter } from '../lib/meta-engine';
+import { effectSizeConverter } from '../lib/meta';
 import { Calculator } from 'lucide-react';
 
 interface Props {

@@ -1,5 +1,7 @@
-// Re-export shim — preserves backward compatibility for existing imports.
-// All code now lives in ./meta/* modules.
+// Barrel re-exports for the meta-analysis engine.
+// Import from "../lib/meta" for any meta-analysis function.
+
+// Types
 export type {
   StudyInput,
   MetaSettings,
@@ -9,8 +11,9 @@ export type {
   MetaAnalysisResult,
   ForestPlotData,
   FunnelPlotData,
-} from './meta';
+} from "./types";
 
+// Core
 export {
   normalCDF,
   normalPPF,
@@ -23,14 +26,22 @@ export {
   generateForestPlotData,
   generateFunnelPlotData,
   runMetaAnalysis,
+} from "./core";
+
+// Publication Bias
+export {
   trimAndFill,
   beggsTest,
   harbordTest,
   petersTest,
+} from "./publication-bias";
+
+// Power Tools
+export {
   cumulativeMetaAnalysis,
   metaRegression,
   rosenthalFailsafe,
   orwinFailsafe,
   labbePlotData,
   bubblePlotData,
-} from './meta';
+} from "./power-tools";
