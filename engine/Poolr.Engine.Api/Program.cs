@@ -530,3 +530,46 @@ app.MapPost("/api/powerhouse/qh", ([FromBody] PowerhouseEngine.QhRequest req) =>
     try { return Results.Ok(PowerhouseEngine.RunQhTest(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
+
+// v0.6.0 — Competitive Engine: 6 features closing gap with RevMan/JASP/Stata/CMA/metafor
+// 1. Influence Diagnostics (Cook's distance, DFFITS, COVRATIO)
+app.MapPost("/api/competitive/influence", ([FromBody] CompetitiveEngine.InfluenceRequest req) =>
+{
+    try { return Results.Ok(CompetitiveEngine.RunInfluenceDiagnostics(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// 2. Bubble Meta-Regression (effect vs moderator with WLS regression line)
+app.MapPost("/api/competitive/bubble", ([FromBody] CompetitiveEngine.BubbleMetaRequest req) =>
+{
+    try { return Results.Ok(CompetitiveEngine.RunBubbleMetaRegression(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// 3. Subgroup Interaction Test (continuous moderator x subgroup interaction)
+app.MapPost("/api/competitive/interaction", ([FromBody] CompetitiveEngine.InteractionRequest req) =>
+{
+    try { return Results.Ok(CompetitiveEngine.RunSubgroupInteraction(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// 4. Multivariate Meta-Regression (multiple moderators, full WLS matrix)
+app.MapPost("/api/competitive/multivariate", ([FromBody] CompetitiveEngine.MultivariateRequest req) =>
+{
+    try { return Results.Ok(CompetitiveEngine.RunMultivariateRegression(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// 5. Cluster-Robust Variance Estimation (CR0/CR2/CR4 small-sample corrections)
+app.MapPost("/api/competitive/crve", ([FromBody] CompetitiveEngine.CrveRequest req) =>
+{
+    try { return Results.Ok(CompetitiveEngine.RunClusterRobust(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// 6. Bayesian Meta-Analysis (conjugate normal-normal hierarchical model)
+app.MapPost("/api/competitive/bayesian", ([FromBody] CompetitiveEngine.BayesianRequest req) =>
+{
+    try { return Results.Ok(CompetitiveEngine.RunBayesianMetaAnalysis(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
