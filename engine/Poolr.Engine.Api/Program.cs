@@ -615,6 +615,41 @@ app.MapPost("/api/clusterrobust", ([FromBody] ClusterRobustEngine.ClusterRobustR
     }
 });
 
+// v0.6.0 — Prognostic Model Meta-Analysis
+app.MapPost("/api/prognostic/meta", ([FromBody] PrognosticMetaEngine.PrognosticMetaRequest req) =>
+{
+    try { return Results.Ok(PrognosticMetaEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.0 — Bivariate DTA Meta-Analysis
+app.MapPost("/api/dta/bivariate", ([FromBody] BivariateDtaEngine.BivariateRequest req) =>
+{
+    try { return Results.Ok(BivariateDtaEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.0 — Multilevel NMA
+app.MapPost("/api/nma/multilevel", ([FromBody] MultilevelNmaEngine.MultilevelNmaRequest req) =>
+{
+    try { return Results.Ok(MultilevelNmaEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.0 — HSROC Model
+app.MapPost("/api/dta/hsroc", ([FromBody] HsrocEngine.HsrocRequest req) =>
+{
+    try { return Results.Ok(HsrocEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.0 — Competing Risks Meta-Analysis
+app.MapPost("/api/competing-risks", ([FromBody] CompetingRisksEngine.CompetingRisksRequest req) =>
+{
+    try { return Results.Ok(CompetingRisksEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
 // v0.6.0 — Multi-Arm NMA Correction
 app.MapPost("/api/nma/multiarm", ([FromBody] MultiArmNmaEngine.MultiArmRequest req) =>
 {
