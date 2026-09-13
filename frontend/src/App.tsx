@@ -45,6 +45,7 @@ import DiagnosticMeta from "./pages/DiagnosticMeta";
 import ProportionsMeta from "./pages/ProportionsMeta";
 import QualitativeMeta from "./pages/QualitativeMeta";
 import ManualMode from "./pages/ManualMode";
+import AdvancedBayesian from "./pages/AdvancedBayesian";
 import DisclaimerModal from "./components/DisclaimerModal";
 import NewProjectWizard from "./components/NewProjectWizard";
 import ProfileModal from "./components/ProfileModal";
@@ -71,6 +72,7 @@ const NAV = [
   { key: "extraction", label: "Extraction", Icon: Table2 },
   { key: "rob", label: "Risk of Bias", Icon: ShieldAlert },
   { key: "meta", label: "Meta-Analysis", Icon: Sigma },
+  { key: "advanced", label: "Advanced", Icon: Activity },
   { key: "prisma", label: "PRISMA", Icon: Workflow },
   { key: "settings", label: "Settings", Icon: Settings2 },
 ] as const;
@@ -85,6 +87,7 @@ const TITLES: Record<string, string> = {
   extraction: "Data Extraction",
   rob: "Risk of Bias Assessment",
   meta: "Meta-Analysis",
+  advanced: "Advanced Analyses",
   prisma: "PRISMA 2020",
   settings: "Settings",
 };
@@ -431,6 +434,7 @@ function Shell() {
     diagnostic: () => <DiagnosticMeta project={current} onChange={onProjectChange} />,
     proportions: () => <ProportionsMeta project={current} onChange={onProjectChange} />,
     qualitative: () => <QualitativeMeta project={current} onChange={onProjectChange} />,
+    advanced: () => <AdvancedBayesian project={current} onChange={onProjectChange} />,
     manual: () => <ManualMode project={current} onChange={onProjectChange} />,
   };
 
