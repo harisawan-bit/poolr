@@ -615,6 +615,20 @@ app.MapPost("/api/clusterrobust", ([FromBody] ClusterRobustEngine.ClusterRobustR
     }
 });
 
+// v0.6.0 — Bayesian Network Meta-Analysis
+app.MapPost("/api/bayesian-nma", ([FromBody] BayesianNmaEngine.BayesianNmaRequest req) =>
+{
+    try { return Results.Ok(BayesianNmaEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.0 — Umbrella Review
+app.MapPost("/api/umbrella", ([FromBody] UmbrellaReviewEngine.UmbrellaRequest req) =>
+{
+    try { return Results.Ok(UmbrellaReviewEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
 // v0.6.0 — Citation Deduplication
 app.MapPost("/api/deduplicate", ([FromBody] List<DeduplicationEngine.Citation> req) =>
 {
