@@ -711,6 +711,20 @@ app.MapPost("/api/umbrella", ([FromBody] UmbrellaReviewEngine.UmbrellaRequest re
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
+// v0.6.0 — IPD from KM Reconstruction
+app.MapPost("/api/ipd/from-km", ([FromBody] IpdFromKmEngine.IpdFromKmRequest req) =>
+{
+    try { return Results.Ok(IpdFromKmEngine.Reconstruct(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.0 — Robust Variance Estimation
+app.MapPost("/api/rve", ([FromBody] RveEngine.RveRequest req) =>
+{
+    try { return Results.Ok(RveEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
 // v0.6.0 — Citation Deduplication
 app.MapPost("/api/deduplicate", ([FromBody] List<DeduplicationEngine.Citation> req) =>
 {
