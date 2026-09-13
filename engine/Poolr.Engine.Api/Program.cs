@@ -615,6 +615,25 @@ app.MapPost("/api/clusterrobust", ([FromBody] ClusterRobustEngine.ClusterRobustR
     }
 });
 
+// v0.6.0 — PRISMA-DTA Flow Diagram
+app.MapPost("/api/prisma-dta", ([FromBody] PrismaDtaEngine.PrismaDtaRequest req) =>
+{
+    try { return Results.Ok(PrismaDtaEngine.Generate(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.0 — Living Review Automation
+app.MapPost("/api/living/automate", ([FromBody] LivingReviewAutomationEngine.LivingReviewConfig req) =>
+{
+    try
+    {
+        // In production, this would fetch from PubMed/OpenAlex
+        // For now, return the automation status
+        return Results.Ok(LivingReviewAutomationEngine.Run(req, new List<string>()));
+    }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
 // v0.6.0 — Bayesian Network Meta-Analysis
 app.MapPost("/api/bayesian-nma", ([FromBody] BayesianNmaEngine.BayesianNmaRequest req) =>
 {
