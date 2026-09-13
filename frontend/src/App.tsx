@@ -333,7 +333,7 @@ function Shell() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // v0.5.8 — cross-page navigation via CustomEvent (Dashboard quick-action buttons).
+  // v0.6.0 — cross-page navigation via CustomEvent (Dashboard quick-action buttons).
   useEffect(() => {
     const handler = (e: Event) => {
       const page = (e as CustomEvent<string>).detail;

@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// v0.7.0 SUCRA (Surface Under Cumulative Ranking) engine with percentile
+/// v0.6.0 SUCRA (Surface Under Cumulative Ranking) engine with percentile
 /// bootstrap 95% CIs. Implements the frequentist SUCRA computation with
 /// uncertainty quantification via bootstrap resampling of study effects.
 /// Reference: Rücker & Schwarzer 2015, Salanti et al. 2011.

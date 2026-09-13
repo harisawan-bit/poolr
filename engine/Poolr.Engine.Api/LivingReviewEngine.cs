@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// Living Systematic Review engine (v0.5.7).
+/// Living Systematic Review engine (v0.6.0).
 /// Cumulative MA with automated re-search, ML priority screening.
 /// </summary>
 public static class LivingReviewEngine

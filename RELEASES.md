@@ -2,24 +2,24 @@
 
 ## Latest Release
 
-**poolr v0.5.7** — Complete PRISMA 2020 Platform & Diagnostics Suite
+**poolr v0.6.0** — Complete PRISMA 2020 Platform & Diagnostics Suite
 Release date: 2026-09-03
 
 > An institutional-grade release establishing mathematical parity with gold-standard R packages, zero compiler warnings, zero CI errors, an interactive diagnostic figure studio with Cochrane robvis visualizations, automated PRISMA 2020 flow-syncing, Trial Sequential Analysis, specialized meta-analysis hubs, and a universal manuscript export center.
 
-### Native Desktop Installers (v0.5.7)
+### Native Desktop Installers (v0.6.0)
 
 | Platform | Architecture | Installer Package | Direct Download |
 |---|---|---|---|
-| **Windows** | x64 (Standard) | `.msi` (Enterprise) / `.exe` (NSIS) | [poolr_0.5.7_x64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x64_en-US.msi) · [poolr_0.5.7_x64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x64-setup.exe) |
-| **Windows** | ARM64 (Surface / Snapdragon) | `.msi` / `.exe` | [poolr_0.5.7_arm64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_arm64_en-US.msi) · [poolr_0.5.7_arm64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_arm64-setup.exe) |
-| **Windows** | x86 (32-bit Legacy) | `.msi` / `.exe` | [poolr_0.5.7_x86_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x86_en-US.msi) · [poolr_0.5.7_x86-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x86-setup.exe) |
-| **macOS** | Apple Silicon (M1/M2/M3/M4) | `.dmg` | [poolr_0.5.7_aarch64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_aarch64.dmg) |
-| **macOS** | Intel x64 | `.dmg` | [poolr_0.5.7_x64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x64.dmg) |
-| **Linux** | x86_64 (Debian / Ubuntu / Mint) | `.deb` | [poolr_0.5.7_amd64.deb](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_amd64.deb) |
-| **Linux** | x86_64 (Fedora / RHEL / openSUSE)| `.rpm` | [poolr-0.5.7-1.x86_64.rpm](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr-0.5.7-1.x86_64.rpm) |
+| **Windows** | x64 (Standard) | `.msi` (Enterprise) / `.exe` (NSIS) | [poolr_0.6.0_x64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_x64_en-US.msi) · [poolr_0.6.0_x64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_x64-setup.exe) |
+| **Windows** | ARM64 (Surface / Snapdragon) | `.msi` / `.exe` | [poolr_0.6.0_arm64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_arm64_en-US.msi) · [poolr_0.6.0_arm64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_arm64-setup.exe) |
+| **Windows** | x86 (32-bit Legacy) | `.msi` / `.exe` | [poolr_0.6.0_x86_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_x86_en-US.msi) · [poolr_0.6.0_x86-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_x86-setup.exe) |
+| **macOS** | Apple Silicon (M1/M2/M3/M4) | `.dmg` | [poolr_0.6.0_aarch64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_aarch64.dmg) |
+| **macOS** | Intel x64 | `.dmg` | [poolr_0.6.0_x64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_x64.dmg) |
+| **Linux** | x86_64 (Debian / Ubuntu / Mint) | `.deb` | [poolr_0.6.0_amd64.deb](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_amd64.deb) |
+| **Linux** | x86_64 (Fedora / RHEL / openSUSE)| `.rpm` | [poolr-0.6.0-1.x86_64.rpm](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr-0.6.0-1.x86_64.rpm) |
 
-### What's New in v0.5.7
+### What's New in v0.6.0
 
 **Interactive Figure Studio & Visualizations**
 - **Cochrane robvis Figures**: Real-time vector SVG Traffic Light and Weighted Summary Bar figures adhering to McGuinness & Higgins (2021) standards with 1-click SVG download.
@@ -120,7 +120,7 @@ All CI gates pass: C# format verification, frontend lint/type/build/Vitest, the 
 **poolr v0.5.2** — Quality & correctness pass
 Release date: 2026-08-26
 
-> A focused maintenance release on top of v0.5.1's complete classical meta-analysis toolset: no more console-window flash on Windows launch, a truthful version string and connection indicator in the shell, and visible errors when the bundled demo project fails to load.
+> A focused maintenance release on top of v0.6.0's complete classical meta-analysis toolset: no more console-window flash on Windows launch, a truthful version string and connection indicator in the shell, and visible errors when the bundled demo project fails to load.
 
 ### What's New in v0.5.2
 
@@ -148,12 +148,12 @@ All CI gates pass: C# format verification, frontend lint/type/build/Vitest, the 
 ---
 
 
-**poolr v0.5.1** — Complete classical meta-analysis
+**poolr v0.6.0** — Complete classical meta-analysis
 6|Release date: 2026-08-25
 7|
 8|> Everything a standard pairwise systematic review needs: Knapp-Hartung CIs, Mantel-Haenszel and Peto poolers validated against metafor's published outputs, leave-one-out/cumulative sensitivity, real trim-and-fill, PET/PEESE/p-curve/selection models/Henmi-Copas, proportions/rates/correlations/generic-IV outcomes, robvis-style RoB figures for six tools (now including ROBINS-I, QUADAS-2, AMSTAR-2), a GRADE Summary-of-Findings generator with OIS-based imprecision, R/metafor replication scripts, BibTeX/RIS citation export, structured exclusion reasons with automatic import de-duplication, a PRISMA 27-item checklist tracker, and a bundled demo project.
 9|
-10|### What's New in v0.5.1
+10|### What's New in v0.6.0
 11|
 12|**Statistics engine**
 13|- **Knapp-Hartung-Sidik-Jonman confidence intervals** (t-distribution on k-1 df) — recommended for random-effects pooling.

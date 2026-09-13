@@ -1,7 +1,7 @@
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// v0.5.1 extended models. All additions are additive/nullable so legacy
+/// v0.6.0 extended models. All additions are additive/nullable so legacy
 /// payloads and the legacy /api/meta contract remain byte-compatible.
 /// </summary>
 

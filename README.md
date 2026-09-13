@@ -23,14 +23,14 @@
 
 ---
 
-> **Current release — v0.5.7.** Complete PRISMA 2020 Platform & Diagnostics Suite. Built for clinicians, epidemiologists, biostatisticians, and students. Features zero-warning .NET 8 / C# 12 statistical engine with gold-standard parity tests, vector Cochrane *robvis* Traffic Light & Summary Bar plots, Interactive Figure Studio (Contour-Enhanced Funnel, Galbraith, L'Abbé, Baujat), Higgins 95% Prediction Intervals, Trial Sequential Analysis (TSA), Model Averaging across 6 $\tau^2$ estimators, Specialized Analyses Hub (Dose-Response, Survival RMST, Health Economics, Adverse Events, DCA), Dual Screening with Cohen's Kappa $\kappa$, PRISMA 2020 auto-synced Sankey flow, and 1-click manuscript export to Word (.docx), LaTeX (.tex), Standalone HTML, R metafor (.R), Stata (.do), Python (.py), BibTeX, and RIS. 100% offline-first, native desktop build, and 100% Python-free.
+> **Current release — v0.6.0.** Complete PRISMA 2020 Platform & Diagnostics Suite. Built for clinicians, epidemiologists, biostatisticians, and students. Features zero-warning .NET 8 / C# 12 statistical engine with gold-standard parity tests, vector Cochrane *robvis* Traffic Light & Summary Bar plots, Interactive Figure Studio (Contour-Enhanced Funnel, Galbraith, L'Abbé, Baujat), Higgins 95% Prediction Intervals, Trial Sequential Analysis (TSA), Model Averaging across 6 $\tau^2$ estimators, Specialized Analyses Hub (Dose-Response, Survival RMST, Health Economics, Adverse Events, DCA), Dual Screening with Cohen's Kappa $\kappa$, PRISMA 2020 auto-synced Sankey flow, and 1-click manuscript export to Word (.docx), LaTeX (.tex), Standalone HTML, R metafor (.R), Stata (.do), Python (.py), BibTeX, and RIS. 100% offline-first, native desktop build, and 100% Python-free.
 
 ---
 
 ## Table of Contents
 
 1. [Screenshots & Visual Tour](#screenshots)
-2. [Direct Downloads (v0.5.7)](#direct-downloads)
+2. [Direct Downloads (v0.6.0)](#direct-downloads)
 3. [Key Features by SRMA Phase](#features)
 4. [Interactive Figure Studio & Visualizations](#interactive-figure-studio)
 5. [Specialized Analyses Suite](#specialized-analyses-suite)
@@ -67,15 +67,15 @@
 
 Poolr runs natively on Windows, macOS, and Linux without requiring Python, R, Docker, or runtime configuration.
 
-| Operating System | Architecture | Installer Package | Direct Download (v0.5.7) |
+| Operating System | Architecture | Installer Package | Direct Download (v0.6.0) |
 |---|---|---|---|
-| **Windows** | x64 (Standard Intel/AMD) | `.msi` (Enterprise) / `.exe` (NSIS) | [poolr_0.5.7_x64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x64_en-US.msi) · [poolr_0.5.7_x64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x64-setup.exe) |
-| **Windows** | ARM64 (Surface / Copilot+ PC) | `.msi` / `.exe` | [poolr_0.5.7_arm64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_arm64_en-US.msi) · [poolr_0.5.7_arm64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_arm64-setup.exe) |
-| **Windows** | x86 (32-bit Legacy) | `.msi` / `.exe` | [poolr_0.5.7_x86_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x86_en-US.msi) · [poolr_0.5.7_x86-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x86-setup.exe) |
-| **macOS** | Apple Silicon (M1/M2/M3/M4) | `.dmg` | [poolr_0.5.7_aarch64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_aarch64.dmg) |
-| **macOS** | Intel x64 | `.dmg` | [poolr_0.5.7_x64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_x64.dmg) |
-| **Linux** | x86_64 (Debian / Ubuntu / Mint) | `.deb` | [poolr_0.5.7_amd64.deb](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr_0.5.7_amd64.deb) |
-| **Linux** | x86_64 (Fedora / RHEL / openSUSE)| `.rpm` | [poolr-0.5.7-1.x86_64.rpm](https://github.com/harisawan-bit/poolr/releases/download/v0.5.7/poolr-0.5.7-1.x86_64.rpm) |
+| **Windows** | x64 (Standard Intel/AMD) | `.msi` (Enterprise) / `.exe` (NSIS) | [poolr_0.6.0_x64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_x64_en-US.msi) · [poolr_0.6.0_x64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_x64-setup.exe) |
+| **Windows** | ARM64 (Surface / Copilot+ PC) | `.msi` / `.exe` | [poolr_0.6.0_arm64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_arm64_en-US.msi) · [poolr_0.6.0_arm64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_arm64-setup.exe) |
+| **Windows** | x86 (32-bit Legacy) | `.msi` / `.exe` | [poolr_0.6.0_x86_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_x86_en-US.msi) · [poolr_0.6.0_x86-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_x86-setup.exe) |
+| **macOS** | Apple Silicon (M1/M2/M3/M4) | `.dmg` | [poolr_0.6.0_aarch64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_aarch64.dmg) |
+| **macOS** | Intel x64 | `.dmg` | [poolr_0.6.0_x64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_x64.dmg) |
+| **Linux** | x86_64 (Debian / Ubuntu / Mint) | `.deb` | [poolr_0.6.0_amd64.deb](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_amd64.deb) |
+| **Linux** | x86_64 (Fedora / RHEL / openSUSE)| `.rpm` | [poolr-0.6.0-1.x86_64.rpm](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr-0.6.0-1.x86_64.rpm) |
 
 ---
 
@@ -244,14 +244,14 @@ For in-depth technical documentation regarding inter-process communication, zero
 If you use Poolr to conduct, screen, analyze, or report evidence in your systematic review or meta-analysis, please cite the software:
 
 ### APA Format
-> Awan, M. H. (2026). *Poolr: Free, open-source desktop platform for systematic reviews & meta-analyses* (Version 0.5.7) [Computer software]. https://github.com/harisawan-bit/poolr
+> Awan, M. H. (2026). *Poolr: Free, open-source desktop platform for systematic reviews & meta-analyses* (Version 0.6.0) [Computer software]. https://github.com/harisawan-bit/poolr
 
 ### BibTeX
 ```bibtex
 @software{Awan_Poolr_2026,
   author = {Awan, Muhammad Haris},
   title = {{Poolr: Free, Open-Source Desktop Platform for Systematic Reviews & Meta-Analyses}},
-  version = {0.5.7},
+  version = {0.6.0},
   year = {2026},
   url = {https://github.com/harisawan-bit/poolr},
   publisher = {GitHub}

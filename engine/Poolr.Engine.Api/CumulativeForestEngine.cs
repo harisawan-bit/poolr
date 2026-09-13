@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// v0.7.0 Cumulative Forest Plot with Trendline (RevMan Web style).
+/// v0.6.0 Cumulative Forest Plot with Trendline (RevMan Web style).
 /// Produces cumulative meta-analysis data with a trendline showing how
 /// the pooled effect evolves as studies are added chronologically.
 /// Also computes the cumulative I² trend.

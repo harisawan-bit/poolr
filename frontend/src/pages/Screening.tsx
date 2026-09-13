@@ -14,7 +14,7 @@ const DEC_LABEL: Record<ScreenDecision, string> = { include: "Include", exclude:
 const DEC_TONE: Record<ScreenDecision, "include" | "exclude" | "unsure" | "neutral"> = {
   include: "include", exclude: "exclude", unsure: "unsure", unset: "neutral",
 };
-// v0.5.1 — structured PICO-failure exclusion reasons (PRISMA-reportable)
+// v0.6.0 — structured PICO-failure exclusion reasons (PRISMA-reportable)
 const EXCLUSION_REASONS = [
   "Population not relevant",
   "Intervention not relevant",
@@ -247,7 +247,7 @@ export default function Screening({ project, onChange }: { project: Project; onC
       const stageItems = next.screening[stage] ?? [];
       const res = importCitationText(f.text, f.name, stage, stageItems.length + 1);
       if (res.items.length > 0) {
-        // v0.5.1 — de-duplicate against what is already in the stage before merging
+        // v0.6.0 — de-duplicate against what is already in the stage before merging
         const { kept, duplicatesRemoved } = dedupeRecords(res.items, stageItems);
         if (kept.length > 0) next = mergeScreeningItems(next, stage, kept);
         imported += kept.length;
@@ -569,7 +569,7 @@ export default function Screening({ project, onChange }: { project: Project; onC
         </Card>
       )}
 
-      {/* v0.5.8 — Living Review Update Detection */}
+      {/* v0.6.0 — Living Review Update Detection */}
       {tab === "living_review" && (
         <LivingReviews />
       )}

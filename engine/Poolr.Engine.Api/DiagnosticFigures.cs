@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Poolr.Engine.Api;
 
-/// <summary>v0.5.1 diagnostic figures (SVG, monochrome palette matching Figures.cs).</summary>
+/// <summary>v0.6.0 diagnostic figures (SVG, monochrome palette matching Figures.cs).</summary>
 public static class DiagnosticFigures
 {
     private const string StudyColor = "#e6e7ea";

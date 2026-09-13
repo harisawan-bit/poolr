@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// Shared numeric primitives for the v0.5.1 extended engine.
+/// Shared numeric primitives for the v0.6.0 extended engine.
 /// All formulas verified against metafor documentation / primary literature.
 /// </summary>
 public static class ExtendedStats

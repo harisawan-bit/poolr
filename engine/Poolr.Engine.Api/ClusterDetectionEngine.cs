@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// v0.7.0 Cluster Detection in Funnel Plots (CMA-style).
+/// v0.6.0 Cluster Detection in Funnel Plots (CMA-style).
 /// Detects distinct clusters in funnel plots using DBSCAN-like density-based
 /// clustering on (effect, SE) space. Also implements the classic fail-safe N
 /// (Rosenthal 1979, corrected formulation) and Orwin's fail-safe N.

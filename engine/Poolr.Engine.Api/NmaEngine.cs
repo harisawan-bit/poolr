@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// Network Meta-Analysis engine (v0.5.7).
+/// Network Meta-Analysis engine (v0.6.0).
 /// Frequentist WLS (Rücker 2012) + Bayesian MCMC + node-split inconsistency.
 /// Pure C# numerics, guarded by xUnit benchmarks.
 /// </summary>

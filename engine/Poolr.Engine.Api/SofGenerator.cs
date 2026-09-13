@@ -7,7 +7,7 @@ using System.Text;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// v0.5.1 — GRADE Summary-of-Findings (SoF) table generator.
+/// v0.6.0 — GRADE Summary-of-Findings (SoF) table generator.
 /// Combines per-outcome pooled results, RoB judgements and the existing
 /// GradeEngine downgrades into a Cochrane-style SoF structure (markdown +
 /// structured rows). OIS-based imprecision: optimal information size via

@@ -967,7 +967,7 @@ function generateFunnelSVG(data: { points: { effect: number; se: number; study: 
   return svg;
 }
 
-// ── v0.5.8 Power Tools: Publication Bias, Trim-Fill, Begg's, Cumulative, Meta-Regression ──
+// ── v0.6.0 Power Tools: Publication Bias, Trim-Fill, Begg's, Cumulative, Meta-Regression ──
 function PowerToolsBlock({ resp, studies }: { resp: any; studies: StudyInput[] }) {
   const [pbTab, setPbTab] = useState<"trimfill" | "begg" | "cumulative" | "metareg" | "failsafe" | "labbe" | "bubble">("trimfill");
   const [tfResult, setTfResult] = useState<ReturnType<typeof trimAndFill> | null>(null);

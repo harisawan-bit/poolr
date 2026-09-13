@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// Extended Proportions Meta-Analysis engine (v0.5.7).
+/// Extended Proportions Meta-Analysis engine (v0.6.0).
 /// GLMM for proportions, double-arcsine, Miller back-transformation.
 /// </summary>
 public static class ProportionEngine

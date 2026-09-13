@@ -4,7 +4,7 @@ using Xunit;
 namespace Poolr.Engine.Tests;
 
 /// <summary>
-/// v0.7.0 tests for the 6 new engines: NMA regression, SUCRA, cluster detection,
+/// v0.6.0 tests for the 6 new engines: NMA regression, SUCRA, cluster detection,
 /// diagnostic OR forest, cumulative forest, cluster-robust Egger.
 /// </summary>
 public class V07EngineTests

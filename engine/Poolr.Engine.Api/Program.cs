@@ -26,8 +26,8 @@ app.Use(async (ctx, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.5.7", engine = "csharp" }));
-app.MapGet("/version", () => Results.Ok(new { version = "0.5.7" }));
+app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.6.0", engine = "csharp" }));
+app.MapGet("/version", () => Results.Ok(new { version = "0.6.0" }));
 
 // Phase B — C# meta-analysis engine (numerics covered by engine/Poolr.Engine.Tests xUnit).
 app.MapPost("/api/meta", ([FromBody] MetaRequest req) =>
@@ -44,7 +44,7 @@ app.MapPost("/api/meta", ([FromBody] MetaRequest req) =>
     }
 });
 
-// v0.5.1 — extended meta-analysis (KH, MH/Peto, subgroups w/ Q-between, sensitivity, bias depth, new outcome types)
+// v0.6.0 — extended meta-analysis (KH, MH/Peto, subgroups w/ Q-between, sensitivity, bias depth, new outcome types)
 app.MapPost("/api/meta2", async (HttpRequest httpReq) =>
 {
     try
@@ -65,14 +65,14 @@ app.MapPost("/api/meta2", async (HttpRequest httpReq) =>
     }
 });
 
-// v0.5.1 — effect-size conversions / median completion
+// v0.6.0 — effect-size conversions / median completion
 app.MapPost("/api/convert", ([FromBody] ConvertRequest req) =>
 {
     try { return Results.Ok(Converters.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.1 — diagnostic figures (Galbraith, L'Abbe, Baujat, contour funnel)
+// v0.6.0 — diagnostic figures (Galbraith, L'Abbe, Baujat, contour funnel)
 app.MapPost("/api/figure/galbraith", (DiagnosticFigures.PlotInput req) =>
     Results.Text(DiagnosticFigures.Galbraith(req, 0), "image/svg+xml"));
 app.MapPost("/api/figure/labbe", (List<DiagnosticFigures.LabbeArm> arms) =>
@@ -89,7 +89,7 @@ app.MapPost("/api/figure/baujat", (DiagnosticFigures.PlotInput req) =>
 app.MapPost("/api/figure/funnel_contour", ([FromBody] MetaResponse req) =>
     Results.Text(DiagnosticFigures.ContourFunnel(req), "image/svg+xml"));
 
-// v0.5.1 — export suite (R replication, citations, methods paragraph)
+// v0.6.0 — export suite (R replication, citations, methods paragraph)
 app.MapPost("/api/export/r_code", async (HttpRequest httpReq) =>
 {
     try
@@ -122,7 +122,7 @@ app.MapPost("/api/export/citations", async (HttpRequest httpReq) =>
 app.MapPost("/api/export/methods", ([FromBody] ExtendedMetaResponse req) =>
     Results.Text(ExportSuite.MethodsParagraph(req), "text/plain"));
 
-// v0.5.1 — robvis-style RoB figures
+// v0.6.0 — robvis-style RoB figures
 app.MapPost("/api/figure/rob_traffic", ([FromBody] RobFigures.TrafficLightRequest req) =>
     Results.Text(RobFigures.TrafficLight(req), "image/svg+xml"));
 app.MapPost("/api/figure/rob_summary", ([FromBody] RobFigures.TrafficLightRequest req) =>
@@ -174,7 +174,7 @@ app.MapPost("/api/project/load", ([FromBody] ProjectLoadRequest req) =>
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.1 — GRADE Summary-of-Findings
+// v0.6.0 — GRADE Summary-of-Findings
 app.MapPost("/api/grade/sof", ([FromBody] SofGenerator.SofRequest req) =>
 {
     try
@@ -199,7 +199,7 @@ app.MapPost("/api/grade", ([FromBody] GradeRequest req) =>
     }
 });
 
-// v0.5.7 — Living Systematic Review
+// v0.6.0 — Living Systematic Review
 app.MapPost("/api/living/cumulative", ([FromBody] LivingReviewEngine.CumulativeRequest req) =>
 {
     try { return Results.Ok(LivingReviewEngine.RunCumulative(req)); }
@@ -212,7 +212,7 @@ app.MapPost("/api/living/priority", ([FromBody] LivingReviewEngine.PriorityScree
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.7 — Niche MA types (correlations, variability, SCED, Poisson, agreement)
+// v0.6.0 — Niche MA types (correlations, variability, SCED, Poisson, agreement)
 app.MapPost("/api/niche/correlation", ([FromBody] List<NicheEngine.CorrelationStudy> studies) =>
 {
     try { return Results.Ok(NicheEngine.RunCorrelationHunterSchmidt(studies)); }
@@ -239,7 +239,7 @@ app.MapPost("/api/niche/agreement", ([FromBody] List<NicheEngine.AgreementStudy>
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.7 — Specialized (QoL, Economic, Genetics, Ecology, Education, Adverse Events)
+// v0.6.0 — Specialized (QoL, Economic, Genetics, Ecology, Education, Adverse Events)
 app.MapPost("/api/specialized/qol", ([FromBody] SpecializedEngine.QolRequest req) =>
 {
     try { return Results.Ok(SpecializedEngine.RunQol(req.studies, req.pooledBaselineSd)); }
@@ -271,7 +271,7 @@ app.MapPost("/api/specialized/adverse", ([FromBody] List<SpecializedEngine.AeStu
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.7 — Advanced (Prognostic, Qualitative, Bibliometric, Sequential, DCA)
+// v0.6.0 — Advanced (Prognostic, Qualitative, Bibliometric, Sequential, DCA)
 app.MapPost("/api/advanced/prognostic", ([FromBody] List<AdvancedEngine.PrognosticStudy> studies) =>
 {
     try { return Results.Ok(AdvancedEngine.RunPrognostic(studies)); }
@@ -298,7 +298,7 @@ app.MapPost("/api/advanced/dca", ([FromBody] List<AdvancedEngine.DcaStudy> studi
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.7 — Collaboration (snapshots, diff, restore)
+// v0.6.0 — Collaboration (snapshots, diff, restore)
 app.MapPost("/api/collaboration/snapshot", ([FromBody] CollaborationEngine.SnapshotRequest req) =>
 {
     try { return Results.Ok(new { id = CollaborationEngine.CreateSnapshot(req) }); }
@@ -320,7 +320,7 @@ app.MapPost("/api/collaboration/restore", ([FromBody] CollaborationEngine.Restor
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.7 — Reporting (LaTeX, HTML, Python, Stata)
+// v0.6.0 — Reporting (LaTeX, HTML, Python, Stata)
 app.MapPost("/api/report/latex", ([FromBody] ReportingEngine.ManuscriptRequest req) =>
     Results.Text(ReportingEngine.GenerateLatex(req), "application/x-tex"));
 app.MapPost("/api/report/html", ([FromBody] ReportingEngine.HtmlReportRequest req) =>
@@ -330,7 +330,7 @@ app.MapPost("/api/report/python", ([FromBody] ReportingEngine.ManuscriptRequest 
 app.MapPost("/api/report/stata", ([FromBody] ReportingEngine.ManuscriptRequest req) =>
     Results.Text(ReportingEngine.GenerateStataReplication(req), "text/plain"));
 
-// v0.5.7 — AI-assisted screening / extraction / RoB / GRADE
+// v0.6.0 — AI-assisted screening / extraction / RoB / GRADE
 app.MapPost("/api/ai/screening", async (HttpRequest req) =>
 {
     try
@@ -345,7 +345,7 @@ app.MapPost("/api/ai/screening", async (HttpRequest req) =>
     }
 });
 
-// v0.5.7 — Survival extensions (RMST, IPD reconstruction)
+// v0.6.0 — Survival extensions (RMST, IPD reconstruction)
 app.MapPost("/api/survival", async (HttpRequest req) =>
 {
     try
@@ -376,7 +376,7 @@ app.MapPost("/api/survival", async (HttpRequest req) =>
     }
 });
 
-// v0.5.7 — Proportion Meta-Analysis (extended)
+// v0.6.0 — Proportion Meta-Analysis (extended)
 app.MapPost("/api/proportion", ([FromBody] ProportionEngine.ProportionRequest req) =>
 {
     try
@@ -390,21 +390,21 @@ app.MapPost("/api/proportion", ([FromBody] ProportionEngine.ProportionRequest re
     }
 });
 
-// v0.5.7 — Prediction interval
+// v0.6.0 — Prediction interval
 app.MapPost("/api/prediction", ([FromBody] PredictionEngine.PredictionRequest req) =>
 {
     try { return Results.Ok(PredictionEngine.ComputePredictionInterval(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.7 — Model averaging
+// v0.6.0 — Model averaging
 app.MapPost("/api/modelaverage", ([FromBody] PredictionEngine.ModelAverageRequest req) =>
 {
     try { return Results.Ok(PredictionEngine.RunModelAveraging(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.7 — Dose-Response Meta-Analysis
+// v0.6.0 — Dose-Response Meta-Analysis
 app.MapPost("/api/dose", ([FromBody] DoseResponseEngine.DoseRequest req) =>
 {
     try
@@ -418,7 +418,7 @@ app.MapPost("/api/dose", ([FromBody] DoseResponseEngine.DoseRequest req) =>
     }
 });
 
-// v0.5.7 — IPD Meta-Analysis
+// v0.6.0 — IPD Meta-Analysis
 app.MapPost("/api/ipd", ([FromBody] IpdEngine.IpdRequest req) =>
 {
     try
@@ -432,7 +432,7 @@ app.MapPost("/api/ipd", ([FromBody] IpdEngine.IpdRequest req) =>
     }
 });
 
-// v0.5.7 — Diagnostic Test Accuracy Meta-Analysis
+// v0.6.0 — Diagnostic Test Accuracy Meta-Analysis
 app.MapPost("/api/dta", ([FromBody] DtaEngine.DtaRequest req) =>
 {
     try
@@ -446,7 +446,7 @@ app.MapPost("/api/dta", ([FromBody] DtaEngine.DtaRequest req) =>
     }
 });
 
-// v0.5.7 — Multilevel / Multivariate / RVE
+// v0.6.0 — Multilevel / Multivariate / RVE
 app.MapPost("/api/multilevel", ([FromBody] MultilevelEngine.MultilevelRequest req) =>
 {
     try
@@ -460,7 +460,7 @@ app.MapPost("/api/multilevel", ([FromBody] MultilevelEngine.MultilevelRequest re
     }
 });
 
-// v0.5.7 — Network Meta-Analysis
+// v0.6.0 — Network Meta-Analysis
 app.MapPost("/api/nma", ([FromBody] NmaEngine.NmaRequest req) =>
 {
     try
@@ -474,7 +474,7 @@ app.MapPost("/api/nma", ([FromBody] NmaEngine.NmaRequest req) =>
     }
 });
 
-// v0.5.8 — Powerhouse: 8 scientifically-critical features vs. SRMA ecosystem
+// v0.6.0 — Powerhouse: 8 scientifically-critical features vs. SRMA ecosystem
 // 1. P-value combination (Fisher/Stouffer/Tippett/Edgington)
 app.MapPost("/api/powerhouse/pval", ([FromBody] PowerhouseEngine.PvalCombineRequest req) =>
 {
@@ -574,42 +574,42 @@ app.MapPost("/api/competitive/bayesian", ([FromBody] CompetitiveEngine.BayesianR
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.7.0 — NMA Meta-Regression (Rücker WLS with relative effects)
+// v0.6.0 — NMA Meta-Regression (Rücker WLS with relative effects)
 app.MapPost("/api/nma/regression", ([FromBody] NmaMetaRegressionEngine.NmaRegRequest req) =>
 {
     try { return Results.Ok(NmaMetaRegressionEngine.RunMetaRegression(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.7.0 — SUCRA with bootstrap 95% CIs
+// v0.6.0 — SUCRA with bootstrap 95% CIs
 app.MapPost("/api/sucra", ([FromBody] SucraEngine.SucraRequest req) =>
 {
     try { return Results.Ok(SucraEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.7.0 — Cluster detection in funnel plots
+// v0.6.0 — Cluster detection in funnel plots
 app.MapPost("/api/cluster/detect", ([FromBody] ClusterDetectionEngine.ClusterRequest req) =>
 {
     try { return Results.Ok(ClusterDetectionEngine.DetectClusters(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.7.0 — Diagnostic OR forest (Moses-Littenberg)
+// v0.6.0 — Diagnostic OR forest (Moses-Littenberg)
 app.MapPost("/api/dta/orforest", ([FromBody] DiagnosticOrForestEngine.DorRequest req) =>
 {
     try { return Results.Ok(DiagnosticOrForestEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.7.0 — Cumulative forest with trendline (RevMan Web style)
+// v0.6.0 — Cumulative forest with trendline (RevMan Web style)
 app.MapPost("/api/cumulative/forest", ([FromBody] CumulativeForestEngine.CumulativeRequest req) =>
 {
     try { return Results.Ok(CumulativeForestEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.7.0 — Cluster-robust Egger test (CMA 4 style)
+// v0.6.0 — Cluster-robust Egger test (CMA 4 style)
 app.MapPost("/api/bias/cluster_egger", ([FromBody] ClusterRobustEggerEngine.EggerRequest req) =>
 {
     try { return Results.Ok(ClusterRobustEggerEngine.Run(req)); }

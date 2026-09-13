@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// v0.5.1 effect-size conversions and data-completion helpers.
+/// v0.6.0 effect-size conversions and data-completion helpers.
 /// Wan et al. (2014): median/Q1/Q3 (or min/max) -> mean/SD for use in MD/SMD MA.
 /// </summary>
 public static class Converters

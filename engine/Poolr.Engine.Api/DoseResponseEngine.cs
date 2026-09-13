@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// Dose-Response Meta-Analysis engine (v0.5.7).
+/// Dose-Response Meta-Analysis engine (v0.6.0).
 /// Aggregate Greenland-Dennek (1992) two-stage + E_max parametric.
 /// </summary>
 public static class DoseResponseEngine

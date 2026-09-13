@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// Phase 13 — Niche meta-analysis types (v0.5.7).
+/// Phase 13 — Niche meta-analysis types (v0.6.0).
 /// Correlations (Hunter-Schmidt), variability ratios, SCED, Poisson GLMM, agreement (kappa/ICC).
 /// </summary>
 public static class NicheEngine

@@ -18,7 +18,7 @@ public class Study
     public double? hr { get; set; }
     public double? hr_lower { get; set; }
     public double? hr_upper { get; set; }
-    // v0.5.1 extensions
+    // v0.6.0 extensions
     public double? aux_time_int { get; set; }   // person-time, intervention arm (rates)
     public double? aux_time_ctrl { get; set; }  // person-time, control arm (rates)
     public double? correlation { get; set; }    // raw r (correlation MA)

@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// v0.5.1 complete-classical-meta-analysis engine layer.
+/// v0.6.0 complete-classical-meta-analysis engine layer.
 /// Additive to the legacy MetaAnalysis: same tau2 estimators (DL/REML/PM/HS/ML/EB),
 /// extended with Knapp-Hartung CIs, Mantel-Haenszel/Peto poolers (SpecialPoolers),
 /// publication-bias depth (PublicationBiasSuite), subgroups with Q-between,

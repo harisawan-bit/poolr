@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// Diagnostic Test Accuracy (DTA) Meta-Analysis engine (v0.5.7).
+/// Diagnostic Test Accuracy (DTA) Meta-Analysis engine (v0.6.0).
 /// Bivariate Reitsma model (2005) + HSROC (Rutter-Gatsonis 2001).
 /// Pure C# numerics, guarded by xUnit benchmarks.
 /// </summary>

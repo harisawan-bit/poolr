@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// Prediction intervals, model averaging, and influence diagnostics (v0.5.7).
+/// Prediction intervals, model averaging, and influence diagnostics (v0.6.0).
 /// Extends the existing meta-analysis results with additional outputs.
 /// </summary>
 public static class PredictionEngine

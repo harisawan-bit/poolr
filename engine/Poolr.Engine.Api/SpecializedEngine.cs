@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// Phase 14-19 engines: QoL, Economic, Genetics, Ecology, Education, Adverse Events (v0.5.7).
+/// Phase 14-19 engines: QoL, Economic, Genetics, Ecology, Education, Adverse Events (v0.6.0).
 /// </summary>
 public static class SpecializedEngine
 {

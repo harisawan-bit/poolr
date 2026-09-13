@@ -4,7 +4,7 @@ Our mission is to establish Poolr as the world's most accessible, reliable, and 
 
 ---
 
-## Current Release: v0.5.7 (September 2026) :white_check_mark:
+## Current Release: v0.6.0 (September 2026) :white_check_mark:
 - [x] Full PRISMA 2020 8-stage pipeline from PICO to publication.
 - [x] Zero-warning C# engine with 67 xUnit mathematical benchmark tests.
 - [x] 100% Python-free desktop distribution across Windows (MSI/NSIS), macOS (Apple Silicon/Intel), and Linux (DEB/RPM).

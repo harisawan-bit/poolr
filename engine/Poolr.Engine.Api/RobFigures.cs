@@ -7,7 +7,7 @@ using System.Text;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// v0.5.1 — robvis-style RoB figures: traffic-light plot (per-study x per-domain
+/// v0.6.0 — robvis-style RoB figures: traffic-light plot (per-study x per-domain
 /// judgement cells) and weighted summary bar (distribution of judgements,
 /// weighted by the reverse-variance weights robvis uses).
 /// Judgement values accepted: "Low", "Some concerns"/"Concerns", "High", "Critical", "NA".

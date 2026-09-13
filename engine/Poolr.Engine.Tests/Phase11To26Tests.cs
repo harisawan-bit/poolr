@@ -56,7 +56,7 @@ public class ReportingTests
         Assert.Contains("HTML Test", html);
         Assert.Contains("1.50", html);
         Assert.Contains("Moderate", html);
-        Assert.Contains("poolr v0.5.7", html);
+        Assert.Contains("poolr v0.6.0", html);
     }
 
     [Fact]

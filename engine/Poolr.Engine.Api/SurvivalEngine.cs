@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// Survival extensions: RMST meta-analysis, IPD reconstruction from KM curves (v0.5.7).
+/// Survival extensions: RMST meta-analysis, IPD reconstruction from KM curves (v0.6.0).
 /// </summary>
 public static class SurvivalEngine
 {

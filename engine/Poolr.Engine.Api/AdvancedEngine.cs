@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// Phase 20-24 engines: Prognostic, Qualitative, Bibliometric, Sequential/TSA, Decision Curve (v0.5.7).
+/// Phase 20-24 engines: Prognostic, Qualitative, Bibliometric, Sequential/TSA, Decision Curve (v0.6.0).
 /// </summary>
 public static class AdvancedEngine
 {

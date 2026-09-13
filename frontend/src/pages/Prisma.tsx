@@ -9,7 +9,7 @@ import { exportProject, generateGradeSof } from "../lib/api";
 import DisclaimerModal from "../components/DisclaimerModal";
 import { draftManuscriptSection } from "../lib/ai";
 
-// v0.5.1 — PRISMA 2020 27-item checklist tracker (item numbers per the official checklist)
+// v0.6.0 — PRISMA 2020 27-item checklist tracker (item numbers per the official checklist)
 const PRISMA_ITEMS: { n: number; section: string; text: string }[] = [
   { n: 1, section: "TITLE", text: "Identify the report as a systematic review" },
   { n: 2, section: "TITLE", text: "Data sources in the title/abstract" },
@@ -80,7 +80,7 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
     }
   }
 
-  // v0.5.1 — checklist state lives on the project (auto-saved): prisma.checklist[itemNumber]=true
+  // v0.6.0 — checklist state lives on the project (auto-saved): prisma.checklist[itemNumber]=true
   type Checklist = Record<string, boolean>;
   const checklist = ((project.prisma as unknown as { checklist?: Checklist }).checklist ?? {}) as Checklist;
   const setItem = (n: number, done: boolean) =>

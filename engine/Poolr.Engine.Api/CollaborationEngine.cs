@@ -7,7 +7,7 @@ using System.Text.Json;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// Phase 12 — Collaboration engine (v0.5.7).
+/// Phase 12 — Collaboration engine (v0.6.0).
 /// Version history, project snapshots, diff, merge support.
 /// Google Drive sync is a client-side concern; this provides the local foundation.
 /// </summary>

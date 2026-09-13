@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Poolr.Engine.Api;
 
-/// <summary>Publication-bias depth suite (v0.5.1).</summary>
+/// <summary>Publication-bias depth suite (v0.6.0).</summary>
 public static class PublicationBiasSuite
 {
     public static ExtendedPublicationBias Evaluate(

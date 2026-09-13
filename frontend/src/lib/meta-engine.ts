@@ -501,7 +501,7 @@ export function generateFunnelPlotData(result: MetaAnalysisResult): {
   return { points, pseudoCI };
 }
 
-// ── v0.5.8 Power Tools: additional statistical methods ──
+// ── v0.6.0 Power Tools: additional statistical methods ──
 
 /** Trim and Fill (Duval & Tweedie 2000) — imputes missing studies to correct funnel-plot asymmetry. */
 export function trimAndFill(
@@ -624,7 +624,7 @@ export function metaRegression(
   return { intercept, slope, interceptSE, slopeSE, interceptP, slopeP, rSquared, qModel, qResidual, n: valid.length };
 }
 
-// ── v0.5.8 Failsafe & Small-Study Effects ──
+// ── v0.6.0 Failsafe & Small-Study Effects ──
 
 /** Rosenthal's Failsafe N: number of null studies needed to bring p above alpha (default 0.05). */
 export function rosenthalFailsafe(studies: { effect: number; se: number }[], alpha = 0.05): { failsafeN: number; meanZ: number; targetZ: number } {

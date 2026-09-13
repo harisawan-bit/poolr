@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// v0.7.0 Diagnostic OR Forest Engine (JASP-style).
+/// v0.6.0 Diagnostic OR Forest Engine (JASP-style).
 /// Computes diagnostic odds ratio (DOR) forest plot data for each study
 /// and the pooled DOR with 95% CI using the Moses-Littenberg method.
 /// Also provides SROC curve coordinates for plotting.

@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// v0.5.8 powerhouse engine — 8 scientifically-critical features missing
+/// v0.6.0 powerhouse engine — 8 scientifically-critical features missing
 /// from poolr's C# engine vs. the SRMA software ecosystem (RevMan, Stata meta,
 /// R metafor/netmeta, CMA, JASP, Jamovi, Covidence, Rayyan). All numerics are
 /// implemented from primary literature and verified against metafor/stata

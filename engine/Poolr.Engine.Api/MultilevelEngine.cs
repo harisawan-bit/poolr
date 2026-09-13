@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// Multilevel & Multivariate Meta-Analysis engine (v0.5.7).
+/// Multilevel & Multivariate Meta-Analysis engine (v0.6.0).
 /// Three-level MA (Cheung 2014), multivariate MA (Gleser-Olkin),
 /// robust variance estimation (Hedges-Tipton-Pustejovsky 2010).
 /// Pure C# numerics, guarded by xUnit benchmarks.

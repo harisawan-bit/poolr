@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// v0.7.0 Cluster-Robust Egger Test (CMA 4 style).
+/// v0.6.0 Cluster-Robust Egger Test (CMA 4 style).
 /// Performs Egger's regression test for publication bias with cluster-robust
 /// variance estimation to handle dependent effect sizes (e.g., multiple outcomes
 /// from the same study). This is a critical improvement over standard Egger

@@ -15,7 +15,7 @@ export interface Study {
   hr?: number | null;
   hr_lower?: number | null;
   hr_upper?: number | null;
-  // v0.5.1 extensions
+  // v0.6.0 extensions
   aux_time_int?: number | null;   // person-time, intervention arm (IRR/IRD)
   aux_time_ctrl?: number | null;  // person-time, control arm (IRR/IRD)
   correlation?: number | null;    // raw r (Z_CORR)
@@ -29,14 +29,14 @@ export interface Study {
 
 export interface MetaRequest {
   model?: "random" | "fixed";
-  measure?: string; // OR|RR|RD|MD|SMD|HR plus v0.5.1: MH_OR|PETO|GLASS|LOGIT_PROP|ARS_PROP|IRR|IRD|Z_CORR|GEN_IV
+  measure?: string; // OR|RR|RD|MD|SMD|HR plus v0.6.0: MH_OR|PETO|GLASS|LOGIT_PROP|ARS_PROP|IRR|IRD|Z_CORR|GEN_IV
   method?: "DL" | "REML" | "PM" | "HS" | "ML" | "EB";
   subgroup?: string;
   pub_bias?: "none" | "egger" | "begg" | "all";
   data?: Study[];
 }
 
-/** v0.5.1 extended request (POST /api/meta2) */
+/** v0.6.0 extended request (POST /api/meta2) */
 export interface ExtendedMetaRequest extends MetaRequest {
   knapp_hartung?: boolean;
   exclude?: string[] | null;
@@ -93,7 +93,7 @@ export interface PublicationBias {
   begg?: BeggResult | null;
   trimfill?: unknown | null;
 }
-/** v0.5.1 extended response shapes (subset — unknown fields pass through) */
+/** v0.6.0 extended response shapes (subset — unknown fields pass through) */
 export interface ExtendedPooledResult extends PooledResult {
   ci_method?: string;
   t_value?: number | null;
@@ -187,7 +187,7 @@ export interface ScreeningItem {
   decision: ScreenDecision;
   stage: "title_abstract" | "full_text";
   note?: string;
-  // v0.5.1 — structured exclusion reason (PICO-failure tags) + dedup key
+  // v0.6.0 — structured exclusion reason (PICO-failure tags) + dedup key
   exclusion_reason?: string;
   doi?: string;
   pmid?: string;
@@ -326,7 +326,7 @@ export interface ProjectConfig {
 
 export function emptyProject(): Project {
   return {
-    metadata: { version: "0.5.7", created: new Date().toISOString(), title: "Untitled review" },
+    metadata: { version: "0.6.0", created: new Date().toISOString(), title: "Untitled review" },
     pico: { population: "", intervention: "", comparator: "", outcomes: "" },
     protocol: { databases: "PubMed, Embase, Cochrane CENTRAL, Scopus", registration: "Not registered", objective: "" },
     screening: { title_abstract: [], full_text: [] },
@@ -473,7 +473,7 @@ export async function runMeta(req: MetaRequest): Promise<MetaResponse> {
   return postJson<MetaResponse>("/api/meta", req);
 }
 
-/** v0.5.1 — extended analysis endpoint (KH, MH/Peto, sensitivity, bias depth, new outcome types). */
+/** v0.6.0 — extended analysis endpoint (KH, MH/Peto, sensitivity, bias depth, new outcome types). */
 export async function runMetaExtended(req: ExtendedMetaRequest): Promise<ExtendedMetaResponse> {
   return postJson<ExtendedMetaResponse>("/api/meta2", req);
 }
@@ -482,7 +482,7 @@ export async function runGrade(req: { outcomes?: GradeOutcomeInput[]; meta?: Met
   return postJson<GradeRow[]>("/api/grade", req);
 }
 
-/** Fetch an SVG figure by kind (v0.5.1 adds galbraith/labbe/baujat/funnel_contour). */
+/** Fetch an SVG figure by kind (v0.6.0 adds galbraith/labbe/baujat/funnel_contour). */
 export async function getFigure(kind: string, resp: MetaResponse): Promise<string> {
   let r: Response;
   try {
@@ -499,14 +499,14 @@ export async function getFigure(kind: string, resp: MetaResponse): Promise<strin
   return r.text();
 }
 
-/** v0.5.1 effect-size conversions (POST /api/convert). */
+/** v0.6.0 effect-size conversions (POST /api/convert). */
 export interface ConvertResult { conversion: string; result: number; extra?: Record<string, number>; note?: string }
 export async function runConvert(body: Record<string, unknown>): Promise<ConvertResult> {
   return postJson<ConvertResult>("/api/convert", body);
 }
 
 /**
- * v0.5.1 de-duplication across imported records.
+ * v0.6.0 de-duplication across imported records.
  * A record is a duplicate of an earlier one when PMID or DOI match exactly,
  * or when the normalized titles (lowercase, alphanumeric-only) match.
  * Returns the deduped list plus how many were dropped and their ids.
