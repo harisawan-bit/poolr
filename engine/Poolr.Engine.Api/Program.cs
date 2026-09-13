@@ -474,4 +474,144 @@ app.MapPost("/api/nma", ([FromBody] NmaEngine.NmaRequest req) =>
     }
 });
 
+// v0.6.0 — Bayesian MCMC Meta-Analysis
+app.MapPost("/api/bayesian", ([FromBody] BayesianMcmcEngine.BayesianRequest req) =>
+{
+    try
+    {
+        var result = BayesianMcmcEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.6.0 — GOSH (Graphic Approach to Heterogeneity)
+app.MapPost("/api/gosh", ([FromBody] GoshEngine.GoshRequest req) =>
+{
+    try
+    {
+        var result = GoshEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.6.0 — Influence Diagnostics
+app.MapPost("/api/influence", ([FromBody] InfluenceEngine.InfluenceRequest req) =>
+{
+    try
+    {
+        var result = InfluenceEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.6.0 — Permutation Test
+app.MapPost("/api/permutation", ([FromBody] PermutationEngine.PermutationRequest req) =>
+{
+    try
+    {
+        var result = PermutationEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.6.0 — Bootstrap Confidence Intervals
+app.MapPost("/api/bootstrap", ([FromBody] BootstrapEngine.BootstrapRequest req) =>
+{
+    try
+    {
+        var result = BootstrapEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.6.0 — Test of Excess Significance
+app.MapPost("/api/tes", ([FromBody] TesEngine.TesRequest req) =>
+{
+    try
+    {
+        var result = TesEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.6.0 — Location-Scale Meta-Analysis
+app.MapPost("/api/locationscale", ([FromBody] LocationScaleEngine.LocationScaleRequest req) =>
+{
+    try
+    {
+        var result = LocationScaleEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.6.0 — Multiple Imputation for Missing Data
+app.MapPost("/api/mi", ([FromBody] MultipleImputationEngine.MiRequest req) =>
+{
+    try
+    {
+        var result = MultipleImputationEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.6.0 — Restricted Cubic Splines for Dose-Response
+app.MapPost("/api/rcs", ([FromBody] RcsEngine.RcsRequest req) =>
+{
+    try
+    {
+        var result = RcsEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// v0.6.0 — Cluster-Robust Inference for Dependent Effects
+app.MapPost("/api/clusterrobust", ([FromBody] ClusterRobustEngine.ClusterRobustRequest req) =>
+{
+    try
+    {
+        var result = ClusterRobustEngine.Run(req);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
 app.Run();
