@@ -725,6 +725,13 @@ app.MapPost("/api/rve", ([FromBody] RveEngine.RveRequest req) =>
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
+// v0.6.0 — P-Value Combination Methods
+app.MapPost("/api/pvalue/combine", ([FromBody] PValueCombinationEngine.PValueRequest req) =>
+{
+    try { return Results.Ok(PValueCombinationEngine.Combine(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
 // v0.6.0 — Citation Deduplication
 app.MapPost("/api/deduplicate", ([FromBody] List<DeduplicationEngine.Citation> req) =>
 {
