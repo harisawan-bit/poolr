@@ -474,4 +474,59 @@ app.MapPost("/api/nma", ([FromBody] NmaEngine.NmaRequest req) =>
     }
 });
 
-app.Run();
+// v0.5.8 — Powerhouse: 8 scientifically-critical features vs. SRMA ecosystem
+// 1. P-value combination (Fisher/Stouffer/Tippett/Edgington)
+app.MapPost("/api/powerhouse/pval", ([FromBody] PowerhouseEngine.PvalCombineRequest req) =>
+{
+    try { return Results.Ok(PowerhouseEngine.CombinePvalues(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// 2. Variance Ratio Meta-Analysis (method comparison/reliability)
+app.MapPost("/api/powerhouse/varratio", ([FromBody] PowerhouseEngine.VrRequest req) =>
+{
+    try { return Results.Ok(PowerhouseEngine.RunVarianceRatio(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// 3. Profile Likelihood CI for τ²
+app.MapPost("/api/powerhouse/profiltau2", ([FromBody] PowerhouseEngine.ProfileTau2Request req) =>
+{
+    try { return Results.Ok(PowerhouseEngine.ProfileTau2Ci(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// 4. QS-test / Generalized Q-statistic for heterogeneity
+app.MapPost("/api/powerhouse/qstest", ([FromBody] PowerhouseEngine.QsTestRequest req) =>
+{
+    try { return Results.Ok(PowerhouseEngine.RunQsTest(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// 5. Best Linear Unbiased Predictors (BLUPs)
+app.MapPost("/api/powerhouse/blup", ([FromBody] PowerhouseEngine.BlupRequest req) =>
+{
+    try { return Results.Ok(PowerhouseEngine.ComputeBlups(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// 6. Exact Mantel-Haenszel CI
+app.MapPost("/api/powerhouse/exactmh", ([FromBody] PowerhouseEngine.ExactMhRequest req) =>
+{
+    try { return Results.Ok(PowerhouseEngine.RunExactMh(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// 7. Berkey-Seemhaber publication bias test
+app.MapPost("/api/powerhouse/berkey", ([FromBody] PowerhouseEngine.BerkeySeemhaberRequest req) =>
+{
+    try { return Results.Ok(PowerhouseEngine.RunBerkeySeemhaber(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// 8. Generalized Inverse Variance Heterogeneity (QH) test
+app.MapPost("/api/powerhouse/qh", ([FromBody] PowerhouseEngine.QhRequest req) =>
+{
+    try { return Results.Ok(PowerhouseEngine.RunQhTest(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
