@@ -615,6 +615,13 @@ app.MapPost("/api/clusterrobust", ([FromBody] ClusterRobustEngine.ClusterRobustR
     }
 });
 
+// v0.6.0 — Citation Deduplication
+app.MapPost("/api/deduplicate", ([FromBody] List<DeduplicationEngine.Citation> req) =>
+{
+    try { return Results.Ok(DeduplicationEngine.Deduplicate(req ?? new())); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
 // v0.6.0 — RevMan 5 Import/Export
 app.MapPost("/api/revman/import", async (HttpRequest req) =>
 {
