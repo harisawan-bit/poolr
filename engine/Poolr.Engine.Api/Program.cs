@@ -573,3 +573,45 @@ app.MapPost("/api/competitive/bayesian", ([FromBody] CompetitiveEngine.BayesianR
     try { return Results.Ok(CompetitiveEngine.RunBayesianMetaAnalysis(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
+
+// v0.7.0 — NMA Meta-Regression (Rücker WLS with relative effects)
+app.MapPost("/api/nma/regression", ([FromBody] NmaMetaRegressionEngine.NmaRegRequest req) =>
+{
+    try { return Results.Ok(NmaMetaRegressionEngine.RunMetaRegression(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.7.0 — SUCRA with bootstrap 95% CIs
+app.MapPost("/api/sucra", ([FromBody] SucraEngine.SucraRequest req) =>
+{
+    try { return Results.Ok(SucraEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.7.0 — Cluster detection in funnel plots
+app.MapPost("/api/cluster/detect", ([FromBody] ClusterDetectionEngine.ClusterRequest req) =>
+{
+    try { return Results.Ok(ClusterDetectionEngine.DetectClusters(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.7.0 — Diagnostic OR forest (Moses-Littenberg)
+app.MapPost("/api/dta/orforest", ([FromBody] DiagnosticOrForestEngine.DorRequest req) =>
+{
+    try { return Results.Ok(DiagnosticOrForestEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.7.0 — Cumulative forest with trendline (RevMan Web style)
+app.MapPost("/api/cumulative/forest", ([FromBody] CumulativeForestEngine.CumulativeRequest req) =>
+{
+    try { return Results.Ok(CumulativeForestEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.7.0 — Cluster-robust Egger test (CMA 4 style)
+app.MapPost("/api/bias/cluster_egger", ([FromBody] ClusterRobustEggerEngine.EggerRequest req) =>
+{
+    try { return Results.Ok(ClusterRobustEggerEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});

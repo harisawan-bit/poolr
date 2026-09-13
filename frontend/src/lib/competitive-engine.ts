@@ -264,3 +264,270 @@ export interface BayesianResult {
 export function runBayesianMeta(req: BayesianRequest): Promise<BayesianResult> {
   return postJson("/api/competitive/bayesian", req);
 }
+
+// ── 7. NMA Meta-Regression ─────────────────────────────────────────
+
+export interface NmaRegStudyInput {
+  study: string;
+  treatment1: string;
+  treatment2: string;
+  effect?: number;
+  se?: number;
+  covariates?: Record<string, number>;
+}
+
+export interface NmaRegRequest {
+  studies: NmaRegStudyInput[];
+  referenceTreatment: string;
+  measure: string;
+}
+
+export interface NmaRegCoefficient {
+  name: string;
+  estimate: number;
+  se: number;
+  z: number;
+  p: number;
+  ciLower: number;
+  ciUpper: number;
+}
+
+export interface RelativeEffect {
+  treatment1: string;
+  treatment2: string;
+  effect: number;
+  ciLower: number;
+  ciUpper: number;
+}
+
+export interface NmaRegResult {
+  k: number;
+  p: number;
+  nCovariates: number;
+  coefficients: NmaRegCoefficient[];
+  relativeEffects: RelativeEffect[];
+  tau2: number;
+  i2: number;
+  qTotal: number;
+  interpretation: string;
+  method: string;
+}
+
+export function runNmaRegression(req: NmaRegRequest): Promise<NmaRegResult> {
+  return postJson("/api/nma/regression", req);
+}
+
+// ── 8. SUCRA with Bootstrap CI ────────────────────────────────────
+
+export interface SucraRequest {
+  effects: number[];
+  variances: number[];
+  treatments?: string[];
+  nBootstrap?: number;
+  seed?: number;
+}
+
+export interface RankingEntry {
+  treatment: string;
+  sucra: number;
+  pScore: number;
+  meanRank: number;
+  rankSd: number;
+  ciLower: number;
+  ciUpper: number;
+  originalRank: number;
+}
+
+export interface SucraResult {
+  rankings: RankingEntry[];
+  nBootstrap: number;
+  seed: number;
+  pooledEffect: number;
+  i2: number;
+  tau2: number;
+  interpretation: string;
+  method: string;
+}
+
+export function runSucra(req: SucraRequest): Promise<SucraResult> {
+  return postJson("/api/sucra", req);
+}
+
+// ── 9. Cluster Detection in Funnel ────────────────────────────────
+
+export interface ClusterRequest {
+  effects: number[];
+  variances: number[];
+  names?: string[];
+  epsilonMultiplier?: number;
+  minPoints?: number;
+}
+
+export interface ClusterPoint {
+  study: string;
+  effect: number;
+  se: number;
+  cluster: number;
+  isCore: boolean;
+}
+
+export interface ClusterInfo {
+  clusterId: number;
+  size: number;
+  meanEffect: number;
+  pooledEffect: number;
+  ciLower: number;
+  ciUpper: number;
+  i2: number;
+  interpretation: string;
+}
+
+export interface ClusterResult {
+  points: ClusterPoint[];
+  clusters: ClusterInfo[];
+  nClusters: number;
+  nNoise: number;
+  hasDistinctClusters: boolean;
+  interpretation: string;
+  method: string;
+}
+
+export function runClusterDetection(req: ClusterRequest): Promise<ClusterResult> {
+  return postJson("/api/cluster/detect", req);
+}
+
+// ── 10. Diagnostic OR Forest (JASP-style) ─────────────────────────
+
+export interface DorStudyInput {
+  study: string;
+  tp?: number;
+  fp?: number;
+  fn?: number;
+  tn?: number;
+}
+
+export interface DorRequest {
+  studies: DorStudyInput[];
+  userPrevalence?: number;
+}
+
+export interface DorStudyResult {
+  study: string;
+  sensitivity: number;
+  specificity: number;
+  dor: number;
+  logDor: number;
+  seLogDor: number;
+  ciLower: number;
+  ciUpper: number;
+  weight: number;
+  n: number;
+}
+
+export interface SrocPoint {
+  logitSens: number;
+  logitSpec: number;
+  sensitivity: number;
+  specificity: number;
+}
+
+export interface DorResult {
+  studyResults: DorStudyResult[];
+  pooledDor: number;
+  pooledLogDor: number;
+  sePooledLogDor: number;
+  ciLower: number;
+  ciUpper: number;
+  pooledSensitivity: number;
+  pooledSpecificity: number;
+  auc: number;
+  srocCurve: SrocPoint[];
+  interpretation: string;
+  method: string;
+}
+
+export function runDiagnosticOrForest(req: DorRequest): Promise<DorResult> {
+  return postJson("/api/dta/orforest", req);
+}
+
+// ── 11. Cumulative Forest with Trendline ──────────────────────────
+
+export interface CumulativeStudy {
+  study: string;
+  effect?: number;
+  se?: number;
+  year?: number;
+  dateAdded?: string;
+}
+
+export interface CumulativeRequest {
+  studies: CumulativeStudy[];
+  chronological?: boolean;
+  model?: string;
+  method?: string;
+}
+
+export interface CumulativeEntry {
+  study: string;
+  k: number;
+  pooledEffect: number;
+  ciLower: number;
+  ciUpper: number;
+  se: number;
+  i2: number;
+  tau2: number;
+  q: number;
+  p: number;
+  weight: number;
+}
+
+export interface TrendlinePoint {
+  k: number;
+  x: number;
+  y: number;
+}
+
+export interface CumulativeResult {
+  cumulative: CumulativeEntry[];
+  trendline: TrendlinePoint[];
+  finalPooledEffect: number;
+  finalCiLower: number;
+  finalCiUpper: number;
+  finalI2: number;
+  trendlineSlope: number;
+  trendlineIntercept: number;
+  trendlineP: number;
+  interpretation: string;
+  method: string;
+}
+
+export function runCumulativeForest(req: CumulativeRequest): Promise<CumulativeResult> {
+  return postJson("/api/cumulative/forest", req);
+}
+
+// ── 12. Cluster-Robust Egger Test ─────────────────────────────────
+
+export interface ClusterEggerRequest {
+  effects: number[];
+  variances: number[];
+  clusters: string[];
+}
+
+export interface ClusterEggerResult {
+  standardIntercept: number;
+  standardInterceptSe: number;
+  standardInterceptP: number;
+  robustIntercept: number;
+  robustInterceptSe: number;
+  robustInterceptP: number;
+  df: number;
+  nClusters: number;
+  k: number;
+  significant: boolean;
+  interpretation: string;
+  method: string;
+}
+
+export function runClusterEgger(req: ClusterEggerRequest): Promise<ClusterEggerResult> {
+  return postJson("/api/bias/cluster_egger", req);
+}
