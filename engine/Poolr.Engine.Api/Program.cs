@@ -858,7 +858,7 @@ app.MapPost("/api/response-surface", ([FromBody] ResponseSurfaceEngine.ResponseS
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Zotero Sync
+// v0.6.0 -- Zotero Sync
 app.MapPost("/api/zotero/connect", ([FromBody] ZoteroSyncEngine.ZoteroConfig req) =>
 {
     try { return Results.Ok(ZoteroSyncEngine.Connect(req)); }
@@ -875,7 +875,7 @@ app.MapPost("/api/zotero/export", ([FromBody] ZoteroSyncEngine.ZoteroConfig req)
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Mendeley Sync
+// v0.6.0 -- Mendeley Sync
 app.MapPost("/api/mendeley/connect", ([FromBody] MendeleySyncEngine.MendeleyConfig req) =>
 {
     try { return Results.Ok(MendeleySyncEngine.Connect(req)); }
@@ -889,6 +889,48 @@ app.MapPost("/api/mendeley/import", ([FromBody] MendeleySyncEngine.MendeleyConfi
 app.MapPost("/api/mendeley/export", ([FromBody] MendeleySyncEngine.MendeleyConfig req) =>
 {
     try { return Results.Ok(MendeleySyncEngine.Export(req, new List<MendeleySyncEngine.MendeleyDocument>())); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.7.0 -- Risk of Bias 2
+app.MapPost("/api/rob2", ([FromBody] RoB2Engine.RoB2Request req) =>
+{
+    try { return Results.Ok(RoB2Engine.Evaluate(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.7.0 -- ROBINS-I
+app.MapPost("/api/robins-i", ([FromBody] RobinsIEngine.RobinsIRequest req) =>
+{
+    try { return Results.Ok(RobinsIEngine.Evaluate(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.7.0 -- QUADAS-2
+app.MapPost("/api/quadas-2", ([FromBody] Quadas2Engine.Quadas2Request req) =>
+{
+    try { return Results.Ok(Quadas2Engine.Evaluate(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.7.0 -- AMSTAR-2
+app.MapPost("/api/amstar-2", ([FromBody] Amstar2Engine.Amstar2Request req) =>
+{
+    try { return Results.Ok(Amstar2Engine.Evaluate(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.7.0 -- Newcastle-Ottawa Scale
+app.MapPost("/api/nos", ([FromBody] NewcastleOttawaEngine.NosRequest req) =>
+{
+    try { return Results.Ok(NewcastleOttawaEngine.Evaluate(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.7.0 -- GRADE Evidence Profile
+app.MapPost("/api/grade/evidence-profile", ([FromBody] GradeEvidenceProfileEngine.GradeRequest req) =>
+{
+    try { return Results.Ok(GradeEvidenceProfileEngine.Generate(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
