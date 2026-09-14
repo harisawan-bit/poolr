@@ -781,4 +781,39 @@ app.MapPost("/api/revman/export", async (HttpRequest req) =>
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
+// v0.6.0 — Bayesian Model-Averaged Meta-Analysis
+app.MapPost("/api/bma", ([FromBody] BayesianModelAveragingEngine.BmmaRequest req) =>
+{
+    try { return Results.Ok(BayesianModelAveragingEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.0 — Phylogenetic Meta-Analysis
+app.MapPost("/api/phylo", ([FromBody] PhylogeneticMaEngine.PhyloRequest req) =>
+{
+    try { return Results.Ok(PhylogeneticMaEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.0 — Multivariate Dose-Response
+app.MapPost("/api/dose/multivariate", ([FromBody] MultivariateDoseResponseEngine.MultiDoseRequest req) =>
+{
+    try { return Results.Ok(MultivariateDoseResponseEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.0 — Network Meta-Regression
+app.MapPost("/api/nma/regression", ([FromBody] NetworkMetaRegressionEngine.NmaRegressionRequest req) =>
+{
+    try { return Results.Ok(NetworkMetaRegressionEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.0 — GRADE Summary of Findings
+app.MapPost("/api/grade/sof-table", ([FromBody] GradeSoFGenerator.GradeRequest req) =>
+{
+    try { return Results.Ok(GradeSoFGenerator.Generate(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
 app.Run();
