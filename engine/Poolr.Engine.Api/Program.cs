@@ -7,12 +7,12 @@ using Poolr.Engine.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Listen on localhost only — the Tauri shell bridges the webview to this sidecar.
+// Listen on localhost only -- the Tauri shell bridges the webview to this sidecar.
 builder.WebHost.UseUrls("http://127.0.0.1:5180");
 
 var app = builder.Build();
 
-// CORS — the Tauri webview and a plain browser dev server both call this sidecar
+// CORS -- the Tauri webview and a plain browser dev server both call this sidecar
 // from a different origin (tauri://localhost or localhost:1420). Allow it.
 app.Use(async (ctx, next) =>
 {
@@ -30,7 +30,7 @@ app.Use(async (ctx, next) =>
 app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.5.7", engine = "csharp" }));
 app.MapGet("/version", () => Results.Ok(new { version = "0.5.7" }));
 
-// Phase B — C# meta-analysis engine (numerics covered by engine/Poolr.Engine.Tests xUnit).
+// Phase B -- C# meta-analysis engine (numerics covered by engine/Poolr.Engine.Tests xUnit).
 app.MapPost("/api/meta", ([FromBody] MetaRequest req) =>
 {
     try
@@ -45,7 +45,7 @@ app.MapPost("/api/meta", ([FromBody] MetaRequest req) =>
     }
 });
 
-// v0.5.1 — extended meta-analysis (KH, MH/Peto, subgroups w/ Q-between, sensitivity, bias depth, new outcome types)
+// v0.5.1 -- extended meta-analysis (KH, MH/Peto, subgroups w/ Q-between, sensitivity, bias depth, new outcome types)
 app.MapPost("/api/meta2", async (HttpRequest httpReq) =>
 {
     try
@@ -66,14 +66,14 @@ app.MapPost("/api/meta2", async (HttpRequest httpReq) =>
     }
 });
 
-// v0.5.1 — effect-size conversions / median completion
+// v0.5.1 -- effect-size conversions / median completion
 app.MapPost("/api/convert", ([FromBody] ConvertRequest req) =>
 {
     try { return Results.Ok(Converters.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.1 — diagnostic figures (Galbraith, L'Abbe, Baujat, contour funnel)
+// v0.5.1 -- diagnostic figures (Galbraith, L'Abbe, Baujat, contour funnel)
 app.MapPost("/api/figure/galbraith", (DiagnosticFigures.PlotInput req) =>
     Results.Text(DiagnosticFigures.Galbraith(req, 0), "image/svg+xml"));
 app.MapPost("/api/figure/labbe", (List<DiagnosticFigures.LabbeArm> arms) =>
@@ -90,7 +90,7 @@ app.MapPost("/api/figure/baujat", (DiagnosticFigures.PlotInput req) =>
 app.MapPost("/api/figure/funnel_contour", ([FromBody] MetaResponse req) =>
     Results.Text(DiagnosticFigures.ContourFunnel(req), "image/svg+xml"));
 
-// v0.5.1 — export suite (R replication, citations, methods paragraph)
+// v0.5.1 -- export suite (R replication, citations, methods paragraph)
 app.MapPost("/api/export/r_code", async (HttpRequest httpReq) =>
 {
     try
@@ -123,19 +123,19 @@ app.MapPost("/api/export/citations", async (HttpRequest httpReq) =>
 app.MapPost("/api/export/methods", ([FromBody] ExtendedMetaResponse req) =>
     Results.Text(ExportSuite.MethodsParagraph(req), "text/plain"));
 
-// v0.5.1 — robvis-style RoB figures
+// v0.5.1 -- robvis-style RoB figures
 app.MapPost("/api/figure/rob_traffic", ([FromBody] RobFigures.TrafficLightRequest req) =>
     Results.Text(RobFigures.TrafficLight(req), "image/svg+xml"));
 app.MapPost("/api/figure/rob_summary", ([FromBody] RobFigures.TrafficLightRequest req) =>
     Results.Text(RobFigures.SummaryBar(req), "image/svg+xml"));
 
-// Phase B5 — figures (SVG). Returns image/svg+xml.
+// Phase B5 -- figures (SVG). Returns image/svg+xml.
 app.MapPost("/api/figure/forest", ([FromBody] MetaResponse req) =>
     Results.Text(Figures.ForestPlot(req), "image/svg+xml"));
 app.MapPost("/api/figure/funnel", ([FromBody] MetaResponse req) =>
     Results.Text(Figures.FunnelPlot(req), "image/svg+xml"));
 
-// Phase B6 — export. ?format=json|md|latex|docx
+// Phase B6 -- export. ?format=json|md|latex|docx
 // NOTE: bind the raw request body rather than [FromBody] Dictionary<string,object>.
 // System.Text.Json materialises NESTED objects/arrays as JsonElement, so the
 // exporters' `is Dictionary<string,object>` / `is List<object>` checks failed and
@@ -163,7 +163,7 @@ app.MapPost("/api/export", async (HttpRequest req, string format = "json") =>
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// Phase B7 — project persistence (atomic save + .bak, load).
+// Phase B7 -- project persistence (atomic save + .bak, load).
 app.MapPost("/api/project/save", ([FromBody] ProjectSaveRequest req) =>
 {
     try { var p = ProjectStore.Save(req.path ?? "poolr.json", req.project ?? new()); return Results.Ok(new { saved = p }); }
@@ -175,7 +175,7 @@ app.MapPost("/api/project/load", ([FromBody] ProjectLoadRequest req) =>
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.1 — GRADE Summary-of-Findings
+// v0.5.1 -- GRADE Summary-of-Findings
 app.MapPost("/api/grade/sof", ([FromBody] SofGenerator.SofRequest req) =>
 {
     try
@@ -200,7 +200,7 @@ app.MapPost("/api/grade", ([FromBody] GradeRequest req) =>
     }
 });
 
-// v0.5.7 — Living Systematic Review
+// v0.5.7 -- Living Systematic Review
 app.MapPost("/api/living/cumulative", ([FromBody] LivingReviewEngine.CumulativeRequest req) =>
 {
     try { return Results.Ok(LivingReviewEngine.RunCumulative(req)); }
@@ -213,7 +213,7 @@ app.MapPost("/api/living/priority", ([FromBody] LivingReviewEngine.PriorityScree
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.7 — Niche MA types (correlations, variability, SCED, Poisson, agreement)
+// v0.5.7 -- Niche MA types (correlations, variability, SCED, Poisson, agreement)
 app.MapPost("/api/niche/correlation", ([FromBody] List<NicheEngine.CorrelationStudy> studies) =>
 {
     try { return Results.Ok(NicheEngine.RunCorrelationHunterSchmidt(studies)); }
@@ -240,7 +240,7 @@ app.MapPost("/api/niche/agreement", ([FromBody] List<NicheEngine.AgreementStudy>
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.7 — Specialized (QoL, Economic, Genetics, Ecology, Education, Adverse Events)
+// v0.5.7 -- Specialized (QoL, Economic, Genetics, Ecology, Education, Adverse Events)
 app.MapPost("/api/specialized/qol", ([FromBody] SpecializedEngine.QolRequest req) =>
 {
     try { return Results.Ok(SpecializedEngine.RunQol(req.studies, req.pooledBaselineSd)); }
@@ -272,7 +272,7 @@ app.MapPost("/api/specialized/adverse", ([FromBody] List<SpecializedEngine.AeStu
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.7 — Advanced (Prognostic, Qualitative, Bibliometric, Sequential, DCA)
+// v0.5.7 -- Advanced (Prognostic, Qualitative, Bibliometric, Sequential, DCA)
 app.MapPost("/api/advanced/prognostic", ([FromBody] List<AdvancedEngine.PrognosticStudy> studies) =>
 {
     try { return Results.Ok(AdvancedEngine.RunPrognostic(studies)); }
@@ -299,7 +299,7 @@ app.MapPost("/api/advanced/dca", ([FromBody] List<AdvancedEngine.DcaStudy> studi
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.7 — Collaboration (snapshots, diff, restore)
+// v0.5.7 -- Collaboration (snapshots, diff, restore)
 app.MapPost("/api/collaboration/snapshot", ([FromBody] CollaborationEngine.SnapshotRequest req) =>
 {
     try { return Results.Ok(new { id = CollaborationEngine.CreateSnapshot(req) }); }
@@ -321,7 +321,7 @@ app.MapPost("/api/collaboration/restore", ([FromBody] CollaborationEngine.Restor
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.7 — Reporting (LaTeX, HTML, Python, Stata)
+// v0.5.7 -- Reporting (LaTeX, HTML, Python, Stata)
 app.MapPost("/api/report/latex", ([FromBody] ReportingEngine.ManuscriptRequest req) =>
     Results.Text(ReportingEngine.GenerateLatex(req), "application/x-tex"));
 app.MapPost("/api/report/html", ([FromBody] ReportingEngine.HtmlReportRequest req) =>
@@ -331,7 +331,7 @@ app.MapPost("/api/report/python", ([FromBody] ReportingEngine.ManuscriptRequest 
 app.MapPost("/api/report/stata", ([FromBody] ReportingEngine.ManuscriptRequest req) =>
     Results.Text(ReportingEngine.GenerateStataReplication(req), "text/plain"));
 
-// v0.5.7 — AI-assisted screening / extraction / RoB / GRADE
+// v0.5.7 -- AI-assisted screening / extraction / RoB / GRADE
 app.MapPost("/api/ai/screening", async (HttpRequest req) =>
 {
     try
@@ -346,7 +346,7 @@ app.MapPost("/api/ai/screening", async (HttpRequest req) =>
     }
 });
 
-// v0.5.7 — Survival extensions (RMST, IPD reconstruction)
+// v0.5.7 -- Survival extensions (RMST, IPD reconstruction)
 app.MapPost("/api/survival", async (HttpRequest req) =>
 {
     try
@@ -377,7 +377,7 @@ app.MapPost("/api/survival", async (HttpRequest req) =>
     }
 });
 
-// v0.5.7 — Proportion Meta-Analysis (extended)
+// v0.5.7 -- Proportion Meta-Analysis (extended)
 app.MapPost("/api/proportion", ([FromBody] ProportionEngine.ProportionRequest req) =>
 {
     try
@@ -391,21 +391,21 @@ app.MapPost("/api/proportion", ([FromBody] ProportionEngine.ProportionRequest re
     }
 });
 
-// v0.5.7 — Prediction interval
+// v0.5.7 -- Prediction interval
 app.MapPost("/api/prediction", ([FromBody] PredictionEngine.PredictionRequest req) =>
 {
     try { return Results.Ok(PredictionEngine.ComputePredictionInterval(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.7 — Model averaging
+// v0.5.7 -- Model averaging
 app.MapPost("/api/modelaverage", ([FromBody] PredictionEngine.ModelAverageRequest req) =>
 {
     try { return Results.Ok(PredictionEngine.RunModelAveraging(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.5.7 — Dose-Response Meta-Analysis
+// v0.5.7 -- Dose-Response Meta-Analysis
 app.MapPost("/api/dose", ([FromBody] DoseResponseEngine.DoseRequest req) =>
 {
     try
@@ -419,7 +419,7 @@ app.MapPost("/api/dose", ([FromBody] DoseResponseEngine.DoseRequest req) =>
     }
 });
 
-// v0.5.7 — IPD Meta-Analysis
+// v0.5.7 -- IPD Meta-Analysis
 app.MapPost("/api/ipd", ([FromBody] IpdEngine.IpdRequest req) =>
 {
     try
@@ -433,7 +433,7 @@ app.MapPost("/api/ipd", ([FromBody] IpdEngine.IpdRequest req) =>
     }
 });
 
-// v0.5.7 — Diagnostic Test Accuracy Meta-Analysis
+// v0.5.7 -- Diagnostic Test Accuracy Meta-Analysis
 app.MapPost("/api/dta", ([FromBody] DtaEngine.DtaRequest req) =>
 {
     try
@@ -447,7 +447,7 @@ app.MapPost("/api/dta", ([FromBody] DtaEngine.DtaRequest req) =>
     }
 });
 
-// v0.5.7 — Multilevel / Multivariate / RVE
+// v0.5.7 -- Multilevel / Multivariate / RVE
 app.MapPost("/api/multilevel", ([FromBody] MultilevelEngine.MultilevelRequest req) =>
 {
     try
@@ -461,7 +461,7 @@ app.MapPost("/api/multilevel", ([FromBody] MultilevelEngine.MultilevelRequest re
     }
 });
 
-// v0.5.7 — Network Meta-Analysis
+// v0.5.7 -- Network Meta-Analysis
 app.MapPost("/api/nma", ([FromBody] NmaEngine.NmaRequest req) =>
 {
     try
@@ -475,7 +475,7 @@ app.MapPost("/api/nma", ([FromBody] NmaEngine.NmaRequest req) =>
     }
 });
 
-// v0.6.0 — Bayesian MCMC Meta-Analysis
+// v0.6.0 -- Bayesian MCMC Meta-Analysis
 app.MapPost("/api/bayesian", ([FromBody] BayesianMcmcEngine.BayesianRequest req) =>
 {
     try
@@ -489,7 +489,7 @@ app.MapPost("/api/bayesian", ([FromBody] BayesianMcmcEngine.BayesianRequest req)
     }
 });
 
-// v0.6.0 — GOSH (Graphic Approach to Heterogeneity)
+// v0.6.0 -- GOSH (Graphic Approach to Heterogeneity)
 app.MapPost("/api/gosh", ([FromBody] GoshEngine.GoshRequest req) =>
 {
     try
@@ -503,7 +503,7 @@ app.MapPost("/api/gosh", ([FromBody] GoshEngine.GoshRequest req) =>
     }
 });
 
-// v0.6.0 — Influence Diagnostics
+// v0.6.0 -- Influence Diagnostics
 app.MapPost("/api/influence", ([FromBody] InfluenceEngine.InfluenceRequest req) =>
 {
     try
@@ -517,7 +517,7 @@ app.MapPost("/api/influence", ([FromBody] InfluenceEngine.InfluenceRequest req) 
     }
 });
 
-// v0.6.0 — Permutation Test
+// v0.6.0 -- Permutation Test
 app.MapPost("/api/permutation", ([FromBody] PermutationEngine.PermutationRequest req) =>
 {
     try
@@ -531,7 +531,7 @@ app.MapPost("/api/permutation", ([FromBody] PermutationEngine.PermutationRequest
     }
 });
 
-// v0.6.0 — Bootstrap Confidence Intervals
+// v0.6.0 -- Bootstrap Confidence Intervals
 app.MapPost("/api/bootstrap", ([FromBody] BootstrapEngine.BootstrapRequest req) =>
 {
     try
@@ -545,7 +545,7 @@ app.MapPost("/api/bootstrap", ([FromBody] BootstrapEngine.BootstrapRequest req) 
     }
 });
 
-// v0.6.0 — Test of Excess Significance
+// v0.6.0 -- Test of Excess Significance
 app.MapPost("/api/tes", ([FromBody] TesEngine.TesRequest req) =>
 {
     try
@@ -559,7 +559,7 @@ app.MapPost("/api/tes", ([FromBody] TesEngine.TesRequest req) =>
     }
 });
 
-// v0.6.0 — Location-Scale Meta-Analysis
+// v0.6.0 -- Location-Scale Meta-Analysis
 app.MapPost("/api/locationscale", ([FromBody] LocationScaleEngine.LocationScaleRequest req) =>
 {
     try
@@ -573,7 +573,7 @@ app.MapPost("/api/locationscale", ([FromBody] LocationScaleEngine.LocationScaleR
     }
 });
 
-// v0.6.0 — Multiple Imputation for Missing Data
+// v0.6.0 -- Multiple Imputation for Missing Data
 app.MapPost("/api/mi", ([FromBody] MultipleImputationEngine.MiRequest req) =>
 {
     try
@@ -587,7 +587,7 @@ app.MapPost("/api/mi", ([FromBody] MultipleImputationEngine.MiRequest req) =>
     }
 });
 
-// v0.6.0 — Restricted Cubic Splines for Dose-Response
+// v0.6.0 -- Restricted Cubic Splines for Dose-Response
 app.MapPost("/api/rcs", ([FromBody] RcsEngine.RcsRequest req) =>
 {
     try
@@ -601,7 +601,7 @@ app.MapPost("/api/rcs", ([FromBody] RcsEngine.RcsRequest req) =>
     }
 });
 
-// v0.6.0 — Cluster-Robust Inference for Dependent Effects
+// v0.6.0 -- Cluster-Robust Inference for Dependent Effects
 app.MapPost("/api/clusterrobust", ([FromBody] ClusterRobustEngine.ClusterRobustRequest req) =>
 {
     try
@@ -615,77 +615,77 @@ app.MapPost("/api/clusterrobust", ([FromBody] ClusterRobustEngine.ClusterRobustR
     }
 });
 
-// v0.6.0 — Prognostic Model Meta-Analysis
+// v0.6.0 -- Prognostic Model Meta-Analysis
 app.MapPost("/api/prognostic/meta", ([FromBody] PrognosticMetaEngine.PrognosticMetaRequest req) =>
 {
     try { return Results.Ok(PrognosticMetaEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Bivariate DTA Meta-Analysis
+// v0.6.0 -- Bivariate DTA Meta-Analysis
 app.MapPost("/api/dta/bivariate", ([FromBody] BivariateDtaEngine.BivariateRequest req) =>
 {
     try { return Results.Ok(BivariateDtaEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Multilevel NMA
+// v0.6.0 -- Multilevel NMA
 app.MapPost("/api/nma/multilevel", ([FromBody] MultilevelNmaEngine.MultilevelNmaRequest req) =>
 {
     try { return Results.Ok(MultilevelNmaEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — HSROC Model
+// v0.6.0 -- HSROC Model
 app.MapPost("/api/dta/hsroc", ([FromBody] HsrocEngine.HsrocRequest req) =>
 {
     try { return Results.Ok(HsrocEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Competing Risks Meta-Analysis
+// v0.6.0 -- Competing Risks Meta-Analysis
 app.MapPost("/api/competing-risks", ([FromBody] CompetingRisksEngine.CompetingRisksRequest req) =>
 {
     try { return Results.Ok(CompetingRisksEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Multi-Arm NMA Correction
+// v0.6.0 -- Multi-Arm NMA Correction
 app.MapPost("/api/nma/multiarm", ([FromBody] MultiArmNmaEngine.MultiArmRequest req) =>
 {
     try { return Results.Ok(MultiArmNmaEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Qualitative Meta-Synthesis
+// v0.6.0 -- Qualitative Meta-Synthesis
 app.MapPost("/api/qualitative/meta", ([FromBody] QualitativeMetaEngine.QualitativeMetaRequest req) =>
 {
     try { return Results.Ok(QualitativeMetaEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Bubble Plot / Meta-Regression Scatter Plot
+// v0.6.0 -- Bubble Plot / Meta-Regression Scatter Plot
 app.MapPost("/api/figure/bubble", ([FromBody] BubblePlotEngine.BubblePlotRequest req) =>
 {
     try { return Results.Ok(BubblePlotEngine.Generate(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — League Matrix Heatmap
+// v0.6.0 -- League Matrix Heatmap
 app.MapPost("/api/figure/league-matrix", ([FromBody] LeagueMatrixEngine.LeagueMatrixRequest req) =>
 {
     try { return Results.Ok(LeagueMatrixEngine.Generate(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — PRISMA-DTA Flow Diagram
+// v0.6.0 -- PRISMA-DTA Flow Diagram
 app.MapPost("/api/prisma-dta", ([FromBody] PrismaDtaEngine.PrismaDtaRequest req) =>
 {
     try { return Results.Ok(PrismaDtaEngine.Generate(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Living Review Automation
+// v0.6.0 -- Living Review Automation
 app.MapPost("/api/living/automate", ([FromBody] LivingReviewAutomationEngine.LivingReviewConfig req) =>
 {
     try
@@ -697,49 +697,49 @@ app.MapPost("/api/living/automate", ([FromBody] LivingReviewAutomationEngine.Liv
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Bayesian Network Meta-Analysis
+// v0.6.0 -- Bayesian Network Meta-Analysis
 app.MapPost("/api/bayesian-nma", ([FromBody] BayesianNmaEngine.BayesianNmaRequest req) =>
 {
     try { return Results.Ok(BayesianNmaEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Umbrella Review
+// v0.6.0 -- Umbrella Review
 app.MapPost("/api/umbrella", ([FromBody] UmbrellaReviewEngine.UmbrellaRequest req) =>
 {
     try { return Results.Ok(UmbrellaReviewEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — IPD from KM Reconstruction
+// v0.6.0 -- IPD from KM Reconstruction
 app.MapPost("/api/ipd/from-km", ([FromBody] IpdFromKmEngine.IpdFromKmRequest req) =>
 {
     try { return Results.Ok(IpdFromKmEngine.Reconstruct(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Robust Variance Estimation
+// v0.6.0 -- Robust Variance Estimation
 app.MapPost("/api/rve", ([FromBody] RveEngine.RveRequest req) =>
 {
     try { return Results.Ok(RveEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — P-Value Combination Methods
+// v0.6.0 -- P-Value Combination Methods
 app.MapPost("/api/pvalue/combine", ([FromBody] PValueCombinationEngine.PValueRequest req) =>
 {
     try { return Results.Ok(PValueCombinationEngine.Combine(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Citation Deduplication
+// v0.6.0 -- Citation Deduplication
 app.MapPost("/api/deduplicate", ([FromBody] List<DeduplicationEngine.Citation> req) =>
 {
     try { return Results.Ok(DeduplicationEngine.Deduplicate(req ?? new())); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — RevMan 5 Import/Export
+// v0.6.0 -- RevMan 5 Import/Export
 app.MapPost("/api/revman/import", async (HttpRequest req) =>
 {
     try
@@ -781,80 +781,114 @@ app.MapPost("/api/revman/export", async (HttpRequest req) =>
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Bayesian Model-Averaged Meta-Analysis
+// v0.6.0 -- Bayesian Model-Averaged Meta-Analysis
 app.MapPost("/api/bma", ([FromBody] BayesianModelAveragingEngine.BmmaRequest req) =>
 {
     try { return Results.Ok(BayesianModelAveragingEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Phylogenetic Meta-Analysis
+// v0.6.0 -- Phylogenetic Meta-Analysis
 app.MapPost("/api/phylo", ([FromBody] PhylogeneticMaEngine.PhyloRequest req) =>
 {
     try { return Results.Ok(PhylogeneticMaEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Multivariate Dose-Response
+// v0.6.0 -- Multivariate Dose-Response
 app.MapPost("/api/dose/multivariate", ([FromBody] MultivariateDoseResponseEngine.MultiDoseRequest req) =>
 {
     try { return Results.Ok(MultivariateDoseResponseEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Network Meta-Regression
+// v0.6.0 -- Network Meta-Regression
 app.MapPost("/api/nma/regression", ([FromBody] NetworkMetaRegressionEngine.NmaRegressionRequest req) =>
 {
     try { return Results.Ok(NetworkMetaRegressionEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — GRADE Summary of Findings
+// v0.6.0 -- GRADE Summary of Findings
 app.MapPost("/api/grade/sof-table", ([FromBody] GradeSoFGenerator.GradeRequest req) =>
 {
     try { return Results.Ok(GradeSoFGenerator.Generate(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Citation Network Analysis
+// v0.6.0 -- Citation Network Analysis
 app.MapPost("/api/citation/network", ([FromBody] CitationNetworkEngine.CitationNetworkRequest req) =>
 {
     try { return Results.Ok(CitationNetworkEngine.Analyze(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Bucher Indirect Comparison
+// v0.6.0 -- Bucher Indirect Comparison
 app.MapPost("/api/bucher", ([FromBody] BucherIndirectComparisonEngine.BucherRequest req) =>
 {
     try { return Results.Ok(BucherIndirectComparisonEngine.Compare(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Component Network Meta-Analysis
+// v0.6.0 -- Component Network Meta-Analysis
 app.MapPost("/api/cnma", ([FromBody] ComponentNmaEngine.CnmaRequest req) =>
 {
     try { return Results.Ok(ComponentNmaEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — PRISMA-ScR Flow Diagram
+// v0.6.0 -- PRISMA-ScR Flow Diagram
 app.MapPost("/api/scr/flow", ([FromBody] PrismaScrEngine.PrismaScrRequest req) =>
 {
     try { return Results.Ok(PrismaScrEngine.Generate(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Spatio-Temporal Meta-Analysis
+// v0.6.0 -- Spatio-Temporal Meta-Analysis
 app.MapPost("/api/spatiotemporal", ([FromBody] SpatioTemporalEngine.SpatioTemporalRequest req) =>
 {
     try { return Results.Ok(SpatioTemporalEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.0 — Response Surface Meta-Analysis
+// v0.6.0 -- Response Surface Meta-Analysis
 app.MapPost("/api/response-surface", ([FromBody] ResponseSurfaceEngine.ResponseSurfaceRequest req) =>
 {
     try { return Results.Ok(ResponseSurfaceEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.0 — Zotero Sync
+app.MapPost("/api/zotero/connect", ([FromBody] ZoteroSyncEngine.ZoteroConfig req) =>
+{
+    try { return Results.Ok(ZoteroSyncEngine.Connect(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/zotero/import", ([FromBody] ZoteroSyncEngine.ZoteroConfig req) =>
+{
+    try { return Results.Ok(ZoteroSyncEngine.Import(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/zotero/export", ([FromBody] ZoteroSyncEngine.ZoteroConfig req) =>
+{
+    try { return Results.Ok(ZoteroSyncEngine.Export(req, new List<ZoteroSyncEngine.ZoteroItem>())); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.0 — Mendeley Sync
+app.MapPost("/api/mendeley/connect", ([FromBody] MendeleySyncEngine.MendeleyConfig req) =>
+{
+    try { return Results.Ok(MendeleySyncEngine.Connect(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/mendeley/import", ([FromBody] MendeleySyncEngine.MendeleyConfig req) =>
+{
+    try { return Results.Ok(MendeleySyncEngine.Import(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+app.MapPost("/api/mendeley/export", ([FromBody] MendeleySyncEngine.MendeleyConfig req) =>
+{
+    try { return Results.Ok(MendeleySyncEngine.Export(req, new List<MendeleySyncEngine.MendeleyDocument>())); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
