@@ -837,4 +837,25 @@ app.MapPost("/api/cnma", ([FromBody] ComponentNmaEngine.CnmaRequest req) =>
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
+// v0.6.0 — PRISMA-ScR Flow Diagram
+app.MapPost("/api/scr/flow", ([FromBody] PrismaScrEngine.PrismaScrRequest req) =>
+{
+    try { return Results.Ok(PrismaScrEngine.Generate(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.0 — Spatio-Temporal Meta-Analysis
+app.MapPost("/api/spatiotemporal", ([FromBody] SpatioTemporalEngine.SpatioTemporalRequest req) =>
+{
+    try { return Results.Ok(SpatioTemporalEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.0 — Response Surface Meta-Analysis
+app.MapPost("/api/response-surface", ([FromBody] ResponseSurfaceEngine.ResponseSurfaceRequest req) =>
+{
+    try { return Results.Ok(ResponseSurfaceEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
 app.Run();
