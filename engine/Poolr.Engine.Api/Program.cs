@@ -816,4 +816,25 @@ app.MapPost("/api/grade/sof-table", ([FromBody] GradeSoFGenerator.GradeRequest r
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
+// v0.6.0 — Citation Network Analysis
+app.MapPost("/api/citation/network", ([FromBody] CitationNetworkEngine.CitationNetworkRequest req) =>
+{
+    try { return Results.Ok(CitationNetworkEngine.Analyze(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.0 — Bucher Indirect Comparison
+app.MapPost("/api/bucher", ([FromBody] BucherIndirectComparisonEngine.BucherRequest req) =>
+{
+    try { return Results.Ok(BucherIndirectComparisonEngine.Compare(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.0 — Component Network Meta-Analysis
+app.MapPost("/api/cnma", ([FromBody] ComponentNmaEngine.CnmaRequest req) =>
+{
+    try { return Results.Ok(ComponentNmaEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
 app.Run();
