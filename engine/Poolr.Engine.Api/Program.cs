@@ -934,4 +934,46 @@ app.MapPost("/api/grade/evidence-profile", ([FromBody] GradeEvidenceProfileEngin
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
+// v0.6.1 -- SUCRA (Surface Under Cumulative Ranking) with bootstrap CIs
+app.MapPost("/api/sucra", ([FromBody] SucraEngine.SucraRequest req) =>
+{
+    try { return Results.Ok(SucraEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.1 -- Cumulative Meta-Analysis Forest Plot with trendline
+app.MapPost("/api/figure/cumulative-forest", ([FromBody] CumulativeForestEngine.CumulativeRequest req) =>
+{
+    try { return Results.Ok(CumulativeForestEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.1 -- Diagnostic Odds Ratio Forest & Moses-Littenberg SROC
+app.MapPost("/api/dta/dor-forest", ([FromBody] DiagnosticOrForestEngine.DorRequest req) =>
+{
+    try { return Results.Ok(DiagnosticOrForestEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.1 -- Cluster-Robust Egger publication bias test
+app.MapPost("/api/clusterrobust/egger", ([FromBody] ClusterRobustEggerEngine.EggerRequest req) =>
+{
+    try { return Results.Ok(ClusterRobustEggerEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.1 -- DBSCAN Funnel Cluster Detection & Fail-Safe N
+app.MapPost("/api/cluster/detect", ([FromBody] ClusterDetectionEngine.ClusterRequest req) =>
+{
+    try { return Results.Ok(ClusterDetectionEngine.DetectClusters(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.1 -- Powerhouse P-value combination suite
+app.MapPost("/api/powerhouse/pvalue-combine", ([FromBody] PowerhouseEngine.PvalCombineRequest req) =>
+{
+    try { return Results.Ok(PowerhouseEngine.CombinePvalues(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
 app.Run();
