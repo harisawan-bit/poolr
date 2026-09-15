@@ -12,6 +12,7 @@ import { SpecializedHub } from "./hub/SpecializedHub";
 import { QualityHub } from "./hub/QualityHub";
 import { InteroperabilityHub } from "./hub/InteroperabilityHub";
 import { ReportsHub } from "./hub/ReportsHub";
+import { SpatialHub, QualitativeHub, AdvancedDiagnosticsHub } from "./hub/AdvancedEnginesHub";
 import {
   Activity,
   Grid3X3,
@@ -47,7 +48,10 @@ export type CategoryKey =
   | "specialized"
   | "quality"
   | "interop"
-  | "reports";
+  | "reports"
+  | "spatial"
+  | "qualitative"
+  | "advanced";
 
 interface CategoryMeta {
   key: CategoryKey;
@@ -142,9 +146,30 @@ const CATEGORIES: CategoryMeta[] = [
     Icon: FileCode,
     description: "R replication scripts, LaTeX manuscripts, HTML executive reports & PRISMA methods",
   },
+  {
+    key: "spatial",
+    label: "Spatial & Pharmacokinetic",
+    badge: "Moran's I · PK/PD",
+    Icon: Globe,
+    description: "Spatial meta-analysis with CAR/SAR models, Moran's I, pharmacokinetic pooling",
+  },
+  {
+    key: "qualitative",
+    label: "Qualitative & Mixed Methods",
+    badge: "Thematic · Ethnography",
+    Icon: MessageSquare,
+    description: "Thematic synthesis, meta-ethnography, framework synthesis, qualitative coding",
+  },
+  {
+    key: "advanced",
+    label: "Advanced Bayesian",
+    badge: "Multilevel · DTA · Prog",
+    Icon: BrainCircuit,
+    description: "Bayesian multilevel, DTA, prognostic models, profile likelihood, fractional polynomials",
+  },
 ];
 
-export default function AnalysisHub({ project, onProjectChange }: Props) {
+function AnalysisHub({ project, onProjectChange }: Props) {
   const { studies, activeStudyId, addStudy, removeStudy, switchStudy } = useStudyManager();
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("bayesian");
   const [catalogFilter, setCatalogFilter] = useState("");
@@ -267,6 +292,15 @@ export default function AnalysisHub({ project, onProjectChange }: Props) {
         )}
         {activeCategory === "reports" && (
           <ReportsHub project={project} onProjectChange={onProjectChange} />
+        )}
+        {activeCategory === "spatial" && (
+          <SpatialHub project={project} onProjectChange={onProjectChange} />
+        )}
+        {activeCategory === "qualitative" && (
+          <QualitativeHub project={project} onProjectChange={onProjectChange} />
+        )}
+        {activeCategory === "advanced" && (
+          <AdvancedDiagnosticsHub project={project} onProjectChange={onProjectChange} />
         )}
       </div>
     </div>
