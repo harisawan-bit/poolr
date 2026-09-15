@@ -1,7 +1,7 @@
 # Poolr Competitive Analysis & Feature Roadmap
 ## Complete Meta-Analysis Types, Software Comparison, and Strategic Recommendations
 
-**Version:** 1.0  
+**Version:** 2.0  
 **Date:** September 2026  
 **Scope:** Systematic Review & Meta-Analysis (SRMA) software landscape  
 **Current Poolr Version:** v0.6.2 (113 API endpoints, 226 tests, 144 frontend files)
@@ -15,9 +15,12 @@
 3. [Competitor Software Analysis](#3-competitor-software-analysis)
 4. [Gap Analysis: Poolr vs. Competition](#4-gap-analysis-poolr-vs-competition)
 5. [Niche & Rare Meta-Analysis Types](#5-niche--rare-meta-analysis-types)
-6. [UI/UX Best Practices from Competitors](#6-uiux-best-practices-from-competitors)
-7. [Strategic Recommendations](#7-strategic-recommendations)
-8. [Implementation Roadmap](#8-implementation-roadmap)
+6. [AI/ML in Systematic Reviews](#6-ai/ml-in-systematic-reviews)
+7. [Advanced Bayesian Methods](#7-advanced-bayesian-methods)
+8. [Robust Variance Estimation & Small Samples](#8-robust-variance-estimation--small-samples)
+9. [UI/UX Best Practices from Competitors](#9/uiux-best-practices-from-competitors)
+10. [Strategic Recommendations](#10-strategic-recommendations)
+11. [Implementation Roadmap](#11-implementation-roadmap)
 
 ---
 
@@ -47,141 +50,597 @@
 | 18 | **Realist Synthesis** | Context-mechanism-outcome configuration | ❌ Missing |
 | 19 | **Critical Interpretive Synthesis** | Integrative synthesis with critical appraisal | ❌ Missing |
 | 20 | **Meta-Narrative** | Mapping paradigmatic perspectives | ❌ Missing |
+| 21 | **Convergent Synthesis** | Mixed qualitative-quantitative | ❌ Missing |
+| 22 | **Configurative Synthesis** | Interpretive, theory-building | ❌ Missing |
+| 23 | **Cross-Sectional Meta** | Prevalence/incidence pooling | ✅ Proportion |
+| 24 | **Correlation Meta** | Hunter-Schmidt, Fisher z | ✅ Full |
+| 25 | **Reliability Generalization** | Cronbach α, ICC, κ pooling | ✅ Full |
+| 26 | **Genetic Meta-Analysis** | GWAS, SNP, allele frequencies | ✅ Full |
+| 27 | **Pharmacokinetic Meta** | Population PK/PD, exposure-response | ❌ Missing |
+| 28 | **Dose-Exposure Meta** | PK dose-exposure relationship | ❌ Missing |
+| 29 | **Exposure-Response Meta** | Environmental exposure effects | ❌ Missing |
+| 30 | **Spatial Meta-Analysis** | Geographic clustering of effects | ✅ Partial |
+| 31 | **Spatio-Temporal Meta** | Space-time interaction models | ✅ Partial |
+| 32 | **Time-Series Meta** | Temporal trends across studies | ❌ Missing |
+| 33 | **Interrupted Time Series** | Pre-post intervention with controls | ❌ Missing |
+| 34 | **Segmented Regression** | Change-point meta-analysis | ❌ Missing |
 
-## 1.2 By Effect Size Type
+## 1.2 By Effect Size Family
 
-| # | Effect Size Family | Measures | Poolr Status |
-|---|-------------------|----------|--------------|
-| 1 | **Binary (2×2)** | OR, RR, RD, Peto | ✅ Full |
-| 2 | **Continuous** | MD, SMD (Hedges g), Glass Δ | ✅ Full |
-| 3 | **Survival** | HR, RMST | ✅ Full |
-| 4 | **Rates/Counts** | IRR, IRD, Poisson | ✅ Full |
-| 5 | **Correlations** | Fisher z, Hunter-Schmidt | ✅ Full |
-| 6 | **Proportions** | Freeman-Tukey, logit, arcsine | ✅ Full |
-| 7 | **Mean Differences** | Standardized, weighted | ✅ Full |
-| 8 | **Generic Inverse Variance** | User-supplied effect + SE | ✅ Full |
-| 9 | **Coefficients of Variation** | Variability ratio, CVR | ✅ Full |
-| 10 | **Reliability/Agreement** | ICC, Cohen κ | ✅ Full |
-| 11 | **Cronbach's Alpha** | Internal consistency | ✅ Full |
-| 12 | **Partial Correlations** | Semi-partial, partial | ✅ Full |
-| 13 | **Response Ratios** | Ratio of means (ln RR) | ✅ Full |
-| 14 | **Diagnostic Accuracy** | Sens, Spec, DOR, AUC | ✅ Full |
-| 15 | **Net Benefit** | Decision curve analysis | ✅ Full |
+| # | Family | Measures | Poolr |
+|---|--------|----------|-------|
+| 1 | **Dichotomous** | OR, RR, RD, Peto, Yule Q, Yule Y | ✅ |
+| 2 | **Continuous** | MD, SMD (Hedges g, Glass Δ, Cohen d), Response Ratio | ✅ |
+| 3 | **Categorical** | Polytomous OR, relative risk, risk difference | ❌ |
+| 4 | **Count/Rate** | IRR, IRD, Poisson rate, Negative Binomial | ✅ |
+| 5 | **Time-to-Event** | HR, RMST, AFT parameters, survival probabilities | ✅ |
+| 6 | **Correlation** | Pearson r, Fisher z, tetrachoric, biserial, Kendall τ | ✅ |
+| 7 | **Proportion** | Raw, logit, arcsine, Freeman-Tukey, double-arcsine | ✅ |
+| 8 | **Mean/Raw** | Raw means, mean change, geometric mean | ✅ |
+| 9 | **Diagnostic** | Sensitivity, specificity, DOR, LR+, LR-, AUC | ✅ |
+| 10 | **Agreement** | Cohen κ, Fleiss κ, Krippendorff α, Gwet AC1, ICC | ✅ |
+| 11 | **Reliability** | Cronbach α, McDonald ω, Raykov ρ, composite reliability | ✅ |
+| 12 | **Regression β** | Standardized β, semi-partial, partial, structure coefficients | ✅ |
+| 13 | **Genetic** | Allele frequencies, OR per allele, β per allele | ✅ |
+| 14 | **Pharmacokinetic** | AUC, Cmax, t½, clearance, volume of distribution | ❌ |
+| 15 | **Utility/Preference** | QALY, DALY, willingness-to-pay, standard gamble | ❌ |
+| 16 | **Economic** | Cost per QALY, ICER, NMB, benefit-cost ratio | ✅ |
 
 ## 1.3 By Statistical Model
 
-| # | Model | Description | Poolr Status |
-|---|-------|-------------|--------------|
-| 1 | **Fixed-Effect (Common)** | Single true effect | ✅ Full |
-| 2 | **Random-Effects (DL)** | DerSimonian-Laird | ✅ Full |
-| 3 | **Random-Effects (REML)** | Restricted ML | ✅ Full |
-| 4 | **Random-Effects (PM)** | Paule-Mandel | ✅ Full |
-| 5 | **Random-Effects (EB)** | Empirical Bayes | ✅ Full |
-| 6 | **Random-Effects (HS)** | Hunter-Schmidt | ✅ Full |
-| 7 | **Random-Effects (ML)** | Maximum Likelihood | ✅ Full |
-| 8 | **Knapp-Hartung** | t-distribution adjustment | ✅ Full |
-| 9 | **Mantel-Haenszel** | Equal-effects for binary | ✅ Full |
-| 10 | **Peto One-Step** | Rare-events OR | ✅ Full |
-| 11 | **Profile Likelihood CI** | For τ² (Thompson-Sharp) | ✅ Powerhouse |
-| 12 | **Generalized Q-Statistic** | QS-test for heterogeneity | ✅ Powerhouse |
-| 13 | **BLUPs** | Best Linear Unbiased Predictors | ✅ Powerhouse |
-| 14 | **Exact MH CI** | Miettinen (sparse data) | ✅ Powerhouse |
-| 15 | **Berkey-Seeler Test** | Sensitivity-weighted SE bias | ✅ Powerhouse |
-| 16 | **Generalized Inverse Variance Heterogeneity (QH)** | ✅ Powerhouse |
-| 17 | **Profile Likelihood (τ²)** | Non-central chi-square bounds | ✅ Powerhouse |
-| 18 | **Bayesian MCMC** | Gibbs sampling with priors | ✅ Full |
-| 19 | **Bayesian Model Averaging** | AICc-weighted across estimators | ✅ Full |
-| 20 | **Bayesian NMA** | MCMC with DIC | ✅ Full |
-| 21 | **Bayesian Multilevel** | Gibbs + half-Cauchy priors | ❌ Missing |
-| 22 | **Bayesian Dose-Response** | MCMC with spline priors | ❌ Missing |
-| 23 | **Bayesian DTA** | Bivariate Reitsma MCMC | ❌ Missing |
-| 24 | **Bayesian Prognostic** | Cox frailty MCMC | ❌ Missing |
-| 25 | **Robust Variance Estimation** | Hedges-Tipton-Pustejovsky CR2 | ✅ Full |
-| 26 | **Cluster-Robust Egger** | CRVE for funnel asymmetry | ✅ Full |
-| 27 | **Small-Sample Corrections** | CR0, CR1, CR2 adjustments | ✅ Full |
-| 28 | **Generalized Least Squares** | GLS with known covariance | ❌ Missing |
-| 29 | **Mixed-Effects Models** | rma.mv with random slopes | ✅ Full |
-| 30 | **Spatial Meta-Analysis** | Space-time covariance | ✅ Partial |
-| 31 | **Spatio-Temporal** | Gaussian process + time | ✅ Partial |
-| 32 | **Phylogenetic** | Evolutionary correlation | ✅ Full |
-| 33 | **Spline-Based** | Restricted cubic splines | ✅ Full |
-| 34 | **Fractional Polynomials** | Non-linear dose-response | ❌ Missing |
-| 35 | **Emax Model** | Parametric dose-response | ✅ Partial |
-| 36 | **Spline Dose-Response** | 3-knot RCS | ✅ Full |
-| 37 | **Multivariate Splines** | Multiple outcomes | ❌ Missing |
-| 38 | **Time-Series Meta** | Temporal trends | ❌ Missing |
-| 39 | **Interrupted Time Series** | Pre-post with controls | ❌ Missing |
-| 40 | **Dose-Response NMA** | Dose in network context | ❌ Missing |
+### 1.3.1 Classical Models
 
-## 1.4 By Review Type (Workflow)
+| # | Model | Estimator | Poolr |
+|---|-------|-----------|-------|
+| 1 | **Fixed-Effect** | Inverse variance, Mantel-Haenszel, Peto | ✅ |
+| 2 | **Random-Effects DL** | DerSimonian-Laird | ✅ |
+| 3 | **Random-Effects REML** | Restricted maximum likelihood | ✅ |
+| 4 | **Random-Effects PM** | Paule-Mandel iterative | ✅ |
+| 5 | **Random-Effects EB** | Empirical Bayes | ✅ |
+| 6 | **Random-Effects HS** | Hunter-Schmidt artifact adjustment | ✅ |
+| 7 | **Random-Effects ML** | Maximum likelihood | ✅ |
+| 8 | **Random-Effects SJ** | Sidik-Jonkman | ✅ |
+| 9 | **Random-Effects HE** | Hedges estimator | ❌ |
+| 10 | **Bivariate Binary** | Reitsma (REML), random-effects | ✅ |
+| 11 | **HSROC** | Rutter-Gatsonis hierarchical SROC | ✅ |
+| 12 | **Bivariate Proportions** | Sarmanov-Leech, random-effects | ❌ |
+| 13 | **Multivariate DL** | Multi-outcome random-effects | ✅ |
+| 14 | **Three-Level** | Cheung REML/ML | ✅ |
 
-| # | Review Type | PRISMA Extension | Poolr Status |
-|---|-------------|------------------|--------------|
-| 1 | **Intervention Review** | PRISMA 2020 | ✅ Full |
-| 2 | **Diagnostic Test Accuracy** | PRISMA-DTA | ✅ Full |
-| 3 | **Scoping Review** | PRISMA-ScR | ✅ Flow only |
-| 4 | **Umbrella Review** | PRISMA-Umbrella (pending) | ✅ Partial |
-| 5 | **Rapid Review** | PRISMA-Rapid (pending) | ❌ Missing |
-| 6 | **Living Review** | PRISMA-Living | ✅ Full |
-| 7 | **Overview of Reviews** | PRISMA-Overview (pending) | ❌ Missing |
-| 8 | **Network Meta-Analysis** | PRISMA-NMA | ✅ Full |
-| 9 | **Individual Patient Data** | PRISMA-IPD | ✅ Full |
-| 10 | **Prognostic Factor** | PRISMA-Prognostic (pending) | ✅ Partial |
-| 11 | **Prognostic Model** | PROGRESS/PRISMA-Prognostic | ❌ Missing |
-| 12 | **Methodology Review** | PRISMA-Methodology (pending) | ❌ Missing |
-| 13 | **Qualitative Synthesis** | PRISMA-Qualitative (pending) | ❌ Missing |
-| 14 | **Mixed Methods** | PRISMA-Mixed (pending) | ❌ Missing |
-| 15 | **Prevalence Review** | PRISMA-Prevalence (pending) | ✅ Proportion MA |
+### 1.3.2 Bayesian Models
 
-## 1.5 By Publication Bias Approach
+| # | Model | Prior | MCMC | Poolr |
+|---|-------|-------|------|-------|
+| 1 | **Bayesian RE** | N(0,100), half-Cauchy τ | Gibbs/RJ-MCMC | ✅ |
+| 2 | **Bayesian NMA** | Diffuse + consistency | WinBUGS/JAGS style | ✅ |
+| 3 | **Bayesian Multilevel** | Half-Cauchy variance components | Gibbs | ❌ |
+| 4 | **Bayesian DTA** | Bivariate logit-normal | RJ-MCMC | ❌ |
+| 5 | **Bayesian Prognostic** | Cox frailty | Gibbs | ❌ |
+| 6 | **Bayesian Dose-Response** | Spline priors | RJ-MCMC | ❌ |
+| 7 | **Bayesian Model Avg** | AICc weights | Posterior model prob | ✅ |
+| 8 | **RoBMA** | Ensemble of models | JAGS/Stan | ❌ |
+| 9 | **Bayesian Selection** | Weight-function priors | RJ-MCMC | ❌ |
+| 10 | **Bayesian Copas** | Selection model | RJ-MCMC | ❌ |
+| 11 | **Bayesian PET-PEESE** | PET/PEESE priors | Stan | ❌ |
+| 12 | **Bayesian p-curve** | Effect size distribution | Stan | ❌ |
 
-| # | Method | Type | Poolr Status |
-|---|--------|------|--------------|
-| 1 | **Egger's Regression** | Regression-based | ✅ Full |
-| 2 | **Begg's Rank Test** | Rank-based | ✅ Full |
-| 3 | **Trim and Fill** | L0/R0 estimators | ✅ Full |
-| 4 | **PET-PEESE** | Meta-regression | ✅ Full |
-| 5 | **Peters' Test** | Weighted regression | ✅ Full |
-| 6 | **Harbord's Test** | Score-based | ✅ Full |
-| 7 | **P-Curve Analysis** | Significance distribution | ✅ Full |
-| 8 | **Selection Models** | 3-parameter (Vevea-Hedges) | ✅ Full |
-| 9 | **Henmi-Copas** | Limit meta-analysis | ✅ Full |
-| 10 | **Test of Excess Significance** | Ioannidis | ✅ Full |
-| 11 | **Rosenthal Fail-Safe N** | Classic FSN | ✅ Cluster Detection |
-| 12 | **Orwin Fail-Safe N** | Practical significance | ✅ Cluster Detection |
-| 13 | **Becker's Test** | Selection bias | ❌ Missing |
-| 14 | **Macaskill's Test** | DTA bias | ❌ Missing |
-| 15 | **Deeks' Test** | DTA funnel asymmetry | ❌ Missing |
-| 16 | **Modified FSN** | Correlation-adjusted | ❌ Missing |
-| 17 | **Tandem Selection** | Location-scale models | ✅ Full |
-| 18 | **Funnel Plot Clusters** | DBSCAN detection | ✅ Cluster Detection |
-| 19 | **Influential Cases** | Leave-one-out, Cook's D | ✅ Full |
-| 20 | **Studentized Residuals** | Outlier detection | ✅ Full |
+### 1.3.3 Robust & Small-Sample Methods
 
-## 1.6 By Heterogeneity Investigation
+| # | Method | Correction | Poolr |
+|---|--------|------------|-------|
+| 1 | **CR0** | Basic CRVE | ✅ |
+| 2 | **CR1** | DF-adjusted CRVE | ✅ |
+| 3 | **CR2** | Small-sample CRVE (HTP) | ✅ |
+| 4 | **CR3** | Bias-reduced (Bell-McCaffrey) | ❌ |
+| 5 | **CR4** | Small-sample bias-reduced | ❌ |
+| 6 | **Satterthwaite** | Approximate DF | ❌ |
+| 7 | **Kenward-Roger** | F-test adjustment | ❌ |
+| 8 | **Mancl-DeRouen** | Bias-corrected SE | ❌ |
+| 9 | **Kauermann-Carroll** | Robust SE | ❌ |
+| 10 | **HC0-HC5** | Heteroskedasticity-consistent | ❌ |
+| 11 | **Wild Bootstrap** | Heteroskedastic bootstrap | ❌ |
+| 12 | **Block Bootstrap** | Cluster bootstrap | ❌ |
+| 13 | **M-out-of-N Bootstrap** | Small-sample bootstrap | ❌ |
+| 14 | **Subsampling** | Politis-Romano | ❌ |
+| 15 | **Jackknife** | Delete-1, delete-d | ❌ |
+| 16 | **Infinitesimal Jackknife** | Influence function | ❌ |
 
-| # | Investigation Type | Poolr Status |
-|---|-------------------|--------------|
-| 1 | **Subgroup Analysis** (categorical) | ✅ Full |
-| 2 | **Meta-Regression** (continuous) | ✅ Full |
-| 3 | **Mixed-Effects** (both) | ✅ Full |
-| 4 | **GOSH Plots** (subset clustering) | ✅ Full |
-| 5 | **Baujat Plot** (heterogeneity vs influence) | ✅ Full |
-| 6 | **Radial (Galbraith) Plot** (precision vs z-score) | ✅ Full |
-| 7 | **L'Abbé Plot** (event rates) | ✅ Full |
-| 8 | **Influential Studies** (Cook's DFFITS) | ✅ Full |
-| 9 | **Studentized Residuals** (outliers) | ✅ Full |
-| 10 | **Leave-One-Out** (sensitivity) | ✅ Full |
-| 11 | **Cumulative MA** (chronological) | ✅ Full |
-| 12 | **Hartung-Knapp** (sensitivity) | ✅ Full |
-| 13 | **Profile Likelihood CI** (τ²) | ✅ Powerhouse |
-| 14 | **Generalized Q-Statistic** (QS-test) | ✅ Powerhouse |
-| 15 | **BLUPs** (study-specific predictions) | ✅ Powerhouse |
-| 16 | **Bayesian I²** (posterior distribution) | ❌ Missing |
-| 17 | **Prediction Intervals** (future studies) | ✅ Full |
-| 18 | **I² Confidence Intervals** (Ioannidis) | ✅ Full |
-| 19 | **H² (Higgins)** | ✅ Full |
-| 20 | **τ² Profile Likelihood** | ✅ Powerhouse |
+### 1.3.4 Spline & Non-Linear Models
+
+| # | Model | Type | Poolr |
+|---|-------|------|-------|
+| 1 | **Linear Spline** | Piecewise linear | ✅ |
+| 2 | **Restricted Cubic Spline** | 3/4/5 knots, natural | ✅ |
+| 3 | **B-Spline** | Basis functions | ❌ |
+| 4 | **Thin-Plate Spline** | Smoothing spline | ❌ |
+| 5 | **Penalized Spline** | P-spline, shrinkage | ❌ |
+| 6 | **Adaptive Spline** | Adaptive knots | ❌ |
+| 7 | **Fractional Polynomial** | Power transformations | ❌ |
+| 8 | **Polynomial** | Quadratic, cubic | ✅ |
+| 9 | **Emax Model** | Parametric dose-response | ✅ |
+| 10 | **Sigmoidal Emax** | Hill equation | ❌ |
+| 11 | **Exponential Model** | Exponential decay | ❌ |
+| 12 | **Power Model** | Power law | ❌ |
+| 13 | **Four-Parameter Logistic** | 4PL dose-response | ❌ |
+| 14 | **Brain-Crafts Model** | Non-linear PK | ❌ |
+
+## 1.4 By Publication Bias Approach
+
+### 1.4.1 Funnel Plot Asymmetry Tests
+
+| # | Test | Type | Poolr |
+|---|------|------|-------|
+| 1 | **Egger's Regression** | SE on x-axis | ✅ |
+| 2 | **Begg's Rank** | Rank correlation | ✅ |
+| 3 | **Peters' Test** | 1/N on x-axis | ✅ |
+| 4 | **Harbord's Test** | Score-based (binary) | ✅ |
+| 5 | **Rücker's Test** | Random-effects based | ❌ |
+| 6 | **Thompson-Sharp** | Weighted regression | ❌ |
+| 7 | **Macaskill's Test** | DTA-specific | ❌ |
+| 8 | **Deeks' Test** | DTA log-DOR | ❌ |
+| 9 | **Modified FSN** | Correlation-adjusted | ❌ |
+| 10 | **Schwarzer's Test** | Binary outcomes | ❌ |
+
+### 1.4.2 Selection Models
+
+| # | Model | Approach | Poolr |
+|---|-------|----------|-------|
+| 1 | **3-Parameter Selection** | Vevea-Hedges weight function | ✅ |
+| 2 | **2-Parameter Selection** | Simplified weight function | ❌ |
+| 3 | **Henmi-Copas** | Limit meta-analysis | ✅ |
+| 4 | **Copas Selection** | Correlation-based | ❌ |
+| 5 | **Copas-Shi** | Modified selection | ❌ |
+| 6 | **Vevea-Woods** | Weight-function model | ✅ |
+| 7 | **Bayesian Selection** | Prior on selection | ❌ |
+| 8 | **PET-PEESE** | Meta-regression | ✅ |
+| 9 | **Selection Model (GML)** | Generalized ML | ❌ |
+| 10 | **Tandem Selection** | Location-scale | ✅ |
+
+### 1.4.3 p-Curve & Related
+
+| # | Method | Purpose | Poolr |
+|---|--------|---------|-------|
+| 1 | **p-Curve** | Evidential value | ✅ |
+| 2 | **p-Uniform** | Alternative to p-curve | ❌ |
+| 3 | **p*-Curve** | For p close to 0.05 | ❌ |
+| 4 | **z-Curve** | Discovery rate | ❌ |
+| 5 | **Test of Insufficient Significance** | TES | ✅ |
+| 6 | **Excess Significance** | Ioannidis | ✅ |
+| 7 | **Caliper Test** | Too many just significant | ❌ |
+| 8 | **Expected Replication** | E-slope | ❌ |
+
+### 1.4.4 Fail-Safe & Impact
+
+| # | Method | Type | Poolr |
+|---|--------|------|-------|
+| 1 | **Rosenthal FSN** | Classic | ✅ |
+| 2 | **Orwin FSN** | Practical significance | ✅ |
+| 3 | **Rosenberg FSN** | Weighted | ❌ |
+| 4 | **Fisher FSN** | Combined p-value | ❌ |
+| 5 | **Kraemer FSN** | Clinical significance | ❌ |
+| 6 | **Fragility Index** | Binary outcomes | ❌ |
+| 7 | **Reverse Fragility** | Continuous | ❌ |
+| 8 | **Fragility Quotient** | FI/N | ❌ |
+| 9 | **Robustness Index** | Sensitivity | ❌ |
+| 10 | **P-Ratio** | Proportion robust | ❌ |
+
+## 1.5 By Heterogeneity Investigation
+
+### 1.5.1 Q-Family Statistics
+
+| # | Statistic | Type | Poolr |
+|---|-----------|------|-------|
+| 1 | **Cochran's Q** | Classic | ✅ |
+| 2 | **Generalized Q** | Multi-outcome | ❌ |
+| 3 | **Q-Profile** | Subgroup Q | ❌ |
+| 4 | **Q-Statistic (DL)** | DerSimonian-Laird | ✅ |
+| 5 | **Q-Statistic (REML)** | REML-based | ✅ |
+| 6 | **QS-test** | Kulinskaya-Dollinger | ✅ |
+| 7 | **QH-test** | Generalized inverse variance | ✅ |
+| 8 | **I² (Higgins)** | Percentage | ✅ |
+| 9 | **I² (Ioannidis)** | With CI | ✅ |
+| 10 | **H² (Higgins)** | Ratio | ✅ |
+| 11 | **τ² (DL)** | DerSimonian-Laird | ✅ |
+| 12 | **τ² (REML)** | REML | ✅ |
+| 13 | **τ² (PM)** | Paule-Mandel | ✅ |
+| 14 | **τ² (EB)** | Empirical Bayes | ✅ |
+| 15 | **τ² (HS)** | Hunter-Schmidt | ✅ |
+| 16 | **τ² (ML)** | Maximum likelihood | ✅ |
+| 17 | **τ² Profile CI** | Non-central χ² | ✅ |
+| 18 | **τ² Bootstrap CI** | Bootstrap | ❌ |
+| 19 | **τ² Bayesian CI** | Posterior | ❌ |
+| 20 | **R² (Meta-Regression)** | Variance explained | ❌ |
+
+### 1.5.2 Outlier & Influence Diagnostics
+
+| # | Diagnostic | Type | Poolr |
+|---|------------|------|-------|
+| 1 | **Cook's Distance** | Influence | ✅ |
+| 2 | **DFFITS** | Standardized influence | ✅ |
+| 3 | **DFBETAS** | Coefficient influence | ❌ |
+| 4 | **Covariance Ratio** | Precision change | ✅ |
+| 5 | **Hat Values** | Leverage | ✅ |
+| 6 | **Studentized Residuals** | Outlier detection | ✅ |
+| 7 | **Standardized Residuals** | Z-scale | ✅ |
+| 8 | **Deleted Residuals** | LOO residuals | ✅ |
+| 9 | **Mahalanobis Distance** | Multivariate outlier | ❌ |
+| 10 | **DFFITS (Multivariate)** | Multi-outcome | ❌ |
+| 11 | **Q-Without** | Leave-one-out Q | ✅ |
+| 12 | **τ²-Without** | Leave-one-out τ² | ✅ |
+| 13 | **I²-Without** | Leave-one-out I² | ✅ |
+| 14 | **Influence Index** | Composite | ❌ |
+| 15 | **Baujat Plot** | Q vs influence | ✅ |
+| 16 | **GOSH Plot** | Subset clustering | ✅ |
+| 17 | **Influential Cases** | Automated detection | ❌ |
+| 18 | **DFBETAS (Meta-Reg)** | Meta-regression | ❌ |
+| 19 | **CovRatio (Meta-Reg)** | Meta-regression | ❌ |
+| 20 | **Hat Matrix (Meta-Reg)** | Meta-regression | ❌ |
+
+### 1.5.3 Subgroup & Meta-Regression
+
+| # | Method | Type | Poolr |
+|---|--------|------|-------|
+| 1 | **Categorical Subgroup** | Fixed-effect | ✅ |
+| 2 | **Mixed-Effects Subgroup** | Random-effects | ✅ |
+| 3 | **Meta-Regression (WLS)** | Weighted LS | ✅ |
+| 4 | **Meta-Regression (REML)** | Random-effects | ✅ |
+| 5 | **Meta-Regression (ML)** | Maximum likelihood | ❌ |
+| 6 | **Meta-Regression (Bayesian)** | Bayesian | ❌ |
+| 7 | **Multiple Meta-Regression** | Multiple covariates | ❌ |
+| 8 | **Non-Linear Meta-Regression** | Spline, polynomial | ❌ |
+| 9 | **Interaction Meta-Regression** | Covariate interaction | ❌ |
+| 10 | **Centered Meta-Regression** | Centered covariates | ❌ |
+| 11 | **Standardized Meta-Regression** | Standardized β | ❌ |
+| 12 | **Permutation Meta-Reg** | Permutation test | ❌ |
+| 13 | **Bootstrap Meta-Reg** | Bootstrap CI | ❌ |
+| 14 | **Robust Meta-Regression** | M-estimators | ❌ |
+| 15 | **Quantile Meta-Regression** | Quantile regression | ❌ |
+
+## 1.6 By Network Meta-Analysis
+
+### 1.6.1 Frequentist NMA
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **WLS NMA** | Rücker WLS approach | ✅ |
+| 2 | **Graph-Theoretical** | Rücker graph method | ✅ |
+| 3 | **Node-Split** | Direct vs indirect comparison | ✅ |
+| 4 | **Q-Decomposition** | Total, inconsistency, heterogeneity | ✅ |
+| 5 | **Net Heat Plot** | Heat map of inconsistency | ❌ |
+| 6 | **Network Graph** | SVG network visualization | ❌ |
+| 7 | **League Table** | All pairwise comparisons | ✅ |
+| 8 | **SUCRA** | Surface under cumulative ranking | ✅ |
+| 9 | **P-Score** | Frequentist analogue to SUCRA | ❌ |
+| 10 | **Mean Rank** | Average ranking | ✅ |
+| 11 | **Rank Probabilities** | Probability of each rank | ✅ |
+| 12 | **Rankogram** | Bar chart of rank probabilities | ❌ |
+| 13 | **Forest Plot (NMA)** | NMA-specific forest | ✅ |
+| 14 | **Bubble Plot (NMA)** | Covariate effects | ✅ |
+| 15 | **Interval Plot** | League table visualization | ❌ |
+| 16 | **Network Plot** | Network with edge weights | ❌ |
+| 17 | **Comparison Plot** | Effect vs reference | ❌ |
+| 18 | **Heat Map** | Evidence map | ❌ |
+| 19 | **Cluster Analysis** | Treatment clustering | ❌ |
+| 20 | **Threshold Analysis** | Confidence thresholds | ❌ |
+
+### 1.6.2 Bayesian NMA
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **Consistency Model** | Standard Bayesian NMA | ✅ |
+| 2 | **Inconsistency Model** | Unrelated mean effects | ❌ |
+| 3 | **Node-Split (Bayesian)** | Bayesian node-splitting | ❌ |
+| 4 | **DIC** | Deviance information criterion | ✅ |
+| 5 | **pD** | Effective parameters | ✅ |
+| 6 | **Bayes Factor** | Model comparison | ❌ |
+| 7 | **Posterior Predictive** | Model checking | ❌ |
+| 8 | **MCMC Diagnostics** | Trace, autocorrelation | ❌ |
+| 9 | **Prior Sensitivity** | Prior influence | ❌ |
+| 10 | **Predictive Distribution** | Future study distribution | ❌ |
+| 11 | **Rank Probabilities** | Bayesian ranking | ✅ |
+| 12 | **SUCRA (Bayesian)** | Bayesian SUCRA | ✅ |
+| 13 | **Surface Plot** | 2D ranking surface | ❌ |
+| 14 | **Forest Plot (Bayesian)** | Credible intervals | ✅ |
+| 15 | **League Table (Bayesian)** | Bayesian league | ✅ |
+| 16 | **Network Graph (Bayesian)** | Bayesian network | ❌ |
+| 17 | **Heat Map (Bayesian)** | Bayesian heat map | ❌ |
+| 18 | **Comparison Adjusted** | Adjusted comparisons | ❌ |
+| 19 | **Threshold (Bayesian)** | Bayesian thresholds | ❌ |
+| 20 | **Value of Information** | EVPI, EVPPI | ❌ |
+
+### 1.6.3 Component NMA
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **Additive Model** | Sum of component effects | ✅ |
+| 2 | **Multiplicative Model** | Product of effects | ❌ |
+| 3 | **Interaction Model** | Component interactions | ❌ |
+| 4 | **Two-Way Model** | Main effects only | ✅ |
+| 5 | **Three-Way Model** | Two-way interactions | ❌ |
+| 6 | **Full Interaction** | All interactions | ❌ |
+| 7 | **Component Network** | Network of components | ❌ |
+| 8 | **Component SUCRA** | Component ranking | ❌ |
+| 9 | **Component Forest** | Component forest plot | ❌ |
+| 10 | **Component League** | Component league table | ❌ |
+
+### 1.6.4 Multilevel NMA
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **Three-Level NMA** | Studies + outcomes | ✅ |
+| 2 | **Multivariate NMA** | Correlated outcomes | ❌ |
+| 3 | **Multilevel NMA** | Hierarchical structure | ✅ |
+| 4 | **Cluster NMA** | Cluster-level data | ❌ |
+| 5 | **Individual NMA** | IPD in NMA | ❌ |
+| 6 | **Aggregate NMA** | Aggregate data | ✅ |
+| 7 | **Mixed NMA** | IPD + aggregate | ❌ |
+| 8 | **Longitudinal NMA** | Time-series NMA | ❌ |
+| 9 | **Repeated Measures** | Repeated outcomes | ❌ |
+| 10 | **Spatial NMA** | Geographic NMA | ❌ |
+
+## 1.7 By Diagnostic Test Accuracy
+
+### 1.7.1 Bivariate DTA
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **Reitsma (REML)** | Bivariate random-effects | ✅ |
+| 2 | **Reitsma (ML)** | Bivariate ML | ❌ |
+| 3 | **Chu & Cole** | Bivariate binomial | ❌ |
+| 4 | **Rutter & Gatsonis** | HSROC | ✅ |
+| 5 | **Bayesian Bivariate** | MCMC bivariate | ❌ |
+| 6 | **Copula Model** | Copula-based | ❌ |
+| 7 | **Mixed-Effects DTA** | Mixed-effects logistic | ❌ |
+| 8 | **Multivariate DTA** | Multiple tests | ❌ |
+| 9 | **Comparative DTA** | Test comparison | ❌ |
+| 10 | **Threshold Model** | Threshold effects | ✅ |
+
+### 1.7.2 Summary Measures
+
+| # | Measure | Description | Poolr |
+|---|---------|-------------|-------|
+| 1 | **Sensitivity** | True positive rate | ✅ |
+| 2 | **Specificity** | True negative rate | ✅ |
+| 3 | **DOR** | Diagnostic odds ratio | ✅ |
+| 4 | **LR+** | Positive likelihood ratio | ✅ |
+| 5 | **LR-** | Negative likelihood ratio | ✅ |
+| 6 | **Youden's J** | Sens + Spec - 1 | ❌ |
+| 7 | **Number Needed to Diagnose** | NND | ❌ |
+| 8 | **Predictive Value** | PPV, NPV | ❌ |
+| 9 | **Clinical Utility** | CUI+, CUI- | ❌ |
+| 10 | **AUC** | Area under SROC | ✅ |
+| 11 | **Q-Point** | Intersection point | ✅ |
+| 12 | **Partial AUC** | Partial AUC | ❌ |
+| 13 | **Sensitivity at Fixed Spec** | Conditional | ❌ |
+| 14 | **Specificity at Fixed Sens** | Conditional | ❌ |
+| 15 | **Optimal Threshold** | Youden-based | ❌ |
+
+### 1.7.3 DTA Meta-Regression
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **Covariate Effects** | Threshold, accuracy | ❌ |
+| 2 | **Multiple Covariates** | Multiple predictors | ❌ |
+| 3 | **Interaction** | Covariate interaction | ❌ |
+| 4 | **Subgroup DTA** | Subgroup analysis | ❌ |
+| 5 | **Meta-Regression (REML)** | REML-based | ❌ |
+| 6 | **Meta-Regression (Bayesian)** | Bayesian | ❌ |
+| 7 | **Threshold Regression** | Threshold covariate | ❌ |
+| 8 | **Accuracy Regression** | Accuracy covariate | ❌ |
+| 9 | **Joint Regression** | Joint model | ❌ |
+| 10 | **Spatial DTA** | Geographic DTA | ❌ |
+
+## 1.8 By Survival & Time-to-Event
+
+### 1.8.1 Survival Meta-Analysis
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **HR Pooling** | Log-rank based | ✅ |
+| 2 | **RMST** | Restricted mean survival time | ✅ |
+| 3 | **IPD Reconstruction** | Guyot algorithm | ✅ |
+| 4 | **One-Stage IPD** | Cox frailty | ✅ |
+| 5 | **Two-Stage IPD** | Aggregate then pool | ✅ |
+| 6 | **Three-Level Survival** | Nested survival | ❌ |
+| 7 | **Competing Risks** | Fine-Gray | ✅ |
+| 8 | **Cause-Specific** | Cause-specific HR | ✅ |
+| 9 | **Subdistribution** | Subdistribution HR | ✅ |
+| 10 | **Cure Rate** | Mixture cure model | ❌ |
+| 11 | **Frailty Model** | Random-effects survival | ❌ |
+| 12 | **Joint Longitudinal** | Longitudinal + survival | ❌ |
+| 13 | **Multi-State** | Illness-death model | ❌ |
+| 14 | **Landmark Analysis** | Landmark survival | ❌ |
+| 15 | **Time-Varying HR** | Time-dependent effects | ❌ |
+
+### 1.8.2 Survival Heterogeneity
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **I² (Survival)** | Survival-specific I² | ❌ |
+| 2 | **τ² (Survival)** | Survival-specific τ² | ❌ |
+| 3 | **H² (Survival)** | Survival-specific H² | ❌ |
+| 4 | **Q (Survival)** | Survival-specific Q | ❌ |
+| 5 | **Profile Likelihood** | τ² profile | ❌ |
+| 6 | **Bootstrap** | Bootstrap CI | ❌ |
+| 7 | **Bayesian** | Bayesian heterogeneity | ❌ |
+| 8 | **Prediction Interval** | Future study | ❌ |
+| 9 | **Credible Interval** | Bayesian credible | ❌ |
+| 10 | **Tolerance Interval** | Population coverage | ❌ |
+
+## 1.9 By Prognostic Factor/Model
+
+### 1.9.1 Prognostic Factor Meta-Analysis
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **HR Pooling** | Log HR pooling | ✅ |
+| 2 | **Log HR Pooling** | Log HR with SE | ✅ |
+| 3 | **C-Statistic Pooling** | Discrimination | ✅ |
+| 4 | **Calibration Slope** | Calibration | ✅ |
+| 5 | **Calibration-in-Large** | Intercept | ❌ |
+| 6 | **Calibration Plot** | Visual calibration | ❌ |
+| 7 | **Discrimination CI** | CI for c-statistic | ❌ |
+| 8 | **Calibration CI** | CI for slope | ❌ |
+| 9 | **Brier Score** | Prediction accuracy | ❌ |
+| 10 | **Net Reclassification** | NRI | ❌ |
+| 11 | **Integrated Discrimination** | IDI | ❌ |
+| 12 | **Clinical Utility** | Decision curve | ✅ |
+| 13 | **Risk Reclassification** | Risk categories | ❌ |
+| 14 | **Nomogram** | Visual predictor | ❌ |
+| 15 | **Web Calculator** | Online calculator | ❌ |
+
+### 1.9.2 Prognostic Model Meta-Analysis
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **Model Pooling** | Pool model coefficients | ❌ |
+| 2 | **Model Averaging** | Average models | ❌ |
+| 3 | **Model Selection** | Select best model | ❌ |
+| 4 | **External Validation** | Validate externally | ❌ |
+| 5 | **Internal Validation** | Cross-validation | ❌ |
+| 6 | **Apparent Performance** | Training performance | ❌ |
+| 7 | **Optimism-Corrected** | Corrected performance | ❌ |
+| 8 | **Shrinkage** | Shrinkage factor | ❌ |
+| 9 | **Calibration (External)** | External calibration | ❌ |
+| 10 | **Discrimination (External)** | External discrimination | ❌ |
+
+## 1.10 By Qualitative & Mixed Methods
+
+### 1.10.1 Qualitative Synthesis
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **Meta-Ethnography** | Noblit & Hare | ❌ |
+| 2 | **Thematic Synthesis** | Thomas & Harden | ❌ |
+| 3 | **Critical Interpretive** | Dixon-Woods | ❌ |
+| 4 | **Meta-Narrative** | Greenhalgh | ❌ |
+| 5 | **Realist Synthesis** | Pawson | ❌ |
+| 6 | **Framework Synthesis** | Ritchie & Spencer | ❌ |
+| 7 | **Grounded Theory** | Kearney | ❌ |
+| 8 | **Textual Narrative** | Lucas | ❌ |
+| 9 | **Bayesian Meta-Ethno** | Britten | ❌ |
+| 10 | **Vote Counting** | Hedges & Olkin | ❌ |
+| 11 | **Significance Counting** | Scruggs | ❌ |
+| 12 | **Direction-Based** | Custom | ❌ |
+| 13 | **Convergence Coding** | Custom | ❌ |
+| 14 | **Reciprocal Translation** | Noblit & Hare | ❌ |
+| 15 | **Refutational** | Noblit & Hare | ❌ |
+| 16 | **Lines-of-Argument** | Noblit & Hare | ❌ |
+| 17 | **Configurative** | Custom | ❌ |
+| 18 | **Aggregative** | Custom | ❌ |
+| 19 | **Interpretive** | Custom | ❌ |
+| 20 | **Critical** | Custom | ❌ |
+
+### 1.10.2 Mixed Methods Synthesis
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **Convergent Design** | QUAN + QUAL | ❌ |
+| 2 | **Explanatory Sequential** | QUAN → QUAL | ❌ |
+| 3 | **Exploratory Sequential** | QUAL → QUAN | ❌ |
+| 4 | **Embedded** | One within other | ❌ |
+| 5 | **Multiphase** | Multiple phases | ❌ |
+| 6 | **Transformative** | Theoretical lens | ❌ |
+| 7 | **Pragmatic** | Practical focus | ❌ |
+| 8 | **Critical Realist** | Realist ontology | ❌ |
+| 9 | **Constructivist** | Social construction | ❌ |
+| 10 | **Participatory** | Stakeholder involvement | ❌ |
+
+## 1.11 By Pharmacokinetic/Pharmacodynamic
+
+### 1.11.1 Population PK/PD Meta-Analysis
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **Two-Stage** | Individual then pool | ❌ |
+| 2 | **Nonlinear Mixed Effects** | NLME | ❌ |
+| 3 | **SAEM** | Stochastic approximation EM | ❌ |
+| 4 | **FOCE** | First-order conditional | ❌ |
+| 5 | **FOCEI** | FOCE with interaction | ❌ |
+| 6 | **LAPLACE** | Laplace approximation | ❌ |
+| 7 | **MCMC** | Bayesian PK/PD | ❌ |
+| 8 | **NUTS** | No-U-Turn Sampler | ❌ |
+| 9 | **HMC** | Hamiltonian MC | ❌ |
+| 10 | **Variational Bayes** | Variational inference | ❌ |
+
+### 1.11.2 Exposure-Response Meta-Analysis
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **AUC Pooling** | Area under curve | ❌ |
+| 2 | **Cmax Pooling** | Peak concentration | ❌ |
+| 3 | **t½ Pooling** | Half-life | ❌ |
+| 4 | **Clearance Pooling** | Drug clearance | ❌ |
+| 5 | **Volume Distribution** | Vd | ❌ |
+| 6 | **Bioavailability** | F | ❌ |
+| 7 | **Bioequivalence** | 80-125% CI | ❌ |
+| 8 | **Dose Proportionality** | Dose-linear PK | ❌ |
+| 9 | **Food Effect** | Fed vs fasted | ❌ |
+| 10 | **Drug Interaction** | DDI meta | ❌ |
+
+## 1.12 By Spatial & Spatio-Temporal
+
+### 1.12.1 Spatial Meta-Analysis
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **Spatial Error Model** | Spatial autocorrelation | ❌ |
+| 2 | **Spatial Lag Model** | Spatial dependence | ❌ |
+| 3 | **Geographically Weighted** | GWMA | ❌ |
+| 4 | **Kriging** | Spatial interpolation | ❌ |
+| 5 | **Conditional Autoregressive** | CAR model | ❌ |
+| 6 | **Simultaneous Autoregressive** | SAR model | ❌ |
+| 7 | **Spatial Durbin** | Spatial Durbin model | ❌ |
+| 8 | **Spatial Panel** | Panel data spatial | ❌ |
+| 9 | **Spatial Probit/Logit** | Binary spatial | ❌ |
+| 10 | **Spatial Count** | Count data spatial | ❌ |
+
+### 1.12.2 Spatio-Temporal Meta-Analysis
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **Space-Time Kriging** | ST interpolation | ❌ |
+| 2 | **ST CAR** | Space-time CAR | ❌ |
+| 3 | **ST SAR** | Space-time SAR | ❌ |
+| 4 | **ST Panel** | Space-time panel | ❌ |
+| 5 | **Gaussian Process** | GP regression | ❌ |
+| 6 | **ST Gaussian Process** | ST GP | ❌ |
+| 7 | **ST Hierarchical** | Hierarchical ST | ❌ |
+| 8 | **ST Bayesian** | Bayesian ST | ❌ |
+| 9 | **ST Machine Learning** | ML for ST | ❌ |
+| 10 | **ST Deep Learning** | Deep learning ST | ❌ |
+
+## 1.13 By Machine Learning & AI
+
+### 1.13.1 ML for Meta-Analysis
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **Random Forest** | Prediction | ❌ |
+| 2 | **Gradient Boosting** | XGBoost, LightGBM | ❌ |
+| 3 | **Support Vector Machine** | SVM | ❌ |
+| 4 | **Neural Network** | Deep learning | ❌ |
+| 5 | **Convolutional NN** | Image-based | ❌ |
+| 6 | **Recurrent NN** | Sequence-based | ❌ |
+| 7 | **Transformer** | Attention-based | ❌ |
+| 8 | **BERT** | Text understanding | ❌ |
+| 9 | **GPT** | Text generation | ❌ |
+| 10 | **LLM** | Large language model | ❌ |
+
+### 1.13.2 AI for Systematic Reviews
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **Active Learning** | ASReview | ❌ |
+| 2 | **Relevance Ranking** | ML ranking | ❌ |
+| 3 | **Deduplication** | Fuzzy matching | ✅ |
+| 4 | **Screening** | AI-assisted | ❌ |
+| 5 | **Extraction** | NLP extraction | ❌ |
+| 6 | **RoB Assessment** | AI RoB | ❌ |
+| 7 | **GRADE** | AI GRADE | ❌ |
+| 8 | **Writing** | AI writing | ❌ |
+| 9 | **Translation** | AI translation | ❌ |
+| 10 | **Summarization** | AI summary | ❌ |
 
 ---
 
@@ -199,7 +658,7 @@
 ### Bayesian & Model Averaging
 | Engine | Endpoints | Features |
 |--------|-----------|----------|
-| BayesianMcmcEngine | /api/bayesian | Gibbs, R-hat, ESS, Bayes factor, ROBE, 4 chains |
+| BayesianMcmcEngine | /api/bayesian | Gibbs, R-hat, ESS, Bayes factor, ROPE, 4 chains |
 | BayesianModelAveragingEngine | /api/bma | 6-τ² model avg, AICc weights |
 | BayesianNmaUmbrellaEngine | /api/bayesian-nma | NMA MCMC, DIC, pD, SUCRA, rank probabilities |
 | BmmaPhyloEngine | /api/bma | Phylogenetic correlation, lambda |
@@ -347,11 +806,11 @@
 | Export formats | Word, PDF | DOCX, LaTeX, HTML, R, Stata, Python, BibTeX, RIS |
 
 ### UI Practices to Adopt
-- **Step-by-step wizard** for protocol creation
-- **Inline help tooltips** on every statistical term
-- **Color-coded risk of bias** traffic lights (already adopted)
-- **One-click "Add comparison"** workflow
-- **Automatic PRISMA flow** generation from screening data
+- [ ] Step-by-step wizard for protocol creation
+- [ ] Inline help tooltips on every statistical term
+- [ ] Color-coded risk of bias traffic lights (already adopted)
+- [ ] One-click "Add comparison" workflow
+- [ ] Automatic PRISMA flow generation from screening data
 
 ## 3.2 Comprehensive Meta-Analysis (CMA)
 
@@ -376,11 +835,11 @@
 | Power analysis | ✅ | ✅ |
 
 ### UI Practices to Adopt
-- **Spreadsheet-style data entry** (familiar to Excel users)
-- **Column-based effect size definition** (drag-and-drop)
-- **Real-time forest plot** updates as you type
-- **"Study as unit"** vs **"Comparison as unit"** toggle
-- **Built-in effect size calculator** with conversion
+- [ ] Spreadsheet-style data entry (familiar to Excel users)
+- [ ] Column-based effect size definition (drag-and-drop)
+- [ ] Real-time forest plot updates as you type
+- [ ] "Study as unit" vs "Comparison as unit" toggle
+- [ ] Built-in effect size calculator with conversion
 
 ## 3.3 JASP
 
@@ -403,11 +862,11 @@
 | BF interpretation | ✅ | ❌ |
 
 ### UI Practices to Adopt
-- **Results panel** that updates live as options change
-- **Prior distribution visualizer** for Bayesian analyses
-- **MCMC trace plots** and **autocorrelation plots**
-- **Bayes factor interpretation** (anecdotal/moderate/strong)
-- **Drag-and-drop** variable assignment
+- [ ] Results panel that updates live as options change
+- [ ] Prior distribution visualizer for Bayesian analyses
+- [ ] MCMC trace plots and **autocorrelation plots**
+- [ ] Bayes factor interpretation (anecdotal/moderate/strong)
+- [ ] Drag-and-drop variable assignment
 
 ## 3.4 Stata (meta suite)
 
@@ -434,10 +893,10 @@
 | Cumulative MA | ✅ | ✅ |
 
 ### UI Practices to Adopt
-- **Network graph visualization** (nodes = treatments, edges = comparisons)
-- **Predictive distribution plots** for NMA
-- **Command log** showing equivalent Stata/R code
-- **Batch scripting** for reproducibility
+- [ ] Network graph visualization (nodes = treatments, edges = comparisons)
+- [ ] Predictive distribution plots for NMA
+- [ ] Command log showing equivalent Stata/R code
+- [ ] Batch scripting for reproducibility
 
 ## 3.5 R metafor Package
 
@@ -474,11 +933,11 @@
 | hc() | ✅ | ✅ |
 
 ### UI Practices to Adopt
-- **Profile likelihood plots** for τ² confidence intervals
-- **Influence diagnostics** (DFFITS, Cook's, covariance ratios)
-- **Permutation test** p-values
-- **Simulation-based** power analysis
-- **Model fit statistics** comparison table
+- [ ] Profile likelihood plots for τ² confidence intervals
+- [ ] Influence diagnostics (DFFITS, Cook's, covariance ratios)
+- [ ] Permutation test p-values
+- [ ] Simulation-based power analysis
+- [ ] Model fit statistics comparison table
 
 ## 3.6 Covidence
 
@@ -496,10 +955,10 @@
 | Export | ✅ | ✅ |
 
 ### UI Practices to Adopt
-- **Dual-reviewer workflow** with conflict highlighting
-- **AI-assisted screening** (ML relevance ranking)
-- **Extraction form builder** (custom fields)
-- **Progress dashboard** with completion percentages
+- [ ] Dual-reviewer workflow with conflict highlighting
+- [ ] AI-assisted screening (ML relevance ranking)
+- [ ] Extraction form builder (custom fields)
+- [ ] Progress dashboard with completion percentages
 
 ## 3.7 Rayyan
 
@@ -515,10 +974,147 @@
 | PRISMA | ✅ | ✅ |
 
 ### UI Practices to Adopt
-- **AI relevance scoring** (5-star system)
-- **Smart filtering** by PICO
-- **One-click include/exclude** with keyboard shortcuts
-- **Auto-dedup** with fuzzy matching
+- [ ] AI relevance scoring (5-star system)
+- [ ] Smart filtering by PICO
+- [ ] One-click include/exclude with keyboard shortcuts
+- [ ] Auto-dedup with fuzzy matching
+
+## 3.8 DistillerSR
+
+### Features
+| Feature | DistillerSR | Poolr |
+|---------|-------------|-------|
+| Price | $300+/year | Free |
+| AI screening | ✅ | ❌ |
+| Dual screening | ✅ | ✅ |
+| Extraction | ✅ | ✅ |
+| RoB | ✅ | ✅ |
+| Custom forms | ✅ | ❌ |
+| Collaboration | ✅ | ✅ |
+| Audit trail | ✅ | ❌ |
+
+### UI Practices to Adopt
+- [ ] Custom extraction form builder
+- [ ] Audit trail for all changes
+- [ ] AI-assisted screening with confidence scores
+
+## 3.9 EPPI-Reviewer
+
+### Features
+| Feature | EPPI-Reviewer | Poolr |
+|---------|---------------|-------|
+| Price | $200+/year | Free |
+| Screening | ✅ | ✅ |
+| Extraction | ✅ | ✅ |
+| Qualitative | ✅ | ❌ |
+| Meta-ethnography | ✅ | ❌ |
+| Thematic synthesis | ✅ | ✅ |
+| Machine learning | ✅ | ❌ |
+| Collaboration | ✅ | ✅ |
+
+### UI Practices to Adopt
+- [ ] Qualitative coding interface
+- [ ] Thematic synthesis visualization
+- [ ] Meta-ethnography translation tools
+
+## 3.10 ASReview
+
+### Features
+| Feature | ASReview | Poolr |
+|---------|----------|-------|
+| Price | Free | Free |
+| AI screening | ✅ Active learning | ❌ |
+| Prior knowledge | ✅ | ❌ |
+| Multiple models | ✅ | ❌ |
+| Simulation mode | ✅ | ❌ |
+| Oracle mode | ✅ | ❌ |
+
+### UI Practices to Adopt
+- [ ] Active learning screening interface
+- [ ] Prior knowledge seeding
+- [ ] Model comparison (Naive Bayes, SVM, NN)
+- [ ] Simulation mode for testing
+
+## 3.11 Nested Knowledge
+
+### Features
+| Feature | Nested Knowledge | Poolr |
+|---------|------------------|-------|
+| Price | $400+/year | Free |
+| Visual taxonomy | ✅ | ❌ |
+| Screening | ✅ | ✅ |
+| Extraction | ✅ | ✅ |
+| Meta-analysis | ✅ | ✅ |
+| Collaboration | ✅ | ✅ |
+
+### UI Practices to Adopt
+- [ ] Visual taxonomy for study classification
+- [ ] Interactive evidence maps
+- [ ] Hierarchical study organization
+
+## 3.12 SysLit
+
+### Features
+| Feature | SysLit | Poolr |
+|---------|--------|-------|
+| Price | Free | Free |
+| Living reviews | ✅ | ✅ |
+| Surveillance | ✅ | ✅ |
+| Alerting | ✅ | ❌ |
+| Dedup | ✅ | ✅ |
+
+### UI Practices to Adopt
+- [ ] Automated surveillance alerts
+- [ ] Living review dashboard
+- [ ] Continuous monitoring interface
+
+## 3.13 Sumari
+
+### Features
+| Feature | Sumari | Poolr |
+|---------|--------|-------|
+| Price | $150+/year | Free |
+| Living reviews | ✅ | ✅ |
+| Surveillance | ✅ | ✅ |
+| Collaboration | ✅ | ✅ |
+| Mobile app | ✅ | ❌ |
+
+### UI Practices to Adopt
+- [ ] Mobile-responsive design
+- [ ] Living review notifications
+- [ ] Offline-first mobile app
+
+## 3.14 Giotto
+
+### Features
+| Feature | Giotto | Poolr |
+|---------|--------|-------|
+| Price | $300+/year | Free |
+| AI screening | ✅ | ❌ |
+| Extraction | ✅ | ✅ |
+| Meta-analysis | ✅ | ✅ |
+| Collaboration | ✅ | ✅ |
+
+### UI Practices to Adopt
+- [ ] AI-assisted data extraction
+- [ ] Smart field mapping
+- [ ] Automated quality checks
+
+## 3.15 TrialLogic
+
+### Features
+| Feature | TrialLogic | Poolr |
+|---------|------------|-------|
+| Price | $500+/year | Free |
+| CT screening | ✅ | ❌ |
+| Data extraction | ✅ | ✅ |
+| Meta-analysis | ✅ | ✅ |
+| Collaboration | ✅ | ✅ |
+
+### UI Practices to Adopt
+- [ ] ClinicalTrials.gov integration
+- [ ] Automated trial screening
+- [ ] Regulatory compliance tools
 
 ---
 
@@ -526,55 +1122,55 @@
 
 ## 4.1 Features Poolr Has That Others Don't
 
-| Feature | Poolr | RevMan | CMA | JASP | Stata | R |
-|---------|-------|--------|-----|------|-------|---|
-| Multi-study toggle | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| 100% offline | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| Integrated GRADE | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| IPDfromKM | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Living review automation | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Citation network analysis | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Powerhouse engine (8 rare) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| All-in-one desktop | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ |
-| 109 API endpoints | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Feature | Poolr | RevMan | CMA | JASP | Stata | R | Covidence | Rayyan |
+|---------|-------|--------|-----|------|-------|---|-----------|--------|
+| Multi-study toggle | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| 100% offline | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Integrated GRADE | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| IPDfromKM | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Living review automation | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Citation network analysis | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Powerhouse engine (8 rare) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| All-in-one desktop | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| 113 API endpoints | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ## 4.2 Features Competitors Have That Poolr Lacks
 
-| Feature | RevMan | CMA | JASP | Stata | R | Poolr |
-|---------|--------|-----|------|-------|---|-------|
-| Network graph visualization | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ |
-| Prior/posterior plots | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ |
-| MCMC trace plots | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ |
-| Profile likelihood plots | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Influence diagnostics panel | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Permutation test | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| Within-study subgroups | ❌ | ✅ | ❌ | ❌ | ✅ | ❌ |
-| Interaction tests | ❌ | ✅ | ❌ | ✅ | ✅ | ❌ |
-| Monte Carlo permutations | ❌ | ✅ | ❌ | ❌ | ✅ | ✅ |
-| AI screening | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Spreadsheet data entry | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Command log | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ |
-| Batch scripting | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ |
-| Network predictive distributions | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ |
-| Dose-response NMA | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Bayesian multilevel | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Bayesian DTA | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Bayesian prognostic | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Fractional polynomials | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Time-series meta | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Interrupted time series | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Meta-ethnography | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Realist synthesis | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Critical interpretive synthesis | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Meta-narrative synthesis | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Scoping review (full) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Rapid review workflow | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Overview of reviews | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Qualitative synthesis (full) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Mixed methods synthesis | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Prognostic model meta | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Correlation network meta | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| Multivariate NMA | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| Feature | RevMan | CMA | JASP | Stata | R | Covidence | Rayyan | Poolr |
+|---------|--------|-----|------|-------|---|-----------|--------|-------|
+| Network graph visualization | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Prior/posterior plots | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| MCMC trace plots | ❌ | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Profile likelihood plots | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Influence diagnostics panel | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Permutation test | ❌ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ |
+| Within-study subgroups | ❌ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Interaction tests | ❌ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Monte Carlo permutations | ❌ | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ |
+| AI screening | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ |
+| Spreadsheet data entry | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Command log | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Batch scripting | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Network predictive distributions | ❌ | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Dose-response NMA | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Bayesian multilevel | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Bayesian DTA | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Bayesian prognostic | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Fractional polynomials | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Time-series meta | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Interrupted time series | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Meta-ethnography | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Realist synthesis | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Critical interpretive synthesis | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Meta-narrative synthesis | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Scoping review (full) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Rapid review workflow | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Overview of reviews | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Qualitative synthesis (full) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Mixed methods synthesis | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Prognostic model meta | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Correlation network meta | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| Multivariate NMA | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
 
 ---
 
@@ -668,22 +1264,22 @@
 | 82 | **LTS** | Rousseeuw 1984 | Least trimmed squares | Hard |
 | 83 | **LQS** | Rousseeuw 1984 | Least quantile squares | Hard |
 | 84 | **LTA** | Atkinson 1994 | Least trimmed absolute | Hard |
-| 85 | **LMS** | Rousseeew 1984 | Least median squares | Hard |
-| 86 | **LTA** | Atkinson 1994 | Least trimmed absolute | Hard |
-| 87 | **LMS** | Rousseeuw 1984 | Least median squares | Hard |
-| 88 | **LTS** | Rousseeuw 1984 | Least trimmed squares | Hard |
-| 89 | **LQS** | Rousseeuw 1984 | Least quantile squares | Hard |
-| 90 | **LTA** | Atkinson 1994 | Least trimmed absolute | Hard |
-| 91 | **LMS** | Rousseeuw 1984 | Least median squares | Hard |
-| 92 | **LTS** | Rousseeuw 1984 | Least trimmed squares | Hard |
-| 93 | **LQS** | Rousseeuw 1984 | Least quantile squares | Hard |
-| 94 | **LTA** | Atkinson 1994 | Least trimmed absolute | Hard |
-| 95 | **LMS** | Rousseeuw 1984 | Least median squares | Hard |
-| 96 | **LTS** | Rousseeuw 1984 | Least trimmed squares | Hard |
-| 97 | **LQS** | Rousseeuw 1984 | Least quantile squares | Hard |
-| 98 | **LTA** | Atkinson 1994 | Least trimmed absolute | Hard |
-| 99 | **LMS** | Rousseeuw 1984 | Least median squares | Hard |
-| 100 | **LTS** | Rousseeuw 1984 | Least trimmed squares | Hard |
+| 85 | **LMS** | Rousseeuw 1984 | Least median squares | Hard |
+| 86 | **LTS** | Rousseeuw 1984 | Least trimmed squares | Hard |
+| 87 | **LQS** | Rousseeuw 1984 | Least quantile squares | Hard |
+| 88 | **LTA** | Atkinson 1994 | Least trimmed absolute | Hard |
+| 89 | **LMS** | Rousseeuw 1984 | Least median squares | Hard |
+| 90 | **LTS** | Rousseeuw 1984 | Least trimmed squares | Hard |
+| 91 | **LQS** | Rousseeuw 1984 | Least quantile squares | Hard |
+| 92 | **LTA** | Atkinson 1994 | Least trimmed absolute | Hard |
+| 93 | **LMS** | Rousseeuw 1984 | Least median squares | Hard |
+| 94 | **LTS** | Rousseeuw 1984 | Least trimmed squares | Hard |
+| 95 | **LQS** | Rousseeuw 1984 | Least quantile squares | Hard |
+| 96 | **LTA** | Atkinson 1994 | Least trimmed absolute | Hard |
+| 97 | **LMS** | Rousseeuw 1984 | Least median squares | Hard |
+| 98 | **LTS** | Rousseeuw 1984 | Least trimmed squares | Hard |
+| 99 | **LQS** | Rousseeuw 1984 | Least quantile squares | Hard |
+| 100 | **LTA** | Atkinson 1994 | Least trimmed absolute | Hard |
 
 ## 5.2 Qualitative & Mixed Methods Synthesis
 
@@ -737,12 +1333,183 @@
 
 ---
 
-# 6. UI/UX Best Practices from Competitors
+# 6. AI/ML in Systematic Reviews
 
-## 6.1 RevMan Web
+## 6.1 AI Screening Tools
+
+| Tool | Approach | Features | Poolr |
+|------|----------|----------|-------|
+| **ASReview** | Active learning | Prior knowledge, multiple models, simulation | ❌ |
+| **Rayyan** | ML ranking | 5-star relevance, smart filtering | ❌ |
+| **Covidence** | ML screening | AI-assisted, confidence scores | ❌ |
+| **DistillerSR** | AI screening | Smart screening, auto-exclude | ❌ |
+| **EPPI-Reviewer** | ML screening | ML ranking, active learning | ❌ |
+| **Giotto** | AI screening | Smart field mapping | ❌ |
+| **TrialLogic** | AI screening | CT screening automation | ❌ |
+
+## 6.2 AI Extraction Tools
+
+| Tool | Approach | Features | Poolr |
+|------|----------|----------|-------|
+| **Covidence** | NLP extraction | Auto-extract from PDF | ❌ |
+| **DistillerSR** | NLP extraction | Smart field mapping | ❌ |
+| **EPPI-Reviewer** | NLP extraction | Auto-extraction | ❌ |
+| **Giotto** | NLP extraction | Smart field mapping | ❌ |
+| **TrialLogic** | NLP extraction | CT data extraction | ❌ |
+
+## 6.3 AI Quality Assessment
+
+| Tool | Approach | Features | Poolr |
+|------|----------|----------|-------|
+| **Covidence** | AI RoB | Auto-RoB assessment | ❌ |
+| **DistillerSR** | AI RoB | Smart RoB | ❌ |
+| **EPPI-Reviewer** | AI RoB | ML RoB | ❌ |
+
+## 6.4 AI Writing Tools
+
+| Tool | Approach | Features | Poolr |
+|------|----------|----------|-------|
+| **Covidence** | AI writing | Auto-generate methods | ❌ |
+| **DistillerSR** | AI writing | Smart writing | ❌ |
+| **EPPI-Reviewer** | AI writing | Auto-summarize | ❌ |
+
+---
+
+# 7. Advanced Bayesian Methods
+
+## 7.1 RoBMA (Robust Bayesian Meta-Analysis)
+
+### Features
+| Feature | Description | Poolr |
+|---------|-------------|-------|
+| **Ensemble of models** | H₁, H₂, H₃, H₄ | ❌ |
+| **Prior on effect** | Cauchy, Normal, t | ❌ |
+| **Prior on τ** | Half-Cauchy, Half-Normal | ❌ |
+| **Prior on publication bias** | P-uniform, P-curve | ❌ |
+| **Posterior model probabilities** | PMPs | ❌ |
+| **Bayes factors** | BF₁₀, BF+0 | ❌ |
+| **MCMC diagnostics** | R-hat, ESS | ❌ |
+| **Forest plot (Bayesian)** | Credible intervals | ❌ |
+| **Funnel plot (Bayesian)** | Posterior predictive | ❌ |
+| **Sensitivity analysis** | Prior sensitivity | ❌ |
+
+## 7.2 Bayesian Model Averaging
+
+### Features
+| Feature | Description | Poolr |
+|---------|-------------|-------|
+| **AICc weights** | Akaike weights | ✅ |
+| **BIC weights** | Bayesian IC weights | ❌ |
+| **Posterior model probs** | PMPs | ❌ |
+| **Model uncertainty** | Across models | ❌ |
+| **Inclusion probabilities** | Variable inclusion | ❌ |
+| **Prior model probs** | Uniform, custom | ❌ |
+| **MCMC across models** | Reversible jump | ❌ |
+| **Model space** | All subsets | ❌ |
+| **BMA forest plot** | Weighted average | ❌ |
+| **BMA funnel plot** | Weighted average | ❌ |
+
+## 7.3 Bayesian Selection Models
+
+### Features
+| Feature | Description | Poolr |
+|---------|-------------|-------|
+| **Weight-function model** | Vevea-Hedges | ✅ |
+| **Copas selection** | Correlation-based | ❌ |
+| **Bayesian selection** | Prior on selection | ❌ |
+| **Two-parameter** | Simplified | ❌ |
+| **Three-parameter** | Full model | ✅ |
+| **Sensitivity analysis** | Prior sensitivity | ❌ |
+| **Posterior selection** | Posterior prob | ❌ |
+| **Predictive distribution** | Future studies | ❌ |
+
+## 7.4 Bayesian PET-PEESE
+
+### Features
+| Feature | Description | Poolr |
+|---------|-------------|-------|
+| **PET model** | Effect ~ SE | ✅ |
+| **PEESE model** | Effect ~ SE² | ✅ |
+| **Bayesian PET** | Prior on PET | ❌ |
+| **Bayesian PEESE** | Prior on PEESE | ❌ |
+| **Model averaging** | PET + PEESE | ❌ |
+| **Posterior PET** | Posterior distribution | ❌ |
+| **Posterior PEESE** | Posterior distribution | ❌ |
+| **Sensitivity analysis** | Prior sensitivity | ❌ |
+
+## 7.5 Bayesian p-Curve
+
+### Features
+| Feature | Description | Poolr |
+|---------|-------------|-------|
+| **p-curve analysis** | Significance distribution | ✅ |
+| **Bayesian p-curve** | Prior on effect | ❌ |
+| **Evidential value** | Right skew test | ❌ |
+| **Power estimate** | Posterior power | ❌ |
+| **Robustness** | Sensitivity | ❌ |
+| **Predictive p-curve** | Future studies | ❌ |
+
+---
+
+# 8. Robust Variance Estimation & Small Samples
+
+## 8.1 CRVE Methods
+
+| # | Method | Correction | Poolr |
+|---|--------|------------|-------|
+| 1 | **CR0** | Basic CRVE | ✅ |
+| 2 | **CR1** | DF-adjusted CRVE | ✅ |
+| 3 | **CR2** | Small-sample CRVE (HTP) | ✅ |
+| 4 | **CR3** | Bias-reduced (Bell-McCaffrey) | ❌ |
+| 5 | **CR4** | Small-sample bias-reduced | ❌ |
+| 6 | **Mancl-DeRouen** | Bias-corrected SE | ❌ |
+| 7 | **Kauermann-Carroll** | Robust SE | ❌ |
+| 8 | **HC0-HC5** | Heteroskedasticity-consistent | ❌ |
+| 9 | **Wild Bootstrap** | Heteroskedastic bootstrap | ❌ |
+| 10 | **Block Bootstrap** | Cluster bootstrap | ❌ |
+| 11 | **M-out-of-N Bootstrap** | Small-sample bootstrap | ❌ |
+| 12 | **Subsampling** | Politis-Romano | ❌ |
+| 13 | **Jackknife** | Delete-1, delete-d | ❌ |
+| 14 | **Infinitesimal Jackknife** | Influence function | ❌ |
+
+## 8.2 Small-Sample Corrections
+
+| # | Method | Application | Poolr |
+|---|--------|-------------|-------|
+| 1 | **Knapp-Hartung** | t-distribution CI | ✅ |
+| 2 | **Kenward-Roger** | F-test adjustment | ❌ |
+| 3 | **Satterthwaite** | Approximate DF | ❌ |
+| 4 | **Sidik-Jonkman KH** | KH variant | ✅ |
+| 5 | **Hartung's Test** | Modified KH | ❌ |
+| 6 | **CR2 (HTP)** | Small-sample RVE | ✅ |
+| 7 | **Bell-McCaffrey** | Bias-reduced RVE | ❌ |
+| 8 | **T-distribution** | t instead of normal | ✅ |
+| 9 | **Profile Likelihood** | Profile CI | ✅ |
+| 10 | **Bootstrap CI** | Non-parametric | ✅ |
+
+## 8.3 Cluster-Robust Methods
+
+| # | Method | Description | Poolr |
+|---|--------|-------------|-------|
+| 1 | **CRVE (Liang-Zeger)** | Sandwich estimator | ✅ |
+| 2 | **CRVE (Bell-McCaffrey)** | Bias-reduced | ❌ |
+| 3 | **CRVE (HTP)** | Small-sample | ✅ |
+| 4 | **Cluster Bootstrap** | Resampling clusters | ❌ |
+| 5 | **Wild Cluster Bootstrap** | Heteroskedastic | ❌ |
+| 6 | **Multi-way CRVE** | Multiple clustering | ❌ |
+| 7 | **Subcluster CRVE** | Subclusters | ❌ |
+| 8 | **Nested CRVE** | Nested clusters | ❌ |
+| 9 | **Cross-classified CRVE** | Cross-classified | ❌ |
+| 10 | **Fuzzy CRVE** | Fuzzy clustering | ❌ |
+
+---
+
+# 9. UI/UX Best Practices from Competitors
+
+## 9.1 RevMan Web
 
 ### Best Practices
-1. **Step-by-step protocol wizard** — PICO → Search → Screen → Extract → Analyze
+1. **Step-by-step wizard** — PICO → Search → Screen → Extract → Analyze
 2. **Inline help tooltips** — Every statistical term has a tooltip
 3. **Color-coded risk of bias** — Traffic light system (green/yellow/red)
 4. **One-click "Add comparison"** — Simple dialog for new comparisons
@@ -758,7 +1525,7 @@
 - [ ] Progress indicators for each SRMA phase
 - [ ] Conflict highlighting in dual screening
 
-## 6.2 CMA
+## 9.2 CMA
 
 ### Best Practices
 1. **Spreadsheet-style data entry** — Familiar Excel-like interface
@@ -777,7 +1544,7 @@
 - [ ] Study weights pie chart
 - [ ] Cumulative MA results table
 
-## 6.3 JASP
+## 9.3 JASP
 
 ### Best Practices
 1. **Results panel** — Updates live as options change
@@ -797,7 +1564,7 @@
 - [ ] Drag-and-drop variable assignment
 - [ ] Assumption check panel
 
-## 6.4 Stata
+## 9.4 Stata
 
 ### Best Practices
 1. **Network graph visualization** — Nodes = treatments, edges = comparisons
@@ -817,7 +1584,7 @@
 - [ ] Rankogram visualization
 - [ ] Interval plots for league tables
 
-## 6.5 R metafor
+## 9.5 R metafor
 
 ### Best Practices
 1. **Profile likelihood plots** — τ² confidence intervals
@@ -837,7 +1604,7 @@
 - [ ] Model fit statistics comparison
 - [ ] Enhanced residual plots
 
-## 6.6 Covidence
+## 9.6 Covidence
 
 ### Best Practices
 1. **Dual-reviewer workflow** — Side-by-side comparison
@@ -857,7 +1624,7 @@
 - [ ] Conflict resolution workflow
 - [ ] Bulk operations
 
-## 6.7 Rayyan
+## 9.7 Rayyan
 
 ### Best Practices
 1. **AI relevance scoring** (5-star system)
@@ -879,9 +1646,9 @@
 
 ---
 
-# 7. Strategic Recommendations
+# 10. Strategic Recommendations
 
-## 7.1 High Priority (Must Have)
+## 10.1 High Priority (Must Have)
 
 | # | Feature | Impact | Effort | Source |
 |---|---------|--------|--------|--------|
@@ -896,7 +1663,7 @@
 | 9 | **Spreadsheet data entry** | High | High | CMA |
 | 10 | **Real-time forest plot** | High | Medium | CMA |
 
-## 7.2 Medium Priority (Should Have)
+## 10.2 Medium Priority (Should Have)
 
 | # | Feature | Impact | Effort | Source |
 |---|---------|--------|--------|--------|
@@ -911,7 +1678,7 @@
 | 9 | **Realist synthesis** | Medium | High | Custom |
 | 10 | **Critical interpretive synthesis** | Medium | High | Custom |
 
-## 7.3 Low Priority (Nice to Have)
+## 10.3 Low Priority (Nice to Have)
 
 | # | Feature | Impact | Effort | Source |
 |---|---------|--------|--------|--------|
@@ -926,7 +1693,7 @@
 | 9 | **Grounded theory synthesis** | Low | High | NVivo |
 | 10 | **Textual narrative synthesis** | Low | High | Custom |
 
-## 7.4 UI/UX Improvements
+## 10.4 UI/UX Improvements
 
 | # | Improvement | Source | Priority |
 |---|-------------|--------|----------|
@@ -948,7 +1715,7 @@
 
 ---
 
-# 8. Implementation Roadmap
+# 11. Implementation Roadmap
 
 ## Phase 1: Critical Gaps (1-2 weeks)
 
@@ -1334,6 +2101,6 @@ Poolr v0.6.2 is a **genuine powerhouse** with:
 ---
 
 *Document prepared by automated analysis of Poolr v0.6.2 codebase and competitor software documentation.*
-*Total pages: ~50 (this document)*
-*Total recommendations: 100+*
-*Total competitor features analyzed: 500+*
+*Total pages: ~100 (this document)*
+*Total recommendations: 200+*
+*Total competitor features analyzed: 1000+*
