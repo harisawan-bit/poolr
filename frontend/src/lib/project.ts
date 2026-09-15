@@ -15,7 +15,7 @@ export interface Study {
   hr?: number | null;
   hr_lower?: number | null;
   hr_upper?: number | null;
-  // v0.6.2 extensions
+  // v0.6.1 extensions
   aux_time_int?: number | null;   // person-time, intervention arm (IRR/IRD)
   aux_time_ctrl?: number | null;  // person-time, control arm (IRR/IRD)
   correlation?: number | null;    // raw r (Z_CORR)
@@ -187,7 +187,7 @@ export interface ScreeningItem {
   decision: ScreenDecision;
   stage: "title_abstract" | "full_text";
   note?: string;
-  // v0.6.2 — structured exclusion reason (PICO-failure tags) + dedup key
+  // v0.6.1 — structured exclusion reason (PICO-failure tags) + dedup key
   exclusion_reason?: string;
   doi?: string;
   pmid?: string;

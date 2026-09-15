@@ -48,6 +48,7 @@ import QualitativeMeta from "./pages/QualitativeMeta";
 import ManualMode from "./pages/ManualMode";
 import AdvancedBayesian from "./pages/AdvancedBayesian";
 import AnalysisHub from "./pages/AnalysisHub";
+import { StudySelector, useStudyManager } from "./components/StudyManager";
 import DisclaimerModal from "./components/DisclaimerModal";
 import NewProjectWizard from "./components/NewProjectWizard";
 import ProfileModal from "./components/ProfileModal";
@@ -251,6 +252,30 @@ function Shell() {
   const [exportCenterOpen, setExportCenterOpen] = useState(() => queryParams?.get("modal") === "export");
   const appSettings = loadSettings();
 
+  const { studies, activeStudyId, addStudy, removeStudy, switchStudy, updateStudy } = useStudyManager();
+
+  const handleStudySwitch = (id: string) => {
+    switchStudy(id);
+    const target = studies.find((s) => s.id === id);
+    if (target?.project) {
+      setProject(target.project);
+    }
+  };
+
+  const handleStudyAdd = () => {
+    const name = prompt("New study dataset name:");
+    if (name) {
+      const newId = addStudy(name, project ?? emptyProject());
+      switchStudy(newId);
+    }
+  };
+
+  const handleStudyRemove = (id: string) => {
+    if (confirm("Remove this study dataset from the workspace?")) {
+      removeStudy(id);
+    }
+  };
+
   const linefieldRef = useRef<HTMLCanvasElement | null>(null);
   useLineField(linefieldRef, theme);
 
@@ -315,6 +340,9 @@ function Shell() {
 
   const onProjectChange = (p: Project) => {
     setProject(p);
+    if (activeStudyId) {
+      updateStudy(activeStudyId, p);
+    }
     if (!projectPath) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     setSaveState("saving");
@@ -486,6 +514,7 @@ function Shell() {
         { id: "file-demo", label: "Load demo review", description: "BCG dataset", end: "File", icon: <Sparkles className="h-4 w-4" />, onSelect: () => void loadDemo() },
         { id: "file-new", label: "New workspace", end: "File", short: "Ctrl+N", icon: <FilePlus2 className="h-4 w-4" />, onSelect: () => void handleNew() },
         { id: "file-save", label: "Save project", end: "File", short: "Ctrl+S", icon: <Save className="h-4 w-4" />, onSelect: () => void handleSave() },
+        { id: "analysis-hub", label: "Analysis Hub (34 Native Engines)…", description: "Bayesian, Diagnostics, Network, Complex Data, Quality & GRADE", end: "Analysis", icon: <Zap className="h-4 w-4" />, onSelect: () => setPage("analysisHub") },
         { id: "analysis-specialized", label: "Specialized Analyses…", description: "Dose-response, Survival RMST, Economics, Adverse, DCA", end: "Analysis", icon: <Activity className="h-4 w-4" />, onSelect: () => setSpecializedOpen(true) },
         { id: "file-export", label: "Universal Export Center…", description: "DOCX, LaTeX, HTML, R, Stata, Python, BibTeX", end: "File", short: "Ctrl+E", icon: <FileDown className="h-4 w-4" />, onSelect: () => setExportCenterOpen(true) },
         { id: "app-theme", label: theme === "dark" ? "Switch to light theme" : "Switch to dark theme", end: "Appearance", short: "Ctrl+T", icon: theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />, onSelect: toggleTheme },
@@ -513,6 +542,17 @@ function Shell() {
           <div>
             <h1 className="text-[16px] font-semibold">{TITLES[page]}</h1>
             <p className="hidden text-[10.5px] text-[var(--color-text-muted)] sm:block">Systematic review &amp; meta-analysis</p>
+          </div>
+          <div className="hidden lg:block h-5 w-px bg-[var(--color-border)] mx-1" />
+          <div className="hidden lg:block">
+            <StudySelector
+              studies={studies}
+              activeStudyId={activeStudyId}
+              onSwitch={handleStudySwitch}
+              onAdd={handleStudyAdd}
+              onRemove={handleStudyRemove}
+              onImport={handleOpen}
+            />
           </div>
         </div>
 

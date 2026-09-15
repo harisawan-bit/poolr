@@ -1,7 +1,7 @@
 {
   "name": "poolr-frontend",
   "private": true,
-  "version": "0.6.2",
+  "version": "0.6.1",
   "description": "Frontend for Poolr \u2014 Free, open-source desktop app for Systematic Reviews & Meta-Analyses (PRISMA 2020)",
   "author": "M. Haris Awan <m.harisawan@icloud.com>",
   "license": "MIT",
@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",
-    "@number-flow/react": "^0.6.2",
+    "@number-flow/react": "^0.6.1",
     "@radix-ui/react-dropdown-menu": "^2.1.24",
     "@types/d3-shape": "^3.2.0",
     "@visx/group": "^4.0.0",

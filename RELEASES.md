@@ -2,24 +2,24 @@
 
 ## Latest Release
 
-**poolr v0.6.2** — Multi-Study Powerhouse & Comprehensive Evidence Synthesis Suite
+**poolr v0.6.1** — Multi-Study Powerhouse & Comprehensive Evidence Synthesis Suite
 Release date: 2026-09-15
 
 > Powerhouse update introducing seamless multi-study workflow switching, unified AnalysisHub with 34+ advanced engines, comprehensive quality assessment tools (RoB 2, ROBINS-I, QUADAS-2, AMSTAR-2, NOS, GRADE Evidence Profiles), Bayesian MCMC & NMA, GOSH influence diagnostics, RevMan 5 bidirectional import/export, and reference manager sync.
 
-### Native Desktop Installers (v0.6.2)
+### Native Desktop Installers (v0.6.1)
 
 | Platform | Architecture | Installer Package | Direct Download |
 |---|---|---|---|
-| **Windows** | x64 (Standard) | `.msi` (Enterprise) / `.exe` (NSIS) | [poolr_0.6.2_x64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_x64_en-US.msi) · [poolr_0.6.2_x64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_x64-setup.exe) |
-| **Windows** | ARM64 (Surface / Snapdragon) | `.msi` / `.exe` | [poolr_0.6.2_arm64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_arm64_en-US.msi) · [poolr_0.6.2_arm64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_arm64-setup.exe) |
-| **Windows** | x86 (32-bit Legacy) | `.msi` / `.exe` | [poolr_0.6.2_x86_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_x86_en-US.msi) · [poolr_0.6.2_x86-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_x86-setup.exe) |
-| **macOS** | Apple Silicon (M1/M2/M3/M4) | `.dmg` | [poolr_0.6.2_aarch64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_aarch64.dmg) |
-| **macOS** | Intel x64 | `.dmg` | [poolr_0.6.2_x64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_x64.dmg) |
-| **Linux** | x86_64 (Debian / Ubuntu / Mint) | `.deb` | [poolr_0.6.2_amd64.deb](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_amd64.deb) |
-| **Linux** | x86_64 (Fedora / RHEL / openSUSE)| `.rpm` | [poolr_0.6.2-1.x86_64.rpm](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr-0.6.2-1.x86_64.rpm) |
+| **Windows** | x64 (Standard) | `.msi` (Enterprise) / `.exe` (NSIS) | [poolr_0.6.1_x64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_x64_en-US.msi) · [poolr_0.6.1_x64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_x64-setup.exe) |
+| **Windows** | ARM64 (Surface / Snapdragon) | `.msi` / `.exe` | [poolr_0.6.1_arm64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_arm64_en-US.msi) · [poolr_0.6.1_arm64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_arm64-setup.exe) |
+| **Windows** | x86 (32-bit Legacy) | `.msi` / `.exe` | [poolr_0.6.1_x86_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_x86_en-US.msi) · [poolr_0.6.1_x86-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_x86-setup.exe) |
+| **macOS** | Apple Silicon (M1/M2/M3/M4) | `.dmg` | [poolr_0.6.1_aarch64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_aarch64.dmg) |
+| **macOS** | Intel x64 | `.dmg` | [poolr_0.6.1_x64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_x64.dmg) |
+| **Linux** | x86_64 (Debian / Ubuntu / Mint) | `.deb` | [poolr_0.6.1_amd64.deb](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_amd64.deb) |
+| **Linux** | x86_64 (Fedora / RHEL / openSUSE)| `.rpm` | [poolr_0.6.1-1.x86_64.rpm](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr-0.6.1-1.x86_64.rpm) |
 
-### What's New in v0.6.2
+### What's New in v0.6.1
 
 - **Multi-Study Toggle & Persistence**: LocalStorage-backed `StudyManager` with quick `StudySelector` dropdown for concurrent review workflows.
 - **AnalysisHub (34+ Specialized Engines)**: Tabbed interface for Bayesian MCMC, GOSH, Permutation tests, Bootstrap CIs, Test of Excess Significance (TES), RevMan 5, IPD from KM, and more.

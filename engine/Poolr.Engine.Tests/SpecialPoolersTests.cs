@@ -7,7 +7,7 @@ using Xunit;
 namespace Poolr.Engine.Tests;
 
 /// <summary>
-/// v0.6.2 numeric benchmarks. MH/Peto validated against metafor's published
+/// v0.6.1 numeric benchmarks. MH/Peto validated against metafor's published
 /// dat.bcg results (rma.mh docs): MH OR=0.6229 [0.5748,0.6750], se(log)=0.0410.
 /// </summary>
 public class SpecialPoolersTests

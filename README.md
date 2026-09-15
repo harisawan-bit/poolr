@@ -23,14 +23,14 @@
 
 ---
 
-> **Current release — v0.6.2.** Complete PRISMA 2020 Platform & Diagnostics Suite. Built for clinicians, epidemiologists, biostatisticians, and students. Features zero-warning .NET 8 / C# 12 statistical engine with gold-standard parity tests, vector Cochrane *robvis* Traffic Light & Summary Bar plots, Interactive Figure Studio (Contour-Enhanced Funnel, Galbraith, L'Abbé, Baujat), Higgins 95% Prediction Intervals, Trial Sequential Analysis (TSA), Model Averaging across 6 $\tau^2$ estimators, Specialized Analyses Hub (Dose-Response, Survival RMST, Health Economics, Adverse Events, DCA), Dual Screening with Cohen's Kappa $\kappa$, PRISMA 2020 auto-synced Sankey flow, and 1-click manuscript export to Word (.docx), LaTeX (.tex), Standalone HTML, R metafor (.R), Stata (.do), Python (.py), BibTeX, and RIS. 100% offline-first, native desktop build, and 100% Python-free.
+> **Current release — v0.6.1.** Complete PRISMA 2020 Platform & Diagnostics Suite. Built for clinicians, epidemiologists, biostatisticians, and students. Features zero-warning .NET 8 / C# 12 statistical engine with gold-standard parity tests, vector Cochrane *robvis* Traffic Light & Summary Bar plots, Interactive Figure Studio (Contour-Enhanced Funnel, Galbraith, L'Abbé, Baujat), Higgins 95% Prediction Intervals, Trial Sequential Analysis (TSA), Model Averaging across 6 $\tau^2$ estimators, Specialized Analyses Hub (Dose-Response, Survival RMST, Health Economics, Adverse Events, DCA), Dual Screening with Cohen's Kappa $\kappa$, PRISMA 2020 auto-synced Sankey flow, and 1-click manuscript export to Word (.docx), LaTeX (.tex), Standalone HTML, R metafor (.R), Stata (.do), Python (.py), BibTeX, and RIS. 100% offline-first, native desktop build, and 100% Python-free.
 
 ---
 
 ## Table of Contents
 
 1. [Screenshots & Visual Tour](#screenshots)
-2. [Direct Downloads (v0.6.2)](#direct-downloads)
+2. [Direct Downloads (v0.6.1)](#direct-downloads)
 3. [Key Features by SRMA Phase](#features)
 4. [Interactive Figure Studio & Visualizations](#interactive-figure-studio)
 5. [Specialized Analyses Suite](#specialized-analyses-suite)
@@ -67,15 +67,15 @@
 
 Poolr runs natively on Windows, macOS, and Linux without requiring Python, R, Docker, or runtime configuration.
 
-| Operating System | Architecture | Installer Package | Direct Download (v0.6.2) |
+| Operating System | Architecture | Installer Package | Direct Download (v0.6.1) |
 |---|---|---|---|
-| **Windows** | x64 (Standard Intel/AMD) | `.msi` (Enterprise) / `.exe` (NSIS) | [poolr_0.6.2_x64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_x64_en-US.msi) · [poolr_0.6.2_x64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_x64-setup.exe) |
-| **Windows** | ARM64 (Surface / Copilot+ PC) | `.msi` / `.exe` | [poolr_0.6.2_arm64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_arm64_en-US.msi) · [poolr_0.6.2_arm64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_arm64-setup.exe) |
-| **Windows** | x86 (32-bit Legacy) | `.msi` / `.exe` | [poolr_0.6.2_x86_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_x86_en-US.msi) · [poolr_0.6.2_x86-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_x86-setup.exe) |
-| **macOS** | Apple Silicon (M1/M2/M3/M4) | `.dmg` | [poolr_0.6.2_aarch64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_aarch64.dmg) |
-| **macOS** | Intel x64 | `.dmg` | [poolr_0.6.2_x64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_x64.dmg) |
-| **Linux** | x86_64 (Debian / Ubuntu / Mint) | `.deb` | [poolr_0.6.2_amd64.deb](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_amd64.deb) |
-| **Linux** | x86_64 (Fedora / RHEL / openSUSE)| `.rpm` | [poolr-0.6.2-1.x86_64.rpm](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr-0.6.2-1.x86_64.rpm) |
+| **Windows** | x64 (Standard Intel/AMD) | `.msi` (Enterprise) / `.exe` (NSIS) | [poolr_0.6.1_x64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_x64_en-US.msi) · [poolr_0.6.1_x64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_x64-setup.exe) |
+| **Windows** | ARM64 (Surface / Copilot+ PC) | `.msi` / `.exe` | [poolr_0.6.1_arm64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_arm64_en-US.msi) · [poolr_0.6.1_arm64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_arm64-setup.exe) |
+| **Windows** | x86 (32-bit Legacy) | `.msi` / `.exe` | [poolr_0.6.1_x86_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_x86_en-US.msi) · [poolr_0.6.1_x86-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_x86-setup.exe) |
+| **macOS** | Apple Silicon (M1/M2/M3/M4) | `.dmg` | [poolr_0.6.1_aarch64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_aarch64.dmg) |
+| **macOS** | Intel x64 | `.dmg` | [poolr_0.6.1_x64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_x64.dmg) |
+| **Linux** | x86_64 (Debian / Ubuntu / Mint) | `.deb` | [poolr_0.6.1_amd64.deb](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_amd64.deb) |
+| **Linux** | x86_64 (Fedora / RHEL / openSUSE)| `.rpm` | [poolr-0.6.1-1.x86_64.rpm](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr-0.6.1-1.x86_64.rpm) |
 
 ---
 

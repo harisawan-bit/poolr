@@ -27,8 +27,8 @@ app.Use(async (ctx, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.5.7", engine = "csharp" }));
-app.MapGet("/version", () => Results.Ok(new { version = "0.5.7" }));
+app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.6.1", engine = "csharp" }));
+app.MapGet("/version", () => Results.Ok(new { version = "0.6.1" }));
 
 // Phase B -- C# meta-analysis engine (numerics covered by engine/Poolr.Engine.Tests xUnit).
 app.MapPost("/api/meta", ([FromBody] MetaRequest req) =>
@@ -475,7 +475,7 @@ app.MapPost("/api/nma", ([FromBody] NmaEngine.NmaRequest req) =>
     }
 });
 
-// v0.6.2 -- Bayesian MCMC Meta-Analysis
+// v0.6.1 -- Bayesian MCMC Meta-Analysis
 app.MapPost("/api/bayesian", ([FromBody] BayesianMcmcEngine.BayesianRequest req) =>
 {
     try
@@ -489,7 +489,7 @@ app.MapPost("/api/bayesian", ([FromBody] BayesianMcmcEngine.BayesianRequest req)
     }
 });
 
-// v0.6.2 -- GOSH (Graphic Approach to Heterogeneity)
+// v0.6.1 -- GOSH (Graphic Approach to Heterogeneity)
 app.MapPost("/api/gosh", ([FromBody] GoshEngine.GoshRequest req) =>
 {
     try
@@ -503,7 +503,7 @@ app.MapPost("/api/gosh", ([FromBody] GoshEngine.GoshRequest req) =>
     }
 });
 
-// v0.6.2 -- Influence Diagnostics
+// v0.6.1 -- Influence Diagnostics
 app.MapPost("/api/influence", ([FromBody] InfluenceEngine.InfluenceRequest req) =>
 {
     try
@@ -517,7 +517,7 @@ app.MapPost("/api/influence", ([FromBody] InfluenceEngine.InfluenceRequest req) 
     }
 });
 
-// v0.6.2 -- Permutation Test
+// v0.6.1 -- Permutation Test
 app.MapPost("/api/permutation", ([FromBody] PermutationEngine.PermutationRequest req) =>
 {
     try
@@ -531,7 +531,7 @@ app.MapPost("/api/permutation", ([FromBody] PermutationEngine.PermutationRequest
     }
 });
 
-// v0.6.2 -- Bootstrap Confidence Intervals
+// v0.6.1 -- Bootstrap Confidence Intervals
 app.MapPost("/api/bootstrap", ([FromBody] BootstrapEngine.BootstrapRequest req) =>
 {
     try
@@ -545,7 +545,7 @@ app.MapPost("/api/bootstrap", ([FromBody] BootstrapEngine.BootstrapRequest req) 
     }
 });
 
-// v0.6.2 -- Test of Excess Significance
+// v0.6.1 -- Test of Excess Significance
 app.MapPost("/api/tes", ([FromBody] TesEngine.TesRequest req) =>
 {
     try
@@ -559,7 +559,7 @@ app.MapPost("/api/tes", ([FromBody] TesEngine.TesRequest req) =>
     }
 });
 
-// v0.6.2 -- Location-Scale Meta-Analysis
+// v0.6.1 -- Location-Scale Meta-Analysis
 app.MapPost("/api/locationscale", ([FromBody] LocationScaleEngine.LocationScaleRequest req) =>
 {
     try
@@ -573,7 +573,7 @@ app.MapPost("/api/locationscale", ([FromBody] LocationScaleEngine.LocationScaleR
     }
 });
 
-// v0.6.2 -- Multiple Imputation for Missing Data
+// v0.6.1 -- Multiple Imputation for Missing Data
 app.MapPost("/api/mi", ([FromBody] MultipleImputationEngine.MiRequest req) =>
 {
     try
@@ -587,7 +587,7 @@ app.MapPost("/api/mi", ([FromBody] MultipleImputationEngine.MiRequest req) =>
     }
 });
 
-// v0.6.2 -- Restricted Cubic Splines for Dose-Response
+// v0.6.1 -- Restricted Cubic Splines for Dose-Response
 app.MapPost("/api/rcs", ([FromBody] RcsEngine.RcsRequest req) =>
 {
     try
@@ -601,7 +601,7 @@ app.MapPost("/api/rcs", ([FromBody] RcsEngine.RcsRequest req) =>
     }
 });
 
-// v0.6.2 -- Cluster-Robust Inference for Dependent Effects
+// v0.6.1 -- Cluster-Robust Inference for Dependent Effects
 app.MapPost("/api/clusterrobust", ([FromBody] ClusterRobustEngine.ClusterRobustRequest req) =>
 {
     try
@@ -615,77 +615,77 @@ app.MapPost("/api/clusterrobust", ([FromBody] ClusterRobustEngine.ClusterRobustR
     }
 });
 
-// v0.6.2 -- Prognostic Model Meta-Analysis
+// v0.6.1 -- Prognostic Model Meta-Analysis
 app.MapPost("/api/prognostic/meta", ([FromBody] PrognosticMetaEngine.PrognosticMetaRequest req) =>
 {
     try { return Results.Ok(PrognosticMetaEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Bivariate DTA Meta-Analysis
+// v0.6.1 -- Bivariate DTA Meta-Analysis
 app.MapPost("/api/dta/bivariate", ([FromBody] BivariateDtaEngine.BivariateRequest req) =>
 {
     try { return Results.Ok(BivariateDtaEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Multilevel NMA
+// v0.6.1 -- Multilevel NMA
 app.MapPost("/api/nma/multilevel", ([FromBody] MultilevelNmaEngine.MultilevelNmaRequest req) =>
 {
     try { return Results.Ok(MultilevelNmaEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- HSROC Model
+// v0.6.1 -- HSROC Model
 app.MapPost("/api/dta/hsroc", ([FromBody] HsrocEngine.HsrocRequest req) =>
 {
     try { return Results.Ok(HsrocEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Competing Risks Meta-Analysis
+// v0.6.1 -- Competing Risks Meta-Analysis
 app.MapPost("/api/competing-risks", ([FromBody] CompetingRisksEngine.CompetingRisksRequest req) =>
 {
     try { return Results.Ok(CompetingRisksEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Multi-Arm NMA Correction
+// v0.6.1 -- Multi-Arm NMA Correction
 app.MapPost("/api/nma/multiarm", ([FromBody] MultiArmNmaEngine.MultiArmRequest req) =>
 {
     try { return Results.Ok(MultiArmNmaEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Qualitative Meta-Synthesis
+// v0.6.1 -- Qualitative Meta-Synthesis
 app.MapPost("/api/qualitative/meta", ([FromBody] QualitativeMetaEngine.QualitativeMetaRequest req) =>
 {
     try { return Results.Ok(QualitativeMetaEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Bubble Plot / Meta-Regression Scatter Plot
+// v0.6.1 -- Bubble Plot / Meta-Regression Scatter Plot
 app.MapPost("/api/figure/bubble", ([FromBody] BubblePlotEngine.BubblePlotRequest req) =>
 {
     try { return Results.Ok(BubblePlotEngine.Generate(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- League Matrix Heatmap
+// v0.6.1 -- League Matrix Heatmap
 app.MapPost("/api/figure/league-matrix", ([FromBody] LeagueMatrixEngine.LeagueMatrixRequest req) =>
 {
     try { return Results.Ok(LeagueMatrixEngine.Generate(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- PRISMA-DTA Flow Diagram
+// v0.6.1 -- PRISMA-DTA Flow Diagram
 app.MapPost("/api/prisma-dta", ([FromBody] PrismaDtaEngine.PrismaDtaRequest req) =>
 {
     try { return Results.Ok(PrismaDtaEngine.Generate(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Living Review Automation
+// v0.6.1 -- Living Review Automation
 app.MapPost("/api/living/automate", ([FromBody] LivingReviewAutomationEngine.LivingReviewConfig req) =>
 {
     try
@@ -697,49 +697,49 @@ app.MapPost("/api/living/automate", ([FromBody] LivingReviewAutomationEngine.Liv
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Bayesian Network Meta-Analysis
+// v0.6.1 -- Bayesian Network Meta-Analysis
 app.MapPost("/api/bayesian-nma", ([FromBody] BayesianNmaEngine.BayesianNmaRequest req) =>
 {
     try { return Results.Ok(BayesianNmaEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Umbrella Review
+// v0.6.1 -- Umbrella Review
 app.MapPost("/api/umbrella", ([FromBody] UmbrellaReviewEngine.UmbrellaRequest req) =>
 {
     try { return Results.Ok(UmbrellaReviewEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- IPD from KM Reconstruction
+// v0.6.1 -- IPD from KM Reconstruction
 app.MapPost("/api/ipd/from-km", ([FromBody] IpdFromKmEngine.IpdFromKmRequest req) =>
 {
     try { return Results.Ok(IpdFromKmEngine.Reconstruct(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Robust Variance Estimation
+// v0.6.1 -- Robust Variance Estimation
 app.MapPost("/api/rve", ([FromBody] RveEngine.RveRequest req) =>
 {
     try { return Results.Ok(RveEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- P-Value Combination Methods
+// v0.6.1 -- P-Value Combination Methods
 app.MapPost("/api/pvalue/combine", ([FromBody] PValueCombinationEngine.PValueRequest req) =>
 {
     try { return Results.Ok(PValueCombinationEngine.Combine(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Citation Deduplication
+// v0.6.1 -- Citation Deduplication
 app.MapPost("/api/deduplicate", ([FromBody] List<DeduplicationEngine.Citation> req) =>
 {
     try { return Results.Ok(DeduplicationEngine.Deduplicate(req ?? new())); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- RevMan 5 Import/Export
+// v0.6.1 -- RevMan 5 Import/Export
 app.MapPost("/api/revman/import", async (HttpRequest req) =>
 {
     try
@@ -781,84 +781,84 @@ app.MapPost("/api/revman/export", async (HttpRequest req) =>
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Bayesian Model-Averaged Meta-Analysis
+// v0.6.1 -- Bayesian Model-Averaged Meta-Analysis
 app.MapPost("/api/bma", ([FromBody] BayesianModelAveragingEngine.BmmaRequest req) =>
 {
     try { return Results.Ok(BayesianModelAveragingEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Phylogenetic Meta-Analysis
+// v0.6.1 -- Phylogenetic Meta-Analysis
 app.MapPost("/api/phylo", ([FromBody] PhylogeneticMaEngine.PhyloRequest req) =>
 {
     try { return Results.Ok(PhylogeneticMaEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Multivariate Dose-Response
+// v0.6.1 -- Multivariate Dose-Response
 app.MapPost("/api/dose/multivariate", ([FromBody] MultivariateDoseResponseEngine.MultiDoseRequest req) =>
 {
     try { return Results.Ok(MultivariateDoseResponseEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Network Meta-Regression
+// v0.6.1 -- Network Meta-Regression
 app.MapPost("/api/nma/regression", ([FromBody] NetworkMetaRegressionEngine.NmaRegressionRequest req) =>
 {
     try { return Results.Ok(NetworkMetaRegressionEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- GRADE Summary of Findings
+// v0.6.1 -- GRADE Summary of Findings
 app.MapPost("/api/grade/sof-table", ([FromBody] GradeSoFGenerator.GradeRequest req) =>
 {
     try { return Results.Ok(GradeSoFGenerator.Generate(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Citation Network Analysis
+// v0.6.1 -- Citation Network Analysis
 app.MapPost("/api/citation/network", ([FromBody] CitationNetworkEngine.CitationNetworkRequest req) =>
 {
     try { return Results.Ok(CitationNetworkEngine.Analyze(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Bucher Indirect Comparison
+// v0.6.1 -- Bucher Indirect Comparison
 app.MapPost("/api/bucher", ([FromBody] BucherIndirectComparisonEngine.BucherRequest req) =>
 {
     try { return Results.Ok(BucherIndirectComparisonEngine.Compare(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Component Network Meta-Analysis
+// v0.6.1 -- Component Network Meta-Analysis
 app.MapPost("/api/cnma", ([FromBody] ComponentNmaEngine.CnmaRequest req) =>
 {
     try { return Results.Ok(ComponentNmaEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- PRISMA-ScR Flow Diagram
+// v0.6.1 -- PRISMA-ScR Flow Diagram
 app.MapPost("/api/scr/flow", ([FromBody] PrismaScrEngine.PrismaScrRequest req) =>
 {
     try { return Results.Ok(PrismaScrEngine.Generate(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Spatio-Temporal Meta-Analysis
+// v0.6.1 -- Spatio-Temporal Meta-Analysis
 app.MapPost("/api/spatiotemporal", ([FromBody] SpatioTemporalEngine.SpatioTemporalRequest req) =>
 {
     try { return Results.Ok(SpatioTemporalEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Response Surface Meta-Analysis
+// v0.6.1 -- Response Surface Meta-Analysis
 app.MapPost("/api/response-surface", ([FromBody] ResponseSurfaceEngine.ResponseSurfaceRequest req) =>
 {
     try { return Results.Ok(ResponseSurfaceEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Zotero Sync
+// v0.6.1 -- Zotero Sync
 app.MapPost("/api/zotero/connect", ([FromBody] ZoteroSyncEngine.ZoteroConfig req) =>
 {
     try { return Results.Ok(ZoteroSyncEngine.Connect(req)); }
@@ -875,7 +875,7 @@ app.MapPost("/api/zotero/export", ([FromBody] ZoteroSyncEngine.ZoteroConfig req)
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// v0.6.2 -- Mendeley Sync
+// v0.6.1 -- Mendeley Sync
 app.MapPost("/api/mendeley/connect", ([FromBody] MendeleySyncEngine.MendeleyConfig req) =>
 {
     try { return Results.Ok(MendeleySyncEngine.Connect(req)); }

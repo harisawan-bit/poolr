@@ -7,7 +7,7 @@ using System.Text;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// v0.6.2 export suite: R/metafor replication code, BibTeX/RIS citation export,
+/// v0.6.1 export suite: R/metafor replication code, BibTeX/RIS citation export,
 /// methods-section paragraph generator. Pure string builders, no deps.
 /// </summary>
 public static class ExportSuite

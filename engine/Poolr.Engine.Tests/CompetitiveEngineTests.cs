@@ -4,7 +4,7 @@ using Xunit;
 namespace Poolr.Engine.Tests;
 
 /// <summary>
-/// v0.6.2 competitive engine benchmarks. Numerics verified against metafor,
+/// v0.6.1 competitive engine benchmarks. Numerics verified against metafor,
 /// JASP, Stata, and RevMan reference values where possible.
 /// </summary>
 public class CompetitiveEngineTests

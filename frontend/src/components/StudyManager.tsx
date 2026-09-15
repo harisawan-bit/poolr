@@ -96,7 +96,7 @@ export function StudySelector({
       </button>
 
       {showDropdown && (
-        <div className="absolute top-full left-0 mt-1 w-64 bg-[#1a1b23] border border-[var(--color-border)] rounded-lg shadow-xl z-50">
+        <div className="absolute top-full left-0 mt-1 w-64 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg shadow-xl z-50 text-[var(--color-text)]">
           <div className="p-2 border-b border-[var(--color-border)]">
             <div className="text-xs text-[var(--color-muted-foreground)] px-2 py-1">Studies</div>
           </div>
