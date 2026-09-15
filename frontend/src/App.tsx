@@ -439,7 +439,7 @@ function Shell() {
     proportions: () => <ProportionsMeta project={current} onChange={onProjectChange} />,
     qualitative: () => <QualitativeMeta project={current} onChange={onProjectChange} />,
     advanced: () => <AdvancedBayesian project={current} onChange={onProjectChange} />,
-    analysisHub: () => <AnalysisHub project={current} />,
+    analysisHub: () => <AnalysisHub project={current} onProjectChange={onProjectChange} />,
     manual: () => <ManualMode project={current} onChange={onProjectChange} />,
   };
 

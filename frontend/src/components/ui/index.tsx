@@ -56,15 +56,19 @@ export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   title?: string;
+  subtitle?: string;
   right?: React.ReactNode;
 }
 
-export function Card({ title, right, children, className, ...rest }: CardProps) {
+export function Card({ title, subtitle, right, children, className, ...rest }: CardProps) {
   return (
     <div className={cn("card p-4", className)} {...rest}>
       {title && (
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-[14px] font-semibold">{title}</h2>
+          <div>
+            <h2 className="text-[14px] font-semibold">{title}</h2>
+            {subtitle && <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">{subtitle}</p>}
+          </div>
           {right}
         </div>
       )}
