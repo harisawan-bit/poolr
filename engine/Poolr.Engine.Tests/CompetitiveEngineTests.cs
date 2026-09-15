@@ -4,7 +4,7 @@ using Xunit;
 namespace Poolr.Engine.Tests;
 
 /// <summary>
-/// v0.6.0 competitive engine benchmarks. Numerics verified against metafor,
+/// v0.6.2 competitive engine benchmarks. Numerics verified against metafor,
 /// JASP, Stata, and RevMan reference values where possible.
 /// </summary>
 public class CompetitiveEngineTests
@@ -520,21 +520,32 @@ public class CompetitiveEngineTests
         // 1. Influence
         var inf = CompetitiveEngine.RunInfluenceDiagnostics(new CompetitiveEngine.InfluenceRequest
         {
-            effects = effects, variances = vars, method = "DL"
+            effects = effects,
+            variances = vars,
+            method = "DL"
         });
         Assert.True(double.IsFinite(inf.fullPooledEffect));
 
         // 2. Bubble
         var bub = CompetitiveEngine.RunBubbleMetaRegression(new CompetitiveEngine.BubbleMetaRequest
         {
-            effects = effects, variances = vars, moderators = mods, model = "random", method = "DL"
+            effects = effects,
+            variances = vars,
+            moderators = mods,
+            model = "random",
+            method = "DL"
         });
         Assert.True(double.IsFinite(bub.slope));
 
         // 3. Interaction
         var inter = CompetitiveEngine.RunSubgroupInteraction(new CompetitiveEngine.InteractionRequest
         {
-            effects = effects, variances = vars, moderators = mods, subgroups = subs, model = "random", method = "DL"
+            effects = effects,
+            variances = vars,
+            moderators = mods,
+            subgroups = subs,
+            model = "random",
+            method = "DL"
         });
         Assert.True(double.IsFinite(inter.qInteraction));
 
@@ -544,7 +555,11 @@ public class CompetitiveEngineTests
             mvMods.Add(new List<double> { mods[i], (double)(i + 1) });
         var mv = CompetitiveEngine.RunMultivariateRegression(new CompetitiveEngine.MultivariateRequest
         {
-            effects = effects, variances = vars, moderators = mvMods, model = "random", method = "DL"
+            effects = effects,
+            variances = vars,
+            moderators = mvMods,
+            model = "random",
+            method = "DL"
         });
         Assert.True(double.IsFinite(mv.fStatistic));
 
@@ -554,15 +569,24 @@ public class CompetitiveEngineTests
             crveMods.Add(new List<double> { mods[i] });
         var crve = CompetitiveEngine.RunClusterRobust(new CompetitiveEngine.CrveRequest
         {
-            effects = effects, variances = vars, clusters = clusters, moderators = crveMods, correction = "CR2"
+            effects = effects,
+            variances = vars,
+            clusters = clusters,
+            moderators = crveMods,
+            correction = "CR2"
         });
         Assert.True(double.IsFinite(crve.fRobust));
 
         // 6. Bayesian
         var bay = CompetitiveEngine.RunBayesianMetaAnalysis(new CompetitiveEngine.BayesianRequest
         {
-            effects = effects, variances = vars, priorMuMean = 0, priorMuSd = 2.0,
-            priorTauScale = 1.0, priorTauType = "half-cauchy", nGrid = 50
+            effects = effects,
+            variances = vars,
+            priorMuMean = 0,
+            priorMuSd = 2.0,
+            priorTauScale = 1.0,
+            priorTauType = "half-cauchy",
+            nGrid = 50
         });
         Assert.True(double.IsFinite(bay.mu.posteriorMean));
     }

@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// v0.6.0 powerhouse engine — 8 scientifically-critical features missing
+/// v0.6.2 powerhouse engine — 8 scientifically-critical features missing
 /// from poolr's C# engine vs. the SRMA software ecosystem (RevMan, Stata meta,
 /// R metafor/netmeta, CMA, JASP, Jamovi, Covidence, Rayyan). All numerics are
 /// implemented from primary literature and verified against metafor/stata
@@ -278,7 +278,12 @@ public static class PowerhouseEngine
             pooledVr = pooledVr,
             ciLower = Math.Exp(eff - crit * se),
             ciUpper = Math.Exp(eff + crit * se),
-            se = se, p = p, q = q, i2 = i2, tau2 = tau2, k = k,
+            se = se,
+            p = p,
+            q = q,
+            i2 = i2,
+            tau2 = tau2,
+            k = k,
             studyResults = studyResults,
             interpretation = pooledVr > 1.0
                 ? $"Method 1 has higher variance (VR={pooledVr:F2}, 95% CI [{Math.Exp(eff - crit * se):F2}, {Math.Exp(eff + crit * se):F2}])"
@@ -383,10 +388,14 @@ public static class PowerhouseEngine
         double se = mleTau2 > 0 ? Math.Sqrt(1.0 / FisherInfo(effects, vars, mleTau2)) : 0;
         return new ProfileTau2Result
         {
-            mleTau2 = mleTau2, se = se,
-            ciLower = Math.Max(0, lower), ciUpper = upper,
-            confidenceLevel = req.confidenceLevel, profile = profile,
-            method = "Profile Likelihood (REML, Thompson 1996)", nEvaluations = 201,
+            mleTau2 = mleTau2,
+            se = se,
+            ciLower = Math.Max(0, lower),
+            ciUpper = upper,
+            confidenceLevel = req.confidenceLevel,
+            profile = profile,
+            method = "Profile Likelihood (REML, Thompson 1996)",
+            nEvaluations = 201,
         };
     }
 
@@ -476,8 +485,12 @@ public static class PowerhouseEngine
 
         return new QsTestResult
         {
-            qs = qs, p = qsP, df = df, adjustedP = adjP,
-            cochranQ = q, cochranP = qP,
+            qs = qs,
+            p = qsP,
+            df = df,
+            adjustedP = adjP,
+            cochranQ = q,
+            cochranP = qP,
             interpretation = sig
                 ? $"Significant heterogeneity (QS={qs:F2}, p={qsP:E2})"
                 : $"No significant heterogeneity (QS={qs:F2}, p={qsP:F3})",
@@ -570,9 +583,15 @@ public static class PowerhouseEngine
 
             blups.Add(new BlupEntry
             {
-                studyIndex = i, observedEffect = effects[i], blup = blup,
-                shrunkEffect = shrunk, precision = precision, se = blupSe,
-                z = z, p = p, potentialOutlier = outlier,
+                studyIndex = i,
+                observedEffect = effects[i],
+                blup = blup,
+                shrunkEffect = shrunk,
+                precision = precision,
+                se = blupSe,
+                z = z,
+                p = p,
+                potentialOutlier = outlier,
             });
             if (Math.Abs(blup) > maxAbsBlup) { maxAbsBlup = Math.Abs(blup); maxIdx = i; }
         }
@@ -582,8 +601,14 @@ public static class PowerhouseEngine
 
         return new BlupResult
         {
-            pooledEffect = mu, tau2 = tau2, se = se, q = q, i2 = i2,
-            blups = blups, maxAbsBlup = maxAbsBlup, maxBlupIndex = maxIdx,
+            pooledEffect = mu,
+            tau2 = tau2,
+            se = se,
+            q = q,
+            i2 = i2,
+            blups = blups,
+            maxAbsBlup = maxAbsBlup,
+            maxBlupIndex = maxIdx,
             blupVariance = blupVar,
             interpretation = $"BLUPs computed (τ²={tau2:F4}). Study {maxIdx + 1} has largest deviation (|BLUP|={maxAbsBlup:F3})",
         };
@@ -680,7 +705,11 @@ public static class PowerhouseEngine
             oddsRatio = mhOR,
             ciLower = Math.Exp(lower),
             ciUpper = Math.Exp(upper),
-            se = se, p = p, k = k, q = q, i2 = i2,
+            se = se,
+            p = p,
+            k = k,
+            q = q,
+            i2 = i2,
         };
     }
 
@@ -805,9 +834,16 @@ public static class PowerhouseEngine
 
         return new BerkeySeemhaberResult
         {
-            slope = slope, intercept = intercept, se = seSlope, t = bsT, p = bsP,
-            df = df, significant = sig, sensitivityCorrelation = sensCorr,
-            eggerIntercept = eggerIc, eggerP = eggerPv,
+            slope = slope,
+            intercept = intercept,
+            se = seSlope,
+            t = bsT,
+            p = bsP,
+            df = df,
+            significant = sig,
+            sensitivityCorrelation = sensCorr,
+            eggerIntercept = eggerIc,
+            eggerP = eggerPv,
             interpretation = sig
                 ? $"Publication bias likely (Berkey t={bsT:F2}, df={df}, p={bsP:E2}; Egger p={eggerPv:F3})"
                 : $"No significant publication bias (Berkey t={bsT:F2}, df={df}, p={bsP:F3}; Egger p={eggerPv:F3})",
@@ -869,8 +905,12 @@ public static class PowerhouseEngine
 
         return new QhResult
         {
-            qh = qh, p = qhP, df = finalDf,
-            cochranQ = q, cochranP = qP, bonferroniP = bonfP,
+            qh = qh,
+            p = qhP,
+            df = finalDf,
+            cochranQ = q,
+            cochranP = qP,
+            bonferroniP = bonfP,
             heterogeneityRatio = hetRatio,
             interpretation = sig
                 ? $"Significant heterogeneity (QH={qh:F2}, df={finalDf}, p={qhP:E2}, weight ratio={hetRatio:F1})"

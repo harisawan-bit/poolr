@@ -2,22 +2,36 @@
 
 ## Latest Release
 
-**poolr v0.6.0** — Complete PRISMA 2020 Platform & Diagnostics Suite
-Release date: 2026-09-03
+**poolr v0.6.2** — Multi-Study Powerhouse & Comprehensive Evidence Synthesis Suite
+Release date: 2026-09-15
 
-> An institutional-grade release establishing mathematical parity with gold-standard R packages, zero compiler warnings, zero CI errors, an interactive diagnostic figure studio with Cochrane robvis visualizations, automated PRISMA 2020 flow-syncing, Trial Sequential Analysis, specialized meta-analysis hubs, and a universal manuscript export center.
+> Powerhouse update introducing seamless multi-study workflow switching, unified AnalysisHub with 34+ advanced engines, comprehensive quality assessment tools (RoB 2, ROBINS-I, QUADAS-2, AMSTAR-2, NOS, GRADE Evidence Profiles), Bayesian MCMC & NMA, GOSH influence diagnostics, RevMan 5 bidirectional import/export, and reference manager sync.
 
-### Native Desktop Installers (v0.6.0)
+### Native Desktop Installers (v0.6.2)
 
 | Platform | Architecture | Installer Package | Direct Download |
 |---|---|---|---|
-| **Windows** | x64 (Standard) | `.msi` (Enterprise) / `.exe` (NSIS) | [poolr_0.6.0_x64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_x64_en-US.msi) · [poolr_0.6.0_x64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_x64-setup.exe) |
-| **Windows** | ARM64 (Surface / Snapdragon) | `.msi` / `.exe` | [poolr_0.6.0_arm64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_arm64_en-US.msi) · [poolr_0.6.0_arm64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_arm64-setup.exe) |
-| **Windows** | x86 (32-bit Legacy) | `.msi` / `.exe` | [poolr_0.6.0_x86_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_x86_en-US.msi) · [poolr_0.6.0_x86-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_x86-setup.exe) |
-| **macOS** | Apple Silicon (M1/M2/M3/M4) | `.dmg` | [poolr_0.6.0_aarch64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_aarch64.dmg) |
-| **macOS** | Intel x64 | `.dmg` | [poolr_0.6.0_x64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_x64.dmg) |
-| **Linux** | x86_64 (Debian / Ubuntu / Mint) | `.deb` | [poolr_0.6.0_amd64.deb](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr_0.6.0_amd64.deb) |
-| **Linux** | x86_64 (Fedora / RHEL / openSUSE)| `.rpm` | [poolr-0.6.0-1.x86_64.rpm](https://github.com/harisawan-bit/poolr/releases/download/v0.6.0/poolr-0.6.0-1.x86_64.rpm) |
+| **Windows** | x64 (Standard) | `.msi` (Enterprise) / `.exe` (NSIS) | [poolr_0.6.2_x64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_x64_en-US.msi) · [poolr_0.6.2_x64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_x64-setup.exe) |
+| **Windows** | ARM64 (Surface / Snapdragon) | `.msi` / `.exe` | [poolr_0.6.2_arm64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_arm64_en-US.msi) · [poolr_0.6.2_arm64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_arm64-setup.exe) |
+| **Windows** | x86 (32-bit Legacy) | `.msi` / `.exe` | [poolr_0.6.2_x86_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_x86_en-US.msi) · [poolr_0.6.2_x86-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_x86-setup.exe) |
+| **macOS** | Apple Silicon (M1/M2/M3/M4) | `.dmg` | [poolr_0.6.2_aarch64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_aarch64.dmg) |
+| **macOS** | Intel x64 | `.dmg` | [poolr_0.6.2_x64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_x64.dmg) |
+| **Linux** | x86_64 (Debian / Ubuntu / Mint) | `.deb` | [poolr_0.6.2_amd64.deb](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr_0.6.2_amd64.deb) |
+| **Linux** | x86_64 (Fedora / RHEL / openSUSE)| `.rpm` | [poolr_0.6.2-1.x86_64.rpm](https://github.com/harisawan-bit/poolr/releases/download/v0.6.2/poolr-0.6.2-1.x86_64.rpm) |
+
+### What's New in v0.6.2
+
+- **Multi-Study Toggle & Persistence**: LocalStorage-backed `StudyManager` with quick `StudySelector` dropdown for concurrent review workflows.
+- **AnalysisHub (34+ Specialized Engines)**: Tabbed interface for Bayesian MCMC, GOSH, Permutation tests, Bootstrap CIs, Test of Excess Significance (TES), RevMan 5, IPD from KM, and more.
+- **Quality & Bias Evaluation Pages**: Dedicated UI workflows for RoB 2, ROBINS-I, QUADAS-2, AMSTAR-2, Newcastle-Ottawa Scale, and GRADE Evidence Profiles.
+- **Full Parity & Reliability**: 226 passing xUnit mathematical tests, clean TypeScript compilation, and 100% Python-free desktop packaging.
+
+---
+
+## Previous Releases
+
+### poolr v0.6.0
+Release date: 2026-09-03
 
 ### What's New in v0.6.0
 

@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// v0.6.0 network meta-regression engine (closes gap with R netmeta / Stata).
+/// v0.6.2 network meta-regression engine (closes gap with R netmeta / Stata).
 /// Frequentist WLS network meta-regression (Rücker 2012, extended with covariates).
 /// Also implements SUCRA (surface under cumulative ranking) with 95% CIs
 /// via percentile bootstrap, and cluster detection in funnel plots.
@@ -168,7 +168,8 @@ public static class NmaMetaRegressionEngine
                 name = treatments[j + 1],
                 estimate = logScale ? Math.Exp(beta[j]) : beta[j],
                 se = seBeta,
-                z = z, p = pVal,
+                z = z,
+                p = pVal,
                 ciLower = logScale ? Math.Exp(beta[j] - crit * seBeta) : beta[j] - crit * seBeta,
                 ciUpper = logScale ? Math.Exp(beta[j] + crit * seBeta) : beta[j] + crit * seBeta,
             });

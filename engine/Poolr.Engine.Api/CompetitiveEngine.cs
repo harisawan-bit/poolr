@@ -5,7 +5,7 @@ using System.Linq;
 namespace Poolr.Engine.Api;
 
 /// <summary>
-/// v0.6.0 competitive engine — 6 scientifically-critical features that close
+/// v0.6.2 competitive engine — 6 scientifically-critical features that close
 /// the gap with RevMan Web, JASP 0.19, Stata 18, CMA 4, and R metafor 4.0.
 /// All numerics implemented from primary literature; zero new dependencies.
 ///

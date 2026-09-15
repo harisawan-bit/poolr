@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.2] - 2026-09-15
+
+### Added
+- **Multi-Study Support**: Added `StudyManager` with localStorage persistence and interactive `StudySelector` to effortlessly switch between active systematic reviews.
+- **AnalysisHub (34+ Specialized Engines)**: Tabbed workspace integrating Bayesian MCMC, GOSH diagnostics, Permutation tests, Bootstrap CIs, Test of Excess Significance (TES), RevMan 5 bidirectional import/export, and reference manager sync (Zotero/Mendeley).
+- **Quality Assessment Workflows**: Added dedicated interfaces and backend engines for RoB 2, ROBINS-I, QUADAS-2, AMSTAR-2, Newcastle-Ottawa Scale (NOS), and GRADE Evidence Profiles.
+- **Statistical Parity Suite**: Expanded xUnit regression benchmark tests to 226 tests covering all new engines with zero failures.
+
+### Fixed
+- Code formatting across .NET engines enforcing zero-warning standards.
+- Clean TypeScript and React 19 build across all analysis pages and components.
+
 ## [0.6.0] - 2026-09-09
 
 ### Fixed

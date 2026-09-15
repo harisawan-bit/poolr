@@ -17,14 +17,7 @@ import {
   Table2,
   Workflow,
   Activity,
-  Scale,
-  FileText,
-  SearchSlash,
-  PenTool,
-  ClipboardCheck,
-  Calculator,
-  FlaskConical,
-  BarChart3,
+  Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import {
@@ -53,14 +46,8 @@ import DiagnosticMeta from "./pages/DiagnosticMeta";
 import ProportionsMeta from "./pages/ProportionsMeta";
 import QualitativeMeta from "./pages/QualitativeMeta";
 import ManualMode from "./pages/ManualMode";
-import GradeEvidence from "./pages/GradeEvidence";
-import Interpret from "./pages/Interpret";
-import SearchStrategy from "./pages/SearchStrategy";
-import ManuscriptHelper from "./pages/ManuscriptHelper";
-import ProsperoPage from "./pages/ProsperoPage";
-import PowerCalculatorPage from "./pages/PowerCalculatorPage";
-import ExtractionBuilderPage from "./pages/ExtractionBuilderPage";
-import AdvancedDiagnosticsPage from "./pages/AdvancedDiagnosticsPage";
+import AdvancedBayesian from "./pages/AdvancedBayesian";
+import AnalysisHub from "./pages/AnalysisHub";
 import DisclaimerModal from "./components/DisclaimerModal";
 import NewProjectWizard from "./components/NewProjectWizard";
 import ProfileModal from "./components/ProfileModal";
@@ -82,19 +69,13 @@ const PROFILE_KEY = "poolr.profile";
 const NAV = [
   { key: "dashboard", label: "Dashboard", Icon: LayoutDashboard },
   { key: "protocol", label: "Protocol", Icon: ClipboardList },
-  { key: "prospero", label: "PROSPERO", Icon: ClipboardCheck },
-  { key: "search_strategy", label: "Search Strategy", Icon: SearchSlash },
   { key: "search", label: "Search", Icon: SearchIcon },
   { key: "screening", label: "Screening", Icon: ListChecks },
   { key: "extraction", label: "Extraction", Icon: Table2 },
-  { key: "extraction_builder", label: "Extract Builder", Icon: FlaskConical },
   { key: "rob", label: "Risk of Bias", Icon: ShieldAlert },
   { key: "meta", label: "Meta-Analysis", Icon: Sigma },
-  { key: "diagnostics", label: "Diagnostics", Icon: BarChart3 },
-  { key: "power", label: "Power", Icon: Calculator },
-  { key: "grade", label: "GRADE Evidence", Icon: Scale },
-  { key: "interpret", label: "Interpret", Icon: FileText },
-  { key: "manuscript", label: "Manuscript", Icon: PenTool },
+  { key: "advanced", label: "Advanced", Icon: Activity },
+  { key: "analysisHub", label: "Analysis Hub", Icon: Zap },
   { key: "prisma", label: "PRISMA", Icon: Workflow },
   { key: "settings", label: "Settings", Icon: Settings2 },
 ] as const;
@@ -104,19 +85,13 @@ type PageKey = (typeof NAV)[number]["key"];
 const TITLES: Record<string, string> = {
   dashboard: "Dashboard",
   protocol: "Protocol / PICO Definition",
-  prospero: "PROSPERO Registration",
-  search_strategy: "Search Strategy Builder",
-  search: "Search & Import",
+  search: "Search Strategy Builder",
   screening: "Screening",
   extraction: "Data Extraction",
-  extraction_builder: "Extraction Form Builder",
   rob: "Risk of Bias Assessment",
   meta: "Meta-Analysis",
-  diagnostics: "Advanced Diagnostics",
-  power: "Power Calculator",
-  grade: "GRADE Certainty of Evidence",
-  interpret: "Interpretation Assistant",
-  manuscript: "Manuscript Helper",
+  advanced: "Advanced Analyses",
+  analysisHub: "Analysis Hub",
   prisma: "PRISMA 2020",
   settings: "Settings",
 };
@@ -333,16 +308,6 @@ function Shell() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // v0.6.0 — cross-page navigation via CustomEvent (Dashboard quick-action buttons).
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const page = (e as CustomEvent<string>).detail;
-      if (page && typeof page === "string") setPage(page as PageKey);
-    };
-    window.addEventListener("poolr:gopage", handler);
-    return () => window.removeEventListener("poolr:gopage", handler);
-  }, []);
-
   const cancelPendingSave = () => {
     if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
     saveSeq.current++;
@@ -460,19 +425,11 @@ function Shell() {
   const pages: Record<string, () => React.ReactElement> = {
     dashboard: () => <Dashboard project={current} onChange={onProjectChange} />,
     protocol: () => <Protocol project={current} onChange={onProjectChange} />,
-    prospero: () => <ProsperoPage project={current} />,
-    search_strategy: () => <SearchStrategy project={current} onChange={onProjectChange} />,
     search: () => <Search project={current} onChange={onProjectChange} />,
     screening: () => <Screening project={current} onChange={onProjectChange} />,
     extraction: () => <Extraction project={current} onChange={onProjectChange} />,
-    extraction_builder: () => <ExtractionBuilderPage />,
     rob: () => <Rob project={current} onChange={onProjectChange} />,
     meta: () => <Meta project={current} onChange={onProjectChange} />,
-    diagnostics: () => <AdvancedDiagnosticsPage project={current} />,
-    power: () => <PowerCalculatorPage project={current} />,
-    grade: () => <GradeEvidence project={current} onChange={onProjectChange} />,
-    interpret: () => <Interpret project={current} onChange={onProjectChange} />,
-    manuscript: () => <ManuscriptHelper project={current} onChange={onProjectChange} />,
     prisma: () => <Prisma project={current} onChange={onProjectChange} />,
     settings: () => <Settings />,
     network: () => <NetworkMeta project={current} onChange={onProjectChange} />,
@@ -481,6 +438,8 @@ function Shell() {
     diagnostic: () => <DiagnosticMeta project={current} onChange={onProjectChange} />,
     proportions: () => <ProportionsMeta project={current} onChange={onProjectChange} />,
     qualitative: () => <QualitativeMeta project={current} onChange={onProjectChange} />,
+    advanced: () => <AdvancedBayesian project={current} onChange={onProjectChange} />,
+    analysisHub: () => <AnalysisHub project={current} onProjectChange={onProjectChange} />,
     manual: () => <ManualMode project={current} onChange={onProjectChange} />,
   };
 
@@ -528,10 +487,6 @@ function Shell() {
         { id: "file-new", label: "New workspace", end: "File", short: "Ctrl+N", icon: <FilePlus2 className="h-4 w-4" />, onSelect: () => void handleNew() },
         { id: "file-save", label: "Save project", end: "File", short: "Ctrl+S", icon: <Save className="h-4 w-4" />, onSelect: () => void handleSave() },
         { id: "analysis-specialized", label: "Specialized Analyses…", description: "Dose-response, Survival RMST, Economics, Adverse, DCA", end: "Analysis", icon: <Activity className="h-4 w-4" />, onSelect: () => setSpecializedOpen(true) },
-        { id: "page-prospero", label: "PROSPERO Registration", description: "Step-by-step protocol builder", end: "Go to", icon: <ClipboardCheck className="h-4 w-4" />, onSelect: () => setPage("prospero") },
-        { id: "page-diagnostics", label: "Advanced Diagnostics", description: "Galbraith, Baujat, GOSH plots", end: "Analysis", icon: <BarChart3 className="h-4 w-4" />, onSelect: () => setPage("diagnostics") },
-        { id: "page-power", label: "Power Calculator", description: "Sample size & power estimation", end: "Analysis", icon: <Calculator className="h-4 w-4" />, onSelect: () => setPage("power") },
-        { id: "page-extract-builder", label: "Extraction Form Builder", description: "Cochrane, JBI, QUADAS-2 templates", end: "Analysis", icon: <FlaskConical className="h-4 w-4" />, onSelect: () => setPage("extraction_builder") },
         { id: "file-export", label: "Universal Export Center…", description: "DOCX, LaTeX, HTML, R, Stata, Python, BibTeX", end: "File", short: "Ctrl+E", icon: <FileDown className="h-4 w-4" />, onSelect: () => setExportCenterOpen(true) },
         { id: "app-theme", label: theme === "dark" ? "Switch to light theme" : "Switch to dark theme", end: "Appearance", short: "Ctrl+T", icon: theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />, onSelect: toggleTheme },
       ],
