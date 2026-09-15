@@ -248,7 +248,7 @@ export default function QualitativeMeta({ project, onChange }: { project: Projec
                             key={c.id}
                             className={`rounded-full px-2 py-0.5 text-[11px] border transition-colors ${
                               active
-                                ? "bg-[var(--color-accent)] text-white border-transparent"
+                                ? "bg-blue-600 dark:bg-blue-500 text-white border-transparent"
                                 : "border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-text)]"
                             }`}
                             onClick={() => toggleCodeInTheme(t.id, c.id)}

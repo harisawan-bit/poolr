@@ -22,7 +22,7 @@ export function NetworkHub({ project }: Props) {
           onClick={() => setSubTab("frequentist")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "frequentist"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -33,7 +33,7 @@ export function NetworkHub({ project }: Props) {
           onClick={() => setSubTab("bayesian")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "bayesian"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -44,7 +44,7 @@ export function NetworkHub({ project }: Props) {
           onClick={() => setSubTab("sucra")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "sucra"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -55,7 +55,7 @@ export function NetworkHub({ project }: Props) {
           onClick={() => setSubTab("cnma")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "cnma"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -66,7 +66,7 @@ export function NetworkHub({ project }: Props) {
           onClick={() => setSubTab("multiarm")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "multiarm"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -77,7 +77,7 @@ export function NetworkHub({ project }: Props) {
           onClick={() => setSubTab("figures")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "figures"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >

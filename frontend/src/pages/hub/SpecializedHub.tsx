@@ -21,7 +21,7 @@ export function SpecializedHub({ project: _ }: Props) {
           onClick={() => setSubTab("umbrella")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "umbrella"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -32,7 +32,7 @@ export function SpecializedHub({ project: _ }: Props) {
           onClick={() => setSubTab("qualitative")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "qualitative"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -43,7 +43,7 @@ export function SpecializedHub({ project: _ }: Props) {
           onClick={() => setSubTab("bibliometric")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "bibliometric"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -54,7 +54,7 @@ export function SpecializedHub({ project: _ }: Props) {
           onClick={() => setSubTab("niche")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "niche"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >

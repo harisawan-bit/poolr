@@ -22,7 +22,7 @@ export function FiguresHub({ project }: Props) {
           onClick={() => setSubTab("galbraith")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "galbraith"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -33,7 +33,7 @@ export function FiguresHub({ project }: Props) {
           onClick={() => setSubTab("labbe")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "labbe"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -44,7 +44,7 @@ export function FiguresHub({ project }: Props) {
           onClick={() => setSubTab("baujat")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "baujat"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -55,7 +55,7 @@ export function FiguresHub({ project }: Props) {
           onClick={() => setSubTab("contour")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "contour"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -66,7 +66,7 @@ export function FiguresHub({ project }: Props) {
           onClick={() => setSubTab("forest")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "forest"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >

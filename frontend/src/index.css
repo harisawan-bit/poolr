@@ -43,10 +43,10 @@
   --color-linefield: rgba(15, 17, 21, 0.03);
 
   /* component-level tokens (shadcn-flavored, poolr palette) */
-  --btn-bg: #23262c;
+  --btn-bg: #2563eb;
   --btn-fg: #ffffff;
-  --btn-hover-bg: #000000;
-  --btn-border: #23262c;
+  --btn-hover-bg: #1d4ed8;
+  --btn-border: #2563eb;
   --input-bg: #ffffff;
   --placeholder-fg: #9aa0aa;
   --card-bg: #ffffff;

@@ -35,7 +35,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("gosh")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "gosh"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -46,7 +46,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("influence")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "influence"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -57,7 +57,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("robust")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "robust"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -68,7 +68,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("tes")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "tes"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -79,7 +79,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("mi")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "mi"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -90,7 +90,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("prediction")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "prediction"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -101,7 +101,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("proportion")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "proportion"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -112,7 +112,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("pvalue")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "pvalue"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -123,7 +123,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("cluster")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "cluster"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >

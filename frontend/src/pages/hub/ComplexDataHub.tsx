@@ -22,7 +22,7 @@ export function ComplexDataHub({ project }: Props) {
           onClick={() => setSubTab("km")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "km"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -33,7 +33,7 @@ export function ComplexDataHub({ project }: Props) {
           onClick={() => setSubTab("tsa")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "tsa"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -44,7 +44,7 @@ export function ComplexDataHub({ project }: Props) {
           onClick={() => setSubTab("dca")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "dca"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -55,7 +55,7 @@ export function ComplexDataHub({ project }: Props) {
           onClick={() => setSubTab("competing")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "competing"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -66,7 +66,7 @@ export function ComplexDataHub({ project }: Props) {
           onClick={() => setSubTab("cumulative")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "cumulative"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -77,7 +77,7 @@ export function ComplexDataHub({ project }: Props) {
           onClick={() => setSubTab("prognostic")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "prognostic"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -88,7 +88,7 @@ export function ComplexDataHub({ project }: Props) {
           onClick={() => setSubTab("multilevel")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "multilevel"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -99,7 +99,7 @@ export function ComplexDataHub({ project }: Props) {
           onClick={() => setSubTab("rve")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "rve"
-              ? "bg-[var(--color-accent)] text-white shadow-sm"
+              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >

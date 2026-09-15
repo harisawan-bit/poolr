@@ -76,7 +76,7 @@ export default function Search({ project, onChange }: { project: Project; onChan
             onClick={() => setTab(t.id as Tab)}
             className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-[12.5px] font-medium transition-colors ${
               tab === t.id
-                ? 'bg-[var(--color-accent)] text-white'
+                ? 'bg-blue-600 dark:bg-blue-500 text-white'
                 : 'text-[var(--color-text-muted)] hover:bg-[var(--hover-surface)] hover:text-[var(--color-text)]'
             }`}
           >

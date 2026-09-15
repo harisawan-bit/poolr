@@ -254,7 +254,7 @@ export default function DatabaseSelector({
                       className={cn(
                         'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors',
                         isSelected
-                          ? 'border-[var(--color-accent)] bg-[var(--color-accent)] text-white'
+                          ? 'border-blue-600 bg-blue-600 dark:border-blue-500 dark:bg-blue-500 text-white'
                           : 'border-[var(--color-border)] bg-[var(--input-bg)]'
                       )}
                     >

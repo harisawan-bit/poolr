@@ -536,39 +536,39 @@ export default function Meta({ project, onChange }: { project: Project; onChange
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex items-center gap-1 rounded-md border border-[var(--color-border)] bg-[var(--input-bg)] p-0.5 text-[11px]">
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${figTab === "forest" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${figTab === "forest" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setFigTab("forest")}
                   >
                     Forest Plot
                   </button>
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${figTab === "funnel" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${figTab === "funnel" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setFigTab("funnel")}
                   >
                     Funnel (Std)
                   </button>
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${figTab === "funnel_contour" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${figTab === "funnel_contour" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setFigTab("funnel_contour")}
                   >
                     Contour Funnel
                   </button>
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${figTab === "galbraith" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${figTab === "galbraith" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setFigTab("galbraith")}
                   >
                     Galbraith Radial
                   </button>
                   {["OR", "RR", "RD"].includes(settings.measure || "OR") && (
                     <button
-                      className={`rounded px-2 py-1 transition-colors ${figTab === "labbe" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                      className={`rounded px-2 py-1 transition-colors ${figTab === "labbe" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                       onClick={() => setFigTab("labbe")}
                     >
                       L'Abbé Plot
                     </button>
                   )}
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${figTab === "baujat" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${figTab === "baujat" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setFigTab("baujat")}
                   >
                     Baujat Influence
@@ -716,25 +716,25 @@ export default function Meta({ project, onChange }: { project: Project; onChange
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1 rounded-md border border-[var(--color-border)] bg-[var(--input-bg)] p-0.5 text-[11px]">
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${replTab === "r" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${replTab === "r" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setReplTab("r")}
                   >
                     R (metafor)
                   </button>
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${replTab === "stata" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${replTab === "stata" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setReplTab("stata")}
                   >
                     Stata (meta)
                   </button>
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${replTab === "python" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${replTab === "python" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setReplTab("python")}
                   >
                     Python
                   </button>
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${replTab === "methods" ? "bg-[var(--color-accent)] text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${replTab === "methods" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setReplTab("methods")}
                   >
                     Cochrane Methods Text

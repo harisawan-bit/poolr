@@ -56,7 +56,7 @@ export function FilterBar({
               className={cn(
                 "rounded px-2 py-1 transition-colors",
                 activeOption === opt.value
-                  ? "bg-[var(--color-accent)] text-white font-medium shadow-sm"
+                  ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm"
                   : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
               )}
               onClick={() => onOptionChange?.(opt.value)}

@@ -180,7 +180,7 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
                 <button
                   className={`rounded px-2.5 py-1 transition-colors ${
                     vizTab === "traffic"
-                      ? "bg-[var(--color-accent)] text-white font-medium shadow-sm"
+                      ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm"
                       : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                   }`}
                   onClick={() => setVizTab("traffic")}
@@ -190,7 +190,7 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
                 <button
                   className={`rounded px-2.5 py-1 transition-colors ${
                     vizTab === "summary"
-                      ? "bg-[var(--color-accent)] text-white font-medium shadow-sm"
+                      ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm"
                       : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                   }`}
                   onClick={() => setVizTab("summary")}
@@ -200,7 +200,7 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
                 <button
                   className={`rounded px-2.5 py-1 transition-colors ${
                     vizTab === "radar"
-                      ? "bg-[var(--color-accent)] text-white font-medium shadow-sm"
+                      ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm"
                       : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                   }`}
                   onClick={() => setVizTab("radar")}

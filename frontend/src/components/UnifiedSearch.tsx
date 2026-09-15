@@ -189,7 +189,7 @@ export default function UnifiedSearch({ onImport, className }: UnifiedSearchProp
             <button
               onClick={handleSearch}
               disabled={!query.trim() || searchState.status === 'searching'}
-              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md bg-[var(--color-accent)] px-3 py-1.5 text-[11px] font-medium text-white transition-colors hover:bg-[var(--color-accent)]/90 disabled:opacity-50"
+              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 px-3 py-1.5 text-[11px] font-medium text-white transition-colors disabled:opacity-50"
             >
               {searchState.status === 'searching' ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -270,7 +270,7 @@ export default function UnifiedSearch({ onImport, className }: UnifiedSearchProp
               </div>
               <button
                 onClick={handleImportAll}
-                className="flex items-center gap-1.5 rounded-lg bg-[var(--color-accent)] px-3 py-1.5 text-[11px] font-medium text-white hover:bg-[var(--color-accent)]/90"
+                className="flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 px-3 py-1.5 text-[11px] font-medium text-white transition-colors"
               >
                 <Download className="h-3.5 w-3.5" />
                 Import All ({searchState.response.results.length})

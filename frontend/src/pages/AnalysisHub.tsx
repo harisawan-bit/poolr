@@ -11,6 +11,7 @@ import { FiguresHub } from "./hub/FiguresHub";
 import { SpecializedHub } from "./hub/SpecializedHub";
 import { QualityHub } from "./hub/QualityHub";
 import { InteroperabilityHub } from "./hub/InteroperabilityHub";
+import { ReportsHub } from "./hub/ReportsHub";
 import {
   Activity,
   Grid3X3,
@@ -26,6 +27,7 @@ import {
   Search,
   CheckCircle2,
   ChevronRight,
+  FileCode,
 } from "lucide-react";
 
 interface Props {
@@ -44,7 +46,8 @@ export type CategoryKey =
   | "figures"
   | "specialized"
   | "quality"
-  | "interop";
+  | "interop"
+  | "reports";
 
 interface CategoryMeta {
   key: CategoryKey;
@@ -132,6 +135,13 @@ const CATEGORIES: CategoryMeta[] = [
     Icon: ArrowLeftRight,
     description: "AI screening panel, RevMan 5 XML roundtrip, 3-tier dedup, Zotero sync & PRISMA flows",
   },
+  {
+    key: "reports",
+    label: "Reports & Reproducibility",
+    badge: "R · LaTeX · Methods",
+    Icon: FileCode,
+    description: "R replication scripts, LaTeX manuscripts, HTML executive reports & PRISMA methods",
+  },
 ];
 
 export default function AnalysisHub({ project, onProjectChange }: Props) {
@@ -168,15 +178,15 @@ export default function AnalysisHub({ project, onProjectChange }: Props) {
           </span>
         </div>
         <div className="flex items-center gap-1.5 text-xs text-[var(--color-muted-foreground)]">
-          <CheckCircle2 size={13} className="text-green-400" />
+          <CheckCircle2 size={13} className="text-green-500" />
           <span className="font-mono font-medium text-[var(--color-text)]">
             C# Native Engine v0.6.1 · 100% Dedicated UI Coverage
           </span>
         </div>
       </div>
 
-      {/* Segmented Category Navigation Bar — Cable Managed, 11 Dedicated Hubs */}
-      <nav aria-label="Analysis Hub Categories" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-11 gap-2">
+      {/* Segmented Category Navigation Bar — Aligned 3 Rows × 4 Columns (12 Dedicated Hubs) */}
+      <nav aria-label="Analysis Hub Categories" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {CATEGORIES.map((cat) => {
           const isActive = activeCategory === cat.key;
           const Icon = cat.Icon;
@@ -184,32 +194,40 @@ export default function AnalysisHub({ project, onProjectChange }: Props) {
             <button
               key={cat.key}
               onClick={() => setActiveCategory(cat.key)}
-              className={`flex flex-col items-start p-2 rounded-xl border text-left transition-all ${
+              className={`min-w-0 flex flex-col justify-between p-3.5 rounded-lg border text-left transition-all ${
                 isActive
-                  ? "border-[var(--color-accent)] bg-[var(--color-accent)]/10 text-[var(--color-text)] shadow-sm ring-1 ring-[var(--color-accent)]/30"
-                  : "border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-muted-foreground)] hover:border-[var(--color-border)] hover:bg-[var(--hover-surface)] hover:text-[var(--color-text)]"
+                  ? "border-blue-600 dark:border-blue-500 bg-blue-500/5 dark:bg-blue-500/10 text-[var(--color-text)] shadow-xs ring-1 ring-blue-600/30 dark:ring-blue-500/30"
+                  : "border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-text-muted)] hover:border-[var(--color-border-strong)] hover:bg-[var(--hover-surface)] hover:text-[var(--color-text)]"
               }`}
             >
-              <div className="flex items-center justify-between w-full mb-1">
-                <Icon size={15} className={isActive ? "text-[var(--color-accent)]" : ""} />
+              <div className="flex items-center justify-between gap-2 w-full mb-2 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Icon
+                    size={16}
+                    className={`shrink-0 ${isActive ? "text-blue-600 dark:text-blue-400" : "text-[var(--color-text-muted)]"}`}
+                  />
+                  <span className="text-[12.5px] font-semibold text-[var(--color-text)] truncate">{cat.label}</span>
+                </div>
                 <span
-                  className={`text-[8.5px] px-1 py-0.5 rounded-full font-mono font-semibold ${
+                  className={`shrink-0 max-w-[110px] truncate text-[9.5px] px-1.5 py-0.5 rounded font-mono font-medium border ${
                     isActive
-                      ? "bg-[var(--color-accent)]/20 text-[var(--color-accent)]"
-                      : "bg-[var(--color-border)]/60 text-[var(--color-muted-foreground)]"
+                      ? "bg-blue-600/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-600/30 dark:border-blue-500/30"
+                      : "bg-[var(--color-border)]/50 text-[var(--color-text-muted)] border-[var(--color-border)]"
                   }`}
                 >
                   {cat.badge}
                 </span>
               </div>
-              <span className="text-[11px] font-semibold leading-tight line-clamp-1">{cat.label}</span>
+              <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed line-clamp-2 break-words">
+                {cat.description}
+              </p>
             </button>
           );
         })}
       </nav>
 
       {/* Main active hub view */}
-      <div className="mt-2">
+      <div className="mt-3">
         {activeCategory === "overview" && (
           <EngineCatalogView
             filter={catalogFilter}
@@ -246,6 +264,9 @@ export default function AnalysisHub({ project, onProjectChange }: Props) {
         )}
         {activeCategory === "interop" && (
           <InteroperabilityHub project={project} onProjectChange={onProjectChange} />
+        )}
+        {activeCategory === "reports" && (
+          <ReportsHub project={project} onProjectChange={onProjectChange} />
         )}
       </div>
     </div>
@@ -354,6 +375,14 @@ const ENGINE_CATALOG: CatalogItem[] = [
   { id: "prisma-dta", name: "PRISMA-DTA Flow Diagram", category: "interop", endpoint: "/api/prisma-dta", description: "Vector SVG flowchart tailored for diagnostic test accuracy systematic reviews", inputs: "Screening counts", tag: "PRISMA-DTA" },
   { id: "scr-flow", name: "PRISMA-ScR Scoping Diagram", category: "interop", endpoint: "/api/scr/flow", description: "Vector SVG flowchart tailored for scoping reviews according to PRISMA-ScR", inputs: "ScR flow counts", tag: "PRISMA-ScR" },
   { id: "living-automate", name: "Living Review Surveillance", category: "interop", endpoint: "/api/living/automate", description: "Autonomous periodic surveillance search and screening threshold triggers", inputs: "Search query & timer", tag: "Autonomous" },
+
+  // Reports & Reproducibility
+  { id: "r-code", name: "R Replication Code Studio", category: "reports", endpoint: "/api/export/r_code", description: "Automated reproducible R script using metafor, netmeta, and dmetar", inputs: "Model results & data", tag: "metafor / R" },
+  { id: "methods-para", name: "Methods Paragraph Generator", category: "reports", endpoint: "/api/export/methods", description: "Standardized Cochrane and PRISMA statistical methods text drafting", inputs: "Model parameters", tag: "Methods Paragraph" },
+  { id: "latex-manuscript", name: "LaTeX Manuscript & Tables", category: "reports", endpoint: "/api/report/latex", description: "Full publication-grade LaTeX source with formatted tables and TikZ plots", inputs: "Synthesis results", tag: "LaTeX / TikZ" },
+  { id: "html-report", name: "Standalone HTML Executive Report", category: "reports", endpoint: "/api/report/html", description: "Single-file interactive HTML report with embedded styles and charts", inputs: "Synthesis results", tag: "Executive HTML" },
+  { id: "stata-python", name: "Python & Stata Scripts", category: "reports", endpoint: "/api/report/python", description: "Script translation into Python (statsmodels) and Stata meta commands", inputs: "Study datasets", tag: "Python / Stata" },
+  { id: "citations-export", name: "Bibliographic Citations Exporter", category: "reports", endpoint: "/api/export/citations", description: "Export included studies into BibTeX (.bib) and RIS reference formats", inputs: "Citations / DOIs", tag: "BibTeX / RIS" },
 ];
 
 function EngineCatalogView({
@@ -375,13 +404,13 @@ function EngineCatalogView({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3 bg-[var(--color-card)] p-4 rounded-xl border border-[var(--color-border)]">
+      <div className="flex items-center justify-between gap-3 bg-[var(--color-card)] p-4 rounded-lg border border-[var(--color-border)]">
         <div>
           <h2 className="text-sm font-semibold text-[var(--color-text)]">
-            Native Analytical Engine Registry ({ENGINE_CATALOG.length} Dedicated Hub Engines)
+            Native Analytical Engine Registry ({ENGINE_CATALOG.length} Methods & Endpoints)
           </h2>
           <p className="text-xs text-[var(--color-muted-foreground)]">
-            100% dedicated frontend UI coverage across all 107+ endpoints. All algorithms run in-process on the local C# sidecar with zero cloud latency.
+            100% dedicated frontend UI coverage across all 12 hubs. All algorithms execute in-process on the local C# sidecar with zero cloud latency.
           </p>
         </div>
         <div className="relative w-72">
@@ -391,7 +420,7 @@ function EngineCatalogView({
             value={filter}
             onChange={(e) => onFilterChange(e.target.value)}
             placeholder="Search engines, endpoints, tags…"
-            className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-[var(--color-border)] bg-[var(--input-bg)] text-[var(--color-text)]"
+            className="w-full pl-8 pr-3 py-1.5 text-xs rounded-md border border-[var(--color-border)] bg-[var(--input-bg)] text-[var(--color-text)]"
           />
         </div>
       </div>
@@ -401,28 +430,28 @@ function EngineCatalogView({
           <div
             key={item.id}
             onClick={() => onSelectCategory(item.category)}
-            className="group flex flex-col justify-between p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] hover:border-[var(--color-accent)] hover:bg-[var(--hover-surface)] transition-all cursor-pointer shadow-sm"
+            className="group flex flex-col justify-between p-3.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] hover:border-blue-500/50 hover:bg-[var(--hover-surface)] transition-all cursor-pointer shadow-xs"
           >
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] font-semibold">
+              <div className="flex items-center justify-between gap-2 mb-1.5 min-w-0">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-semibold truncate shrink-0">
                   {item.tag}
                 </span>
-                <span className="text-[10px] font-mono text-[var(--color-muted-foreground)] truncate max-w-[140px]">
+                <span className="text-[10px] font-mono text-[var(--color-muted-foreground)] truncate">
                   {item.endpoint}
                 </span>
               </div>
-              <h3 className="text-xs font-semibold text-[var(--color-text)] group-hover:text-[var(--color-accent)] transition-colors">
+              <h3 className="text-xs font-semibold text-[var(--color-text)] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
                 {item.name}
               </h3>
-              <p className="text-[11px] text-[var(--color-muted-foreground)] mt-1 line-clamp-2">
+              <p className="text-[11px] text-[var(--color-muted-foreground)] mt-1 line-clamp-2 break-words">
                 {item.description}
               </p>
             </div>
 
             <div className="mt-3 pt-2 border-t border-[var(--color-border)]/50 flex items-center justify-between text-[10.5px]">
-              <span className="text-[var(--color-muted-foreground)]">Inputs: {item.inputs}</span>
-              <span className="flex items-center text-[var(--color-accent)] font-medium group-hover:translate-x-0.5 transition-transform">
+              <span className="text-[var(--color-muted-foreground)] truncate mr-2">Inputs: {item.inputs}</span>
+              <span className="flex items-center text-blue-600 dark:text-blue-400 font-medium group-hover:translate-x-0.5 transition-transform shrink-0">
                 Open <ChevronRight size={12} />
               </span>
             </div>
