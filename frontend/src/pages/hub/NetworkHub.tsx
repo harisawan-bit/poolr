@@ -635,7 +635,26 @@ function MultiArmMultilevelRegressionSection({ extracted: _ }: { extracted: Retu
 function FiguresSection({ extracted: _ }: { extracted: ReturnType<typeof getExtractedData> }) {
   const [busy, setBusy] = useState(false);
   const [svgContent, setSvgContent] = useState<string | null>(null);
-  const [figType, setFigType] = useState<"league" | "bubble">("league");
+  const [figType, setFigType] = useState<"league" | "bubble" | "network">("league");
+
+  const loadNetwork = async () => {
+    setBusy(true);
+    setFigType("network");
+    try {
+      const defaultEdges = [
+        { treatment1: "Placebo", treatment2: "Drug A", nStudies: 8 },
+        { treatment1: "Placebo", treatment2: "Drug B", nStudies: 5 },
+        { treatment1: "Drug A", treatment2: "Drug B", nStudies: 3 },
+        { treatment1: "Drug A", treatment2: "Drug C", nStudies: 2 },
+        { treatment1: "Drug B", treatment2: "Drug C", nStudies: 4 },
+      ];
+      const svg = await postJson<any>("/api/nma/graph", { edges: defaultEdges, layout: "force", width: 500, height: 400 });
+      setSvgContent(svg.svg);
+    } catch (e: any) {
+      console.error(e);
+    }
+    setBusy(false);
+  };
 
   const loadFigure = async (type: "league" | "bubble") => {
     setBusy(true);
@@ -690,6 +709,13 @@ function FiguresSection({ extracted: _ }: { extracted: ReturnType<typeof getExtr
           >
             Render Meta-Regression Bubble Plot
           </Button>
+          <Button
+            variant={figType === "network" ? "default" : "ghost"}
+            size="sm"
+            onClick={loadNetwork}
+          >
+            Render Network Graph SVG
+          </Button>
         </div>
       </Card>
 
@@ -700,7 +726,7 @@ function FiguresSection({ extracted: _ }: { extracted: ReturnType<typeof getExtr
       )}
 
       {svgContent && (
-        <Card title={figType === "league" ? "Network League Matrix" : "Meta-Regression Bubble Plot"}>
+        <Card title={figType === "league" ? "Network League Matrix" : figType === "network" ? "Network Meta-Analysis Graph" : "Meta-Regression Bubble Plot"}>
           <div
             className="overflow-x-auto flex justify-center p-4 bg-white/5 rounded-lg border border-[var(--color-border)]"
             dangerouslySetInnerHTML={{ __html: svgContent }}

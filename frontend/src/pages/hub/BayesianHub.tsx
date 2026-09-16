@@ -189,6 +189,20 @@ function BayesianMcmcSection({ extracted }: { extracted: ReturnType<typeof getEx
               ))}
             </div>
           )}
+          {result.allMuSamples && result.allTauSamples && (
+            <div className="mt-3">
+              <div className="text-xs text-[var(--color-muted-foreground)] mb-2">MCMC Convergence Diagnostics</div>
+              <Button size="sm" variant="outline" onClick={async () => {
+                setBusy(true);
+                try {
+                  const chains = [result.allMuSamples.slice(0, 2000), result.allTauSamples.slice(0, 2000)];
+                  const diag = await postJson<any>("/api/mcmc/diagnostics", { chains });
+                  alert(`R-hat: ${diag.rhat.toFixed(4)}\nESS: ${Math.round(diag.ess)}\nGeweke Z: ${diag.gewekeZ.toFixed(2)}\n\n${diag.interpretation}`);
+                } catch(e: any) { alert(e.message); }
+                setBusy(false);
+              }}>Run Convergence Diagnostics</Button>
+            </div>
+          )}
         </Card>
       )}
     </div>

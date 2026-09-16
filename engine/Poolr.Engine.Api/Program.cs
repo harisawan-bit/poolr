@@ -1003,6 +1003,20 @@ app.MapPost("/api/bayesian-dta", ([FromBody] BayesianDtaEngine.BayesianDtaReques
 
 
 
+// v0.6.1 — MCMC Diagnostics
+app.MapPost("/api/mcmc/diagnostics", ([FromBody] McmcDiagnosticsEngine.McmcRequest req) =>
+{
+    try { return Results.Ok(McmcDiagnosticsEngine.Diagnose(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.1 — Qualitative Synthesis
+app.MapPost("/api/qualitative/synthesis", ([FromBody] QualitativeSynthesisEngine.QualRequest req) =>
+{
+    try { return Results.Ok(QualitativeSynthesisEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
 // v0.6.1 — Profile Likelihood CI
 app.MapPost("/api/profile-likelihood", ([FromBody] ProfileLikelihoodEngine.PlRequest req) =>
 {
