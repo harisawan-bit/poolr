@@ -37,6 +37,8 @@ export interface PoolrSettings {
   export: ExportDefaults;
   appearance: AppearanceConfig;
   studyType: StudyTypeConfig;
+  autoUpdateEnabled: boolean;
+  lastUpdateCheck?: string;
 }
 
 const SETTINGS_KEY = 'poolr.settings';
@@ -68,6 +70,7 @@ export const DEFAULT_SETTINGS: PoolrSettings = {
   studyType: {
     type: 'standard',
   },
+  autoUpdateEnabled: true,
 };
 
 export function loadSettings(): PoolrSettings {
@@ -81,6 +84,8 @@ export function loadSettings(): PoolrSettings {
       export: { ...DEFAULT_SETTINGS.export, ...parsed.export },
       appearance: { ...DEFAULT_SETTINGS.appearance, ...parsed.appearance },
       studyType: { ...DEFAULT_SETTINGS.studyType, ...parsed.studyType },
+      autoUpdateEnabled: parsed.autoUpdateEnabled ?? DEFAULT_SETTINGS.autoUpdateEnabled,
+      lastUpdateCheck: parsed.lastUpdateCheck,
     };
   } catch {
     return DEFAULT_SETTINGS;

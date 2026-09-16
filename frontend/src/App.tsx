@@ -28,6 +28,8 @@ import {
 } from "./lib/api";
 import { emptyProject, normalizeProject, type Project, type ProjectConfig } from "./lib/project";
 import { APP_VERSION } from "./lib/version";
+import { useUpdater } from "./lib/updater";
+import UpdateModal from "./components/UpdateModal";
 import { ThemeProvider, useTheme } from "./lib/theme";
 import { loadSettings } from "./lib/settings";
 import Dashboard from "./pages/Dashboard";
@@ -251,6 +253,9 @@ function Shell() {
   const [specializedOpen, setSpecializedOpen] = useState(() => queryParams?.get("modal") === "specialized");
   const [exportCenterOpen, setExportCenterOpen] = useState(() => queryParams?.get("modal") === "export");
   const appSettings = loadSettings();
+
+  const { updateInfo, downloadUpdate } = useUpdater();
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   const { studies, activeStudyId, addStudy, removeStudy, switchStudy, updateStudy } = useStudyManager();
 
@@ -608,6 +613,14 @@ function Shell() {
 
       {/* ── Main ── */}
       <main className="relative z-10 flex-1 overflow-auto p-4 pb-24">
+        {updateInfo?.available && (
+          <div className="mb-3 flex items-center gap-2 rounded-[3px] border border-blue-500/30 bg-blue-900/20 px-2.5 py-1.5 text-[12px] text-blue-400">
+            <Sparkles size={14} className="shrink-0" />
+            <span className="flex-1">Poolr {updateInfo.version} is available. Update now to get the latest features.</span>
+            <button className="shrink-0 rounded bg-blue-600 px-2 py-0.5 text-[11px] font-medium text-white hover:bg-blue-500" onClick={() => setShowUpdateModal(true)}>Update</button>
+            <button className="shrink-0 text-blue-400/70 hover:text-blue-400" onClick={() => setShowUpdateModal(false)} aria-label="Dismiss">✕</button>
+          </div>
+        )}
         {banner && (
           <div className="mb-3 flex items-start gap-2 rounded-[3px] border border-[var(--color-exclude)]/30 bg-[var(--color-exclude)]/10 px-2.5 py-1.5 text-[12px] text-[var(--color-exclude)]">
             <span className="flex-1">{banner}</span>
@@ -777,6 +790,12 @@ function Shell() {
                 />
               </>
             )}
+            <UpdateModal
+              info={updateInfo}
+              open={showUpdateModal}
+              onClose={() => setShowUpdateModal(false)}
+              onUpdate={downloadUpdate}
+            />
           </div>
         );
       }
