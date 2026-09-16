@@ -319,7 +319,7 @@ export function AdvancedDiagnosticsHub({ project }: Props) {
         year: 2018 + i,
         postIntervention: i >= effects.length / 2
       }));
-      const res = await postJson("/api/time-series-meta", { studies: tsStudies, interrupted: true });
+      const res = await postJson("/api/time-series", { studies: tsStudies, interrupted: true });
       setResult(res);
     } catch (e: any) { setErr(e.message); }
     setBusy(false);
