@@ -31,6 +31,7 @@ pub fn run() {
             Ok(())
         })
         .manage(updater::UpdaterState::default())
+        .invoke_handler(tauri::generate_handler![updater::check_for_updates])
         // Graceful close: window close / quit / Ctrl+C.
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
@@ -38,8 +39,7 @@ pub fn run() {
             if let tauri::RunEvent::ExitRequested { .. } = event {
                 kill_engine(app);
             }
-        })
-        .invoke_handler(tauri::generate_handler![updater::check_for_updates]);
+        });
 }
 
 struct EngineSidecar(std::sync::Mutex<Option<Child>>);
