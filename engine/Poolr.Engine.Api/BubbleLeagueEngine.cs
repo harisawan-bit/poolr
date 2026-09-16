@@ -216,6 +216,9 @@ public static class LeagueMatrixEngine
     private static string GenerateHeatmapSvg(List<List<double>> matrix, List<string> treatments, string measure)
     {
         int n = treatments.Count;
+        if (matrix == null || matrix.Count < n)
+            throw new ArgumentException("League matrix must have a row for each treatment");
+
         int cellSize = 50;
         int labelSize = 120;
         int w = labelSize + n * cellSize + 30;

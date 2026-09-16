@@ -32,12 +32,15 @@ public static class DiagnosticFigures
     /// <summary>Galbraith/radial plot: standardized effect vs precision, with pooled-estimate guides.</summary>
     public static string Galbraith(PlotInput d, double pooledLogEff)
     {
-        int k = d.Effs.Count;
+        var effs = d.Effs ?? new List<double>();
+        var vars = d.Vars ?? new List<double>();
+        var names = d.Names ?? new List<string>();
+        int k = effs.Count;
         var sb = StartSvg(560, 520);
         if (k < 3) return NeedMore(sb, "Need >=3 studies for Galbraith plot");
 
-        double precMax = 1.0 / Math.Sqrt(d.Vars.Max());
-        double zMaxAbs = Math.Max(2.5, d.Effs.Zip(d.Vars, (e, v) => e / Math.Sqrt(v)).Select(Math.Abs).Max() * 1.15);
+        double precMax = 1.0 / Math.Sqrt(vars.Max());
+        double zMaxAbs = Math.Max(2.5, effs.Zip(vars, (e, v) => e / Math.Sqrt(v)).Select(Math.Abs).Max() * 1.15);
         double xW = 440, yH = 380, ml = 60, mt = 46;
 
         // scale: x = precision (0..precMax*1.05), y = std eff (-zMax..+zMax)
@@ -64,10 +67,11 @@ public static class DiagnosticFigures
 
         for (int i = 0; i < k; i++)
         {
-            double prec = 1.0 / Math.Sqrt(d.Vars[i]);
-            double z = d.Effs[i] * prec;
+            double prec = 1.0 / Math.Sqrt(vars[i]);
+            double z = effs[i] * prec;
+            string label = i < names.Count ? names[i] : $"S{i + 1}";
             sb.Append($"<circle cx=\"{F(px(prec))}\" cy=\"{F(py(z))}\" r=\"4\" fill=\"{StudyColor}\" fill-opacity=\"0.85\"/>");
-            sb.Append($"<text x=\"{F(px(prec) + 6)}\" y=\"{F(py(z) - 4)}\" font-size=\"9\" fill=\"{Muted}\">{Escape(Trunc(d.Names[i], 14))}</text>");
+            sb.Append($"<text x=\"{F(px(prec) + 6)}\" y=\"{F(py(z) - 4)}\" font-size=\"9\" fill=\"{Muted}\">{Escape(Trunc(label, 14))}</text>");
         }
         sb.Append($"<text x=\"{ml + xW / 2}\" y=\"510\" text-anchor=\"middle\" font-size=\"12\" fill=\"{TextColor}\">Precision (1/SE)</text>");
         sb.Append($"<text x=\"20\" y=\"{mt + yH / 2}\" text-anchor=\"middle\" font-size=\"12\" fill=\"{TextColor}\" transform=\"rotate(-90 20 {mt + yH / 2})\">Standardized effect (z)</text>");
@@ -101,23 +105,27 @@ public static class DiagnosticFigures
     /// <summary>Baujat plot: contribution to Q (x) vs influence on pooled estimate (y).</summary>
     public static string Baujat(PlotInput d)
     {
-        int k = d.Effs.Count;
+        var effs = d.Effs ?? new List<double>();
+        var vars = d.Vars ?? new List<double>();
+        var names = d.Names ?? new List<string>();
+        int k = effs.Count;
         var sb = StartSvg(560, 520);
         if (k < 4) return NeedMore(sb, "Need >=4 studies for Baujat plot");
 
         var pts = new List<(string name, double qContrib, double infl)>();
-        var wAll = d.Vars.Select(v => 1 / v).ToList();
+        var wAll = vars.Select(v => 1 / v).ToList();
         double swAll = wAll.Sum();
-        double feAll = wAll.Zip(d.Effs, (w, e) => w * e).Sum() / swAll;
+        double feAll = wAll.Zip(effs, (w, e) => w * e).Sum() / swAll;
 
         for (int i = 0; i < k; i++)
         {
             // leave-one-out influence on FE estimate (% change)
             var idx = Enumerable.Range(0, k).Where(j => j != i).ToList();
             double sw = idx.Select(j => wAll[j]).Sum();
-            double fe = idx.Select(j => wAll[j] * d.Effs[j]).Sum() / sw;
+            double fe = idx.Select(j => wAll[j] * effs[j]).Sum() / sw;
             double inflPct = Math.Abs(fe - feAll) / Math.Abs(feAll == 0 ? 1e-9 : feAll) * 100;
-            pts.Add((d.Names[i], wAll[i] * Math.Pow(d.Effs[i] - feAll, 2), inflPct));
+            string bName = i < names.Count ? names[i] : "S" + (i + 1);
+            pts.Add((bName, wAll[i] * Math.Pow(effs[i] - feAll, 2), inflPct));
         }
         double xMax = pts.Max(p => p.qContrib) * 1.15 + 1e-9;
         double yMax = pts.Max(p => p.infl) * 1.15 + 1e-9;

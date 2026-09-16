@@ -3,6 +3,8 @@ use std::process::Child;
 
 use tauri::Manager;
 
+mod updater;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -23,8 +25,12 @@ pub fn run() {
             // Frontend → Rust dialogs (Open/Save project).
             let _ = app.handle().plugin(tauri_plugin_dialog::init());
 
+            // Updater plugin (checks GitHub releases)
+            let _ = app.handle().plugin(tauri_plugin_updater::Builder::new().build());
+
             Ok(())
         })
+        .manage(updater::UpdaterState::default())
         // Graceful close: window close / quit / Ctrl+C.
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
@@ -32,7 +38,8 @@ pub fn run() {
             if let tauri::RunEvent::ExitRequested { .. } = event {
                 kill_engine(app);
             }
-        });
+        })
+        .invoke_handler(tauri::generate_handler![updater::check_for_updates]);
 }
 
 struct EngineSidecar(std::sync::Mutex<Option<Child>>);

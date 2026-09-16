@@ -58,6 +58,7 @@ public static class ClusterDetectionEngine
     {
         int k = req.effects.Count;
         if (k < 3) throw new ArgumentException("At least 3 studies required");
+        if (req.variances.Count != k) throw new ArgumentException("Variances count must match effects count");
 
         var ses = req.variances.Select(Math.Sqrt).ToList();
         var names = req.names ?? Enumerable.Range(1, k).Select(i => $"S{i}").ToList();

@@ -3,8 +3,10 @@ import { Card, Input, Select, Button, Pill } from '../components/ui';
 import { loadProviders, saveProviders, DEFAULT_PROVIDERS, type AIProvider } from '../lib/ai';
 import { loadSettings, saveSettings, type PoolrSettings } from '../lib/settings';
 import { applyThemeClass } from '../lib/theme';
+import { APP_VERSION } from '../lib/version';
+import { useUpdater } from '../lib/updater';
 
-type Tab = 'ai' | 'databases' | 'appearance' | 'screening' | 'export';
+type Tab = 'ai' | 'databases' | 'appearance' | 'screening' | 'export' | 'updates';
 
 const DB_KEYS = [
   { id: 'scopus', name: 'Scopus (Elsevier)', link: 'https://dev.elsevier.com' },
@@ -41,6 +43,7 @@ export default function Settings() {
     { key: 'appearance', label: 'Appearance' },
     { key: 'screening', label: 'Screening' },
     { key: 'export', label: 'Export' },
+    { key: 'updates', label: 'Updates' },
   ];
 
   const updateProvider = (id: string, patch: Partial<AIProvider>) => {
@@ -70,6 +73,7 @@ export default function Settings() {
   };
 
   const [testStatus, setTestStatus] = useState<Record<string, "idle" | "ok" | "fail">>({});
+  const { updateInfo, checking, checkForUpdates } = useUpdater();
 
   const testConnection = async (provider: AIProvider) => {
     setTestStatus(prev => ({ ...prev, [provider.id]: "idle" }));
@@ -267,6 +271,38 @@ export default function Settings() {
               <input type="checkbox" checked={settings.export.includeRawData} onChange={e => { const next = { ...settings, export: { ...settings.export, includeRawData: e.target.checked } }; setSettings(next); saveSettings(next); }} />
               <span className="text-[12px]">Include raw data</span>
             </div>
+          </div>
+        </Card>
+      )}
+
+      {tab === 'updates' && (
+        <Card title="Updates">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[12px]">Current Version</span>
+              <span className="text-[12px] font-mono text-[#e6e7ea]">{APP_VERSION}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[12px]">Auto-update</span>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked={settings.autoUpdateEnabled} onChange={e => { const next = { ...settings, autoUpdateEnabled: e.target.checked }; setSettings(next); saveSettings(next); }} className="sr-only peer" />
+                <div className="w-9 h-5 bg-[#2a2b3a] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#8b8d96] after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#3b82f6] peer-checked:after:bg-white"></div>
+              </label>
+            </div>
+            <Button variant="outline" size="sm" onClick={checkForUpdates} disabled={checking}>
+              {checking ? 'Checking...' : 'Check for updates now'}
+            </Button>
+            {updateInfo?.available && (
+              <div className="rounded-lg bg-blue-900/30 border border-blue-500/30 p-3">
+                <p className="text-blue-400 text-[12px]">New version available: {updateInfo.version}</p>
+              </div>
+            )}
+            {updateInfo && !updateInfo.available && (
+              <p className="text-[11px] text-[#8b8d96]">You are running the latest version.</p>
+            )}
+            {settings.lastUpdateCheck && (
+              <p className="text-[10.5px] text-[#8b8d96]">Last checked: {new Date(settings.lastUpdateCheck).toLocaleString()}</p>
+            )}
           </div>
         </Card>
       )}
