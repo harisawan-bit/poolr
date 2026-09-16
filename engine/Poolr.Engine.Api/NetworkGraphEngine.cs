@@ -173,7 +173,8 @@ public static class NetworkGraphEngine
             nodeList.Add(new NodePosition
             {
                 treatment = t,
-                x = p.x, y = p.y,
+                x = p.x,
+                y = p.y,
                 radius = nodeR,
                 connections = connCount[t],
                 totalWeight = totalWeight[t]

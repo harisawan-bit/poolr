@@ -29,6 +29,9 @@ import {
   CheckCircle2,
   ChevronRight,
   FileCode,
+  Globe,
+  MessageSquare,
+  BrainCircuit,
 } from "lucide-react";
 
 interface Props {
@@ -168,8 +171,9 @@ const CATEGORIES: CategoryMeta[] = [
     description: "Bayesian multilevel, DTA, prognostic models, profile likelihood, fractional polynomials",
   },
 ];
+}
 
-function AnalysisHub({ project, onProjectChange }: Props) {
+export default function AnalysisHub({ project, onProjectChange }: Props) {
   const { studies, activeStudyId, addStudy, removeStudy, switchStudy } = useStudyManager();
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("bayesian");
   const [catalogFilter, setCatalogFilter] = useState("");
