@@ -65,7 +65,8 @@ public static class TimeSeriesMetaEngine
         double intercept = yMean - slope * yearMean;
 
         // SE of slope
-        double residSq = years.Zip(y, (xi, yi) => {
+        double residSq = years.Zip(y, (xi, yi) =>
+        {
             double pred = intercept + slope * xi;
             return (yi - pred) * (yi - pred);
         }).Sum();
