@@ -26,7 +26,9 @@ pub fn run() {
             let _ = app.handle().plugin(tauri_plugin_dialog::init());
 
             // Updater plugin (checks GitHub releases)
-            let _ = app.handle().plugin(tauri_plugin_updater::Builder::new().build());
+            let _ = app
+                .handle()
+                .plugin(tauri_plugin_updater::Builder::new().build());
 
             Ok(())
         })
