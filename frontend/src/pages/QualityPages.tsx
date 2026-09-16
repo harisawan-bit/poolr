@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Project } from "../lib/project";
-import { Card, Button, Input } from "../components/ui";
+import { Card, Button } from "../components/ui";
 import { postJson } from "../lib/api";
 import { ResultCard, ErrorDisplay } from "../components/StudyManager";
 import { Loader2 } from "lucide-react";
@@ -368,9 +368,10 @@ export function GradeSoFTablePage({ project: _project }: Props) {
           <input value={comparator} onChange={e => setComparator(e.target.value)} placeholder="Comparator" className="rounded border border-[var(--color-border)] bg-[var(--input-bg)] px-2 py-1 text-xs" />
         </div>
         <Button onClick={run} disabled={busy} className="mt-3">
-          {busy ? <><Loader2 size={14} className="animate-spin" /> Generating...</> : "Generate SoF Table"}
+          {busy ? (<><Loader2 size={14} className="animate-spin" /> Generating...</>) : "Generate SoF Table"}
         </Button>
         {err && <ErrorDisplay error={err} />}
+        </Card>
         {result && (
           <Card title="Summary of Findings Table">
             <div className="overflow-x-auto">
@@ -397,9 +398,7 @@ export function GradeSoFTablePage({ project: _project }: Props) {
             </div>
           </Card>
         )}
-      </div>
-    </div>
-  );
-}
-
+              </div>
+          );
+        }
 

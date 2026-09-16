@@ -868,7 +868,7 @@ function CollaborationSection() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [snapshots, setSnapshots] = useState<Array<{id: string, created: string, note: string}>>([]);
-  const [diffResult, setDiffResult] = useState<string | null>(null);
+  const [_diffResult, setDiffResult] = useState<string | null>(null);
 
   const createSnapshot = async () => {
     setBusy(true);

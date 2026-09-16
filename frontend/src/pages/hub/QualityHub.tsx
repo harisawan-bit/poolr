@@ -6,7 +6,8 @@ import {
   Quadas2Page,
   Amstar2Page,
   NosPage,
-  GradeEvidenceProfilePage
+  GradeEvidenceProfilePage,
+  GradeSoFTablePage
 } from "../QualityPages";
 import { ShieldCheck, ShieldAlert, CheckSquare, Award, Star, FileText } from "lucide-react";
 

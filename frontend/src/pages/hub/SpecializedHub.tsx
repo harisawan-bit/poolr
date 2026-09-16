@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Project } from "../../lib/project";
-import { Card, Button } from "../../components/ui";
+import { Card, Button, Input } from "../../components/ui";
 import { postJson } from "../../lib/api";
 import { ResultCard, ErrorDisplay } from "../../components/StudyManager";
 import { Loader2, Award, FileText, Share2, Compass } from "lucide-react";
@@ -119,12 +119,12 @@ const DEFAULT_UMBRELLA_ITEMS: UmbrellaEntry[] = [
 function UmbrellaSection() {
   const [items] = useState<UmbrellaEntry[]>(DEFAULT_UMBRELLA_ITEMS);
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
+  const [err, _setErr] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
 
   const run = async () => {
     setBusy(true);
-    setErr(null);
+    _setErr(null);
     try {
       const res = await postJson("/api/umbrella", {
         outcomes: items.map(it => ({
@@ -143,7 +143,7 @@ function UmbrellaSection() {
       });
       setResult(res);
     } catch (e: any) {
-      setErr(e.message);
+      _setErr(e.message);
     }
     setBusy(false);
   };
@@ -239,7 +239,7 @@ function UmbrellaSection() {
 // ─── 2. Qualitative Meta-Synthesis ──────────────────────────────────────────
 function QualitativeSection() {
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
+  const [err, _setErr] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
 
   const sampleCodes = [
@@ -251,14 +251,14 @@ function QualitativeSection() {
 
   const run = async () => {
     setBusy(true);
-    setErr(null);
+    _setErr(null);
     try {
       const res = await postJson("/api/qualitative/meta", {
         codes: sampleCodes.map(c => ({ code: c.code, frequency: c.count, theme: c.theme })),
       });
       setResult(res);
     } catch (e: any) {
-      setErr(e.message);
+      _setErr(e.message);
     }
     setBusy(false);
   };
@@ -295,12 +295,12 @@ function QualitativeSection() {
 // ─── 3. Bibliometrics & Citation Networks ───────────────────────────────────
 function BibliometricSection() {
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
+  const [err, _setErr] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
 
   const run = async () => {
     setBusy(true);
-    setErr(null);
+    _setErr(null);
     try {
       const res = await postJson("/api/advanced/bibliometric", [
         { id: "c1", title: "Primary Trial Alpha", author: "Smith J", year: 2018, citations: 240, references: ["c2", "c3"] },
@@ -309,7 +309,7 @@ function BibliometricSection() {
       ]);
       setResult(res);
     } catch (e: any) {
-      setErr(e.message);
+      _setErr(e.message);
     }
     setBusy(false);
   };
@@ -345,12 +345,12 @@ function BibliometricSection() {
 function NicheSection() {
   const [nicheType, setNicheType] = useState<"correlation" | "variability" | "sced" | "poisson" | "agreement">("correlation");
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
+  const [err, _setErr] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
 
   const run = async () => {
     setBusy(true);
-    setErr(null);
+    _setErr(null);
     try {
       let endpoint = `/api/niche/${nicheType}`;
       let payload: any = [];
@@ -386,7 +386,7 @@ function NicheSection() {
       const res = await postJson(endpoint, payload);
       setResult(res);
     } catch (e: any) {
-      setErr(e.message);
+      _setErr(e.message);
     }
     setBusy(false);
   };
@@ -446,17 +446,17 @@ function PValueCombinationSection() {
   const [method, setMethod] = useState<"fisher" | "stouffer" | "tippett" | "edgington" | "mudholkar">("fisher");
   const [weights, setWeights] = useState("");
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
+  const [err, _setErr] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
 
   const run = async () => {
     setBusy(true);
-    setErr(null);
+    _setErr(null);
     try {
       const pvals = pValues.split(",").map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
       const res = await postJson("/api/powerhouse/pvalue-combine", { pValues: pvals, method, weights: weights ? weights.split(",").map(w => parseFloat(w.trim())) : undefined });
       setResult(res);
-    } catch (e: any) { setErr(e.message); }
+    } catch (e: any) { _setErr(e.message); }
     setBusy(false);
   };
 
@@ -466,11 +466,11 @@ function PValueCombinationSection() {
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
             <span className="text-xs text-[var(--color-muted-foreground)]">P-values (comma-separated)</span>
-            <Input value={pValues} onChange={e => setPValues(e.target.value)} placeholder="0.04, 0.02, 0.08, 0.15, 0.01" className="mt-1" />
+            <Input value={pValues} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPValues(e.target.value)} placeholder="0.04, 0.02, 0.08, 0.15, 0.01" className="mt-1" />
           </label>
           <label className="block">
             <span className="text-xs text-[var(--color-muted-foreground)]">Method</span>
-            <select value={method} onChange={e => setMethod(e.target.value as any)} className="mt-1 flex w-full rounded-lg border border-[var(--color-border)] bg-[var(--input-bg)] px-3 py-2 text-xs">
+            <select value={method} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setMethod(e.target.value as any)} className="mt-1 flex w-full rounded-lg border border-[var(--color-border)] bg-[var(--input-bg)] px-3 py-2 text-xs">
               <option value="fisher">Fisher's Method (-2Σln(p) ~ χ²₂ₖ)</option>
               <option value="stouffer">Stouffer's Z (Σzᵢ/√k ~ N(0,1))</option>
               <option value="tippett">Tippett's Minimum p (Beta(1,k))</option>
@@ -480,7 +480,7 @@ function PValueCombinationSection() {
           </label>
           <label className="block">
             <span className="text-xs text-[var(--color-muted-foreground)]">Weights (optional, comma-separated)</span>
-            <Input value={weights} onChange={e => setWeights(e.target.value)} placeholder="1, 1, 2, 1, 1" className="mt-1" />
+            <Input value={weights} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setWeights(e.target.value)} placeholder="1, 1, 2, 1, 1" className="mt-1" />
           </label>
         </div>
         <Button onClick={run} disabled={busy} className="mt-3">
@@ -506,15 +506,14 @@ function PValueCombinationSection() {
 function SpecializedMetaSection() {
   const [metaType, setMetaType] = useState<"ecological" | "genetic" | "prepost" | "qol">("ecological");
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
+  const [_err, _setErr] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
 
   const run = async () => {
     setBusy(true);
-    setErr(null);
+    _setErr(null);
     try {
-      let endpoint = `/api/specialized/${metaType}`;
-      let payload: any = [];
+          let payload: any = [];
       if (metaType === "ecological") {
         payload = [{ study: "Region 1", cases: 45, pop: 100000 }, { study: "Region 2", cases: 32, pop: 85000 }];
       } else if (metaType === "genetic") {
@@ -526,7 +525,7 @@ function SpecializedMetaSection() {
       }
       const res = await postJson(`/api/specialized/${metaType}`, { studies: payload });
       setResult(res);
-    } catch (e: any) { setErr(e.message); }
+    } catch (e: any) { _setErr(e.message); }
     setBusy(false);
   };
 
