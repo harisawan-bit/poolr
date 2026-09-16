@@ -374,3 +374,54 @@ export function AdvancedDiagnosticsHub({ project }: Props) {
     </div>
   );
 }
+
+
+// ─── 6. Advanced Prognostic Model ─────────────────────────────────────────────
+export function AdvancedPrognosticHub({ project }: Props) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [result, setResult] = useState<any>(null);
+
+  const studies = project.extraction?.studies ?? [];
+  const progStudies = studies.filter(s => s.hr != null && s.hr_lower != null && s.hr_upper != null);
+
+  const run = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      if (progStudies.length < 2) { setErr("Need at least 2 studies with HR and CI"); setBusy(false); return; }
+      const res = await postJson("/api/advanced/prognostic", {
+        studies: progStudies.map(s => ({
+          logHr: Math.log(s.hr!),
+          se: (Math.log(s.hr_upper!) - Math.log(s.hr_lower!)) / 3.92,
+          cStatistic: null
+        })),
+        iter: 5000, warmup: 1000
+      });
+      setResult(res);
+    } catch (e: any) { setErr(e.message); }
+    setBusy(false);
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card title="Advanced Prognostic Meta-Analysis" subtitle="Bayesian Cox frailty model for survival meta-analysis (advanced endpoint)">
+        <Button onClick={run} disabled={busy || progStudies.length < 2}>
+          {busy ? <><Loader2 size={14} className="animate-spin" /> Fitting...</> : "Run Advanced Prognostic Model"}
+        </Button>
+      </Card>
+      {err && <ErrorDisplay error={err} />}
+      {result && (
+        <Card title="Results">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {result.pooledHr !== undefined && <ResultCard title="Pooled HR" value={F(result.pooledHr, 2)} ci={[result.ciLower, result.ciUpper]} />}
+            {result.tau !== undefined && <ResultCard title="τ" value={F(result.tau, 3)} />}
+            {result.cStatistic !== undefined && <ResultCard title="C-statistic" value={F(result.cStatistic, 3)} />}
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+

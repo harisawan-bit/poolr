@@ -24,7 +24,7 @@ interface Props {
 }
 
 export function InteroperabilityHub({ project, onProjectChange }: Props) {
-  const [subTab, setSubTab] = useState<"aiscreen" | "revman" | "dedup" | "sync" | "prisma" | "living">("aiscreen");
+  const [subTab, setSubTab] = useState<"aiscreen" | "revman" | "dedup" | "sync" | "prisma" | "living" | "collaboration">("aiscreen");
 
   return (
     <div className="space-y-4">
@@ -85,17 +85,28 @@ export function InteroperabilityHub({ project, onProjectChange }: Props) {
           PRISMA-DTA & ScR Flows
         </button>
         <button
-          onClick={() => setSubTab("living")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-            subTab === "living"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
-              : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
-          }`}
-        >
-          <Bell size={14} />
-          Living Review Automation
-        </button>
-      </div>
+                  onClick={() => setSubTab("living")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                    subTab === "living"
+                      ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+                      : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
+                  }`}
+                >
+                  <Bell size={14} />
+                  Living Review Automation
+                </button>
+                <button
+                  onClick={() => setSubTab("collaboration")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                    subTab === "collaboration"
+                      ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+                      : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
+                  }`}
+                >
+                  <Workflow size={14} />
+                  Collaboration & Snapshots
+                </button>
+              </div>
 
       {subTab === "aiscreen" && <AiScreeningSection project={project} onProjectChange={onProjectChange} />}
       {subTab === "revman" && <RevManSection project={project} onProjectChange={onProjectChange} />}
@@ -103,9 +114,10 @@ export function InteroperabilityHub({ project, onProjectChange }: Props) {
       {subTab === "sync" && <ReferenceSyncSection />}
       {subTab === "prisma" && <PrismaFlowSection />}
       {subTab === "living" && <LivingReviewSection />}
-    </div>
-  );
-}
+            {subTab === "collaboration" && <CollaborationSection />}
+          </div>
+        );
+      }
 
 // ─── 1. AI Screening Panel ──────────────────────────────────────────────────
 interface CandidateStudy {
@@ -599,9 +611,25 @@ function ReferenceSyncSection() {
         userId: userId || "1234567",
       });
       setConnected(true);
-    } catch (e: any) {
-      setErr(e.message);
-    }
+    } catch (e: any) { setErr(e.message); }
+    setBusy(false);
+  };
+
+  const handleImport = async (provider: "zotero" | "mendeley") => {
+    setBusy(true);
+    try {
+      const res = await postJson(`/api/${provider}/import`, { apiKey, userId });
+      alert(`Imported ${res.count ?? res.items?.length ?? "some"} items from ${provider}`);
+    } catch (e: any) { alert(e.message); }
+    setBusy(false);
+  };
+
+  const handleExport = async (provider: "zotero" | "mendeley") => {
+    setBusy(true);
+    try {
+      const res = await postJson(`/api/${provider}/export`, { apiKey, userId });
+      alert(`Exported ${res.count ?? res.items?.length ?? "some"} items to ${provider}`);
+    } catch (e: any) { alert(e.message); }
     setBusy(false);
   };
 
@@ -621,12 +649,24 @@ function ReferenceSyncSection() {
             <Input value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="e.g. 7849102" />
           </label>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button onClick={() => handleConnect("zotero")} disabled={busy}>
             {busy ? <><Loader2 size={14} className="animate-spin" /> Connecting...</> : "Connect Zotero"}
           </Button>
           <Button variant="secondary" onClick={() => handleConnect("mendeley")} disabled={busy}>
             Connect Mendeley
+          </Button>
+          <Button variant="outline" onClick={() => handleImport("zotero")} disabled={busy || !connected}>
+            <Download size={14} /> Import from Zotero
+          </Button>
+          <Button variant="outline" onClick={() => handleImport("mendeley")} disabled={busy || !connected}>
+            <Download size={14} /> Import from Mendeley
+          </Button>
+          <Button variant="outline" onClick={() => handleExport("zotero")} disabled={busy || !connected}>
+            <Download size={14} /> Export to Zotero
+          </Button>
+          <Button variant="outline" onClick={() => handleExport("mendeley")} disabled={busy || !connected}>
+            <Download size={14} /> Export to Mendeley
           </Button>
         </div>
       </Card>
@@ -789,11 +829,32 @@ function LivingReviewSection() {
           </div>
         </div>
         <Button onClick={handleActivate} disabled={busy}>
-          {busy ? <><Loader2 size={14} className="animate-spin" /> Configuring Scheduler...</> : "Activate Continuous Surveillance"}
-        </Button>
-      </Card>
+                  {busy ? <><Loader2 size={14} className="animate-spin" /> Configuring Scheduler...</> : "Activate Continuous Surveillance"}
+                </Button>
+              </Card>
 
-      {active && (
+              {active && (
+                <div className="text-xs text-green-400 bg-green-900/20 border border-green-800 rounded-lg p-3 font-medium">
+                  ✓ Living review continuous surveillance is active for "{searchQuery}". You will receive notifications when new matching studies appear.
+                </div>
+              )}
+
+              <Card title="Cumulative Meta-Analysis" subtitle="Run cumulative meta-analysis as new studies are added">
+                <div className="flex gap-2">
+                  <Button onClick={async () => {
+                    setBusy(true);
+                    try {
+                      const res = await postJson("/api/living/cumulative", { searchQuery, frequency });
+                      alert(`Cumulative meta-analysis complete. ${res.studies?.length ?? "N/A"} studies included.`);
+                    } catch (e: any) { alert(e.message); }
+                    setBusy(false);
+                  }} disabled={busy || !active}>
+                    {busy ? <><Loader2 size={14} className="animate-spin" /> Running...</> : "Run Cumulative Meta-Analysis"}
+                  </Button>
+                </div>
+              </Card>
+
+              {active && (
         <div className="text-xs text-green-400 bg-green-900/20 border border-green-800 rounded-lg p-3 font-medium">
           ✓ Living review continuous surveillance is active for "{searchQuery}". You will receive notifications when new matching studies appear.
         </div>
@@ -801,3 +862,82 @@ function LivingReviewSection() {
     </div>
   );
 }
+
+// ─── 7. Collaboration & Snapshots ─────────────────────────────────────────────
+function CollaborationSection() {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [snapshots, setSnapshots] = useState<Array<{id: string, created: string, note: string}>>([]);
+  const [_diffResult, setDiffResult] = useState<string | null>(null);
+
+  const createSnapshot = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await postJson("/api/collaboration/snapshot", { note: `Manual snapshot ${new Date().toISOString()}` });
+      setSnapshots(prev => [{id: res.id, created: new Date().toISOString(), note: `Manual snapshot ${new Date().toISOString()}`}, ...prev]);
+    } catch (e: any) { setErr(e.message); }
+    setBusy(false);
+  };
+
+  const loadSnapshots = async () => {
+    try {
+      const res = await postJson("/api/collaboration/snapshots", {});
+      setSnapshots(res.snapshots || []);
+    } catch (e: any) { setErr(e.message); }
+  };
+
+  const showDiff = async (snapshotId: string) => {
+    setBusy(true);
+    try {
+      const res = await postJson("/api/collaboration/diff", { snapshotId });
+      setDiffResult(res.diff || "No changes");
+    } catch (e: any) { setErr(e.message); }
+    setBusy(false);
+  };
+
+  const restoreSnapshot = async (snapshotId: string) => {
+    setBusy(true);
+    try {
+      await postJson("/api/collaboration/restore", { snapshotId });
+      alert("Snapshot restored successfully");
+    } catch (e: any) { setErr(e.message); }
+    setBusy(false);
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card title="Project Collaboration & Snapshots" subtitle="Create snapshots, diff changes, and restore previous states">
+        <div className="flex gap-2 mb-3">
+          <Button onClick={createSnapshot} disabled={busy}>
+            {busy ? <><Loader2 size={14} className="animate-spin" /> Creating...</> : "Create Snapshot"}
+          </Button>
+          <Button onClick={loadSnapshots} disabled={busy} variant="secondary">
+            <RefreshCw size={14} /> Refresh
+          </Button>
+        </div>
+        {err && <ErrorDisplay error={err} />}
+        <div className="space-y-2">
+          {snapshots.length === 0 ? (
+            <div className="text-xs text-[var(--color-muted-foreground)] p-4 text-center">No snapshots yet. Create one to track project state.</div>
+          ) : (
+            snapshots.map(s => (
+              <div key={s.id} className="flex items-center justify-between p-3 bg-[var(--color-card)] rounded-lg border border-[var(--color-border)]">
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-mono font-medium truncate">{s.id}</div>
+                  <div className="text-[10px] text-[var(--color-muted-foreground)]">{s.note}</div>
+                </div>
+                <div className="flex items-center gap-1.5 ml-3">
+                  <Button size="sm" variant="ghost" onClick={() => showDiff(s.id)} disabled={busy}><RefreshCw size={12} /> Diff</Button>
+                  <Button size="sm" variant="ghost" onClick={() => restoreSnapshot(s.id)} disabled={busy}><RefreshCw size={12} /> Restore</Button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+

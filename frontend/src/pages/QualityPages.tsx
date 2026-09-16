@@ -339,3 +339,66 @@ export function TesPage({ project }: Props) {
     </div>
   );
 }
+
+
+export function GradeSoFTablePage({ project: _project }: Props) {
+  const [outcome, setOutcome] = useState("Mortality");
+  const [intervention, setIntervention] = useState("Drug X");
+  const [comparator, setComparator] = useState("Placebo");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [result, setResult] = useState<any>(null);
+
+  const run = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      const res = await postJson("/api/grade/sof-table", { outcome, intervention, comparator });
+      setResult(res);
+    } catch (e: any) { setErr(e.message); }
+    setBusy(false);
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card title="GRADE Summary of Findings Table" subtitle="Structured SoF table for GRADEpro-compatible output">
+        <div className="grid grid-cols-3 gap-3">
+          <input value={outcome} onChange={e => setOutcome(e.target.value)} placeholder="Outcome" className="rounded border border-[var(--color-border)] bg-[var(--input-bg)] px-2 py-1 text-xs" />
+          <input value={intervention} onChange={e => setIntervention(e.target.value)} placeholder="Intervention" className="rounded border border-[var(--color-border)] bg-[var(--input-bg)] px-2 py-1 text-xs" />
+          <input value={comparator} onChange={e => setComparator(e.target.value)} placeholder="Comparator" className="rounded border border-[var(--color-border)] bg-[var(--input-bg)] px-2 py-1 text-xs" />
+        </div>
+        <Button onClick={run} disabled={busy} className="mt-3">
+          {busy ? (<><Loader2 size={14} className="animate-spin" /> Generating...</>) : "Generate SoF Table"}
+        </Button>
+        {err && <ErrorDisplay error={err} />}
+        </Card>
+        {result && (
+          <Card title="Summary of Findings Table">
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border border-[var(--color-border)]">
+                <thead>
+                  <tr className="bg-[var(--color-muted-foreground)]/10">
+                    <th className="p-2 border border-[var(--color-border)]">Outcome</th>
+                    <th className="p-2 border border-[var(--color-border)]">Relative Effect (95% CI)</th>
+                    <th className="p-2 border border-[var(--color-border)]">Certainty</th>
+                    <th className="p-2 border border-[var(--color-border)]">Comments</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.rows?.map((row: any, i: number) => (
+                    <tr key={i}>
+                      <td className="p-2 border border-[var(--color-border)]">{row.outcome}</td>
+                      <td className="p-2 border border-[var(--color-border)]">{row.relativeEffect}</td>
+                      <td className="p-2 border border-[var(--color-border)]">{row.certainty}</td>
+                      <td className="p-2 border border-[var(--color-border)]">{row.comments}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )}
+              </div>
+          );
+        }
+
