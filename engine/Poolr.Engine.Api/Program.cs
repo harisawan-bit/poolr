@@ -1003,6 +1003,13 @@ app.MapPost("/api/bayesian-dta", ([FromBody] BayesianDtaEngine.BayesianDtaReques
 
 
 
+// v0.6.1 — Bayesian Prognostic
+app.MapPost("/api/bayesian-prognostic", ([FromBody] BayesianPrognosticEngine.PrognosticRequest req) =>
+{
+    try { return Results.Ok(BayesianPrognosticEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
 // v0.6.1 — MCMC Diagnostics
 app.MapPost("/api/mcmc/diagnostics", ([FromBody] McmcDiagnosticsEngine.McmcRequest req) =>
 {
@@ -1030,6 +1037,13 @@ app.MapPost("/api/profile-likelihood", ([FromBody] ProfileLikelihoodEngine.PlReq
 app.MapPost("/api/nma/graph", ([FromBody] NetworkGraphEngine.GraphRequest req) =>
 {
     try { return Results.Ok(NetworkGraphEngine.Generate(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// v0.6.1 — Time-Series Meta-Analysis (with interrupted time-series)
+app.MapPost("/api/time-series", ([FromBody] TimeSeriesMetaEngine.TsRequest req) =>
+{
+    try { return Results.Ok(TimeSeriesMetaEngine.Run(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 app.Run();
