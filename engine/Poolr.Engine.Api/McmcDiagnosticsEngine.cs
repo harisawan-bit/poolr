@@ -53,7 +53,8 @@ public static class McmcDiagnosticsEngine
 
         // Chain means and variances
         var means = chains.Select(c => c.Average()).ToList();
-        var variances = chains.Select(c => {
+        var variances = chains.Select(c =>
+        {
             double mean = c.Average();
             return c.Sum(x => (x - mean) * (x - mean)) / (c.Count - 1);
         }).ToList();
