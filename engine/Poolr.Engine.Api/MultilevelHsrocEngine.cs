@@ -65,6 +65,9 @@ public static class MultilevelNmaEngine
             }
         }
 
+        if (flatStudies.Count == 0)
+            throw new ArgumentException("No valid multi-study comparisons found. Each study must have a 'comparisons' array.");
+
         var treatments = flatStudies
             .SelectMany(s => new[] { s.treatment1, s.treatment2 })
             .Distinct()
@@ -73,6 +76,9 @@ public static class MultilevelNmaEngine
 
         int K = treatments.Count;
         var validStudies = flatStudies.Where(s => s.effect.HasValue && s.se.HasValue && s.se.Value > 0).ToList();
+
+        if (K < 2 || validStudies.Count < 2)
+            throw new ArgumentException($"Need at least 2 treatments and 2 valid studies for multilevel NMA (got {K} treatments, {validStudies.Count} studies)");
 
         // Build design matrix
         var X = new double[validStudies.Count][];

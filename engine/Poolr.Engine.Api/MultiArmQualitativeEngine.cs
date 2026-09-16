@@ -100,6 +100,9 @@ public static class MultiArmNmaEngine
         int S = directEffects.Count;
         int p = K - 1;
 
+        if (S < p || p < 1)
+            throw new ArgumentException($"Need at least {p} edges for {K} treatments in multi-arm NMA");
+
         var X = new double[S][];
         int idx = 0;
         foreach (var kv in edgeEffects)
@@ -140,6 +143,9 @@ public static class MultiArmNmaEngine
         }
 
         // Solve
+        if (S < p)
+            throw new ArgumentException($"Need at least {p} edges for {K} treatments in multi-arm NMA");
+
         var d = SolveLinear(XtWX, XtWy);
 
         // League matrix
