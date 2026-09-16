@@ -1,8 +1,8 @@
 import { useState } from "react";
-import type { Project } from "../lib/project";
-import { Card, Button } from "../components/ui";
-import { postJson } from "../lib/api";
-import { ResultCard, ErrorDisplay } from "../components/StudyManager";
+import type { Project } from "../../lib/project";
+import { Card, Button } from "../../components/ui";
+import { postJson } from "../../lib/api";
+import { ResultCard, ErrorDisplay } from "../../components/StudyManager";
 import { Loader2 } from "lucide-react";
 
 const F = (n: number, d = 3) => n.toFixed(d);
@@ -56,8 +56,8 @@ export function BayesianHub({ project }: Props) {
       if (progStudies.length < 2) { setErr("Need at least 2 studies with HR and CI"); setBusy(false); return; }
       const res = await postJson("/api/bayesian-prognostic", {
         studies: progStudies.map(s => ({
-          logHr: Math.log(s.hr!.Value),
-          se: (Math.log(s.hr_upper!.Value) - Math.log(s.hr_lower!.Value)) / 3.92,
+          logHr: Math.log(s.hr!),
+          se: (Math.log(s.hr_upper!) - Math.log(s.hr_lower!)) / 3.92,
           cStatistic: null
         })),
         iter: 5000, warmup: 1000
