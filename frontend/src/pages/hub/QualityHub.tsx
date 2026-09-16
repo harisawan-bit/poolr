@@ -16,7 +16,7 @@ interface Props {
 }
 
 export function QualityHub({ project, onProjectChange: _ }: Props) {
-  const [subTab, setSubTab] = useState<"rob2" | "robins" | "quadas" | "amstar" | "nos" | "grade">("rob2");
+  const [subTab, setSubTab] = useState<"rob2" | "robins" | "quadas" | "amstar" | "nos" | "grade" | "sof">("rob2");
 
   return (
     <div className="space-y-4">
@@ -77,17 +77,28 @@ export function QualityHub({ project, onProjectChange: _ }: Props) {
           Newcastle-Ottawa (NOS)
         </button>
         <button
-          onClick={() => setSubTab("grade")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-            subTab === "grade"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
-              : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
-          }`}
-        >
-          <FileText size={14} />
-          GRADE Evidence Profile
-        </button>
-      </div>
+                  onClick={() => setSubTab("grade")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                    subTab === "grade"
+                      ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+                      : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
+                  }`}
+                >
+                  <FileText size={14} />
+                  GRADE Evidence Profile
+                </button>
+                <button
+                  onClick={() => setSubTab("sof")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                    subTab === "sof"
+                      ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+                      : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
+                  }`}
+                >
+                  <FileText size={14} />
+                  GRADE SoF Table
+                </button>
+              </div>
 
       {subTab === "rob2" && <RoB2Page project={project} />}
       {subTab === "robins" && <RobinsIPage project={project} />}
@@ -95,6 +106,7 @@ export function QualityHub({ project, onProjectChange: _ }: Props) {
       {subTab === "amstar" && <Amstar2Page project={project} />}
       {subTab === "nos" && <NosPage project={project} />}
       {subTab === "grade" && <GradeEvidenceProfilePage project={project} />}
+      {subTab === "sof" && <GradeSoFTablePage project={project} />}
     </div>
   );
 }

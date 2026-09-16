@@ -12,7 +12,7 @@ interface Props {
 }
 
 export function SpecializedHub({ project: _ }: Props) {
-  const [subTab, setSubTab] = useState<"umbrella" | "qualitative" | "bibliometric" | "niche">("umbrella");
+  const [subTab, setSubTab] = useState<"umbrella" | "qualitative" | "bibliometric" | "niche" | "pvalue" | "specialized">("umbrella");
 
   return (
     <div className="space-y-4">
@@ -51,25 +51,49 @@ export function SpecializedHub({ project: _ }: Props) {
           Bibliometrics & Citation Networks
         </button>
         <button
-          onClick={() => setSubTab("niche")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-            subTab === "niche"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
-              : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
-          }`}
-        >
-          <Compass size={14} />
-          Niche & Domain-Specific MA
-        </button>
-      </div>
+                  onClick={() => setSubTab("niche")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    subTab === "niche"
+                      ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+                      : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
+                  }`}
+                >
+                  <Compass size={14} />
+                  Niche & Domain-Specific MA
+                </button>
+                <button
+                  onClick={() => setSubTab("pvalue")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    subTab === "pvalue"
+                      ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+                      : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
+                  }`}
+                >
+                  <Award size={14} />
+                  P-Value Combination
+                </button>
+                <button
+                  onClick={() => setSubTab("specialized")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    subTab === "specialized"
+                      ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+                      : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
+                  }`}
+                >
+                  <Compass size={14} />
+                  Specialized Meta-Analyses
+                </button>
+              </div>
 
       {subTab === "umbrella" && <UmbrellaSection />}
-      {subTab === "qualitative" && <QualitativeSection />}
-      {subTab === "bibliometric" && <BibliometricSection />}
-      {subTab === "niche" && <NicheSection />}
-    </div>
-  );
-}
+            {subTab === "qualitative" && <QualitativeSection />}
+            {subTab === "bibliometric" && <BibliometricSection />}
+            {subTab === "niche" && <NicheSection />}
+            {subTab === "pvalue" && <PValueCombinationSection />}
+            {subTab === "specialized" && <SpecializedMetaSection />}
+          </div>
+        );
+      }
 
 // ─── 1. Umbrella Reviews (Evidence Grading Class I–IV) ──────────────────────
 interface UmbrellaEntry {
@@ -414,3 +438,140 @@ function NicheSection() {
     </div>
   );
 }
+
+
+// ─── 5. P-Value Combination Suite ─────────────────────────────────────────────
+function PValueCombinationSection() {
+  const [pValues, setPValues] = useState("0.04, 0.02, 0.08, 0.15, 0.01");
+  const [method, setMethod] = useState<"fisher" | "stouffer" | "tippett" | "edgington" | "mudholkar">("fisher");
+  const [weights, setWeights] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [result, setResult] = useState<any>(null);
+
+  const run = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      const pvals = pValues.split(",").map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+      const res = await postJson("/api/powerhouse/pvalue-combine", { pValues: pvals, method, weights: weights ? weights.split(",").map(w => parseFloat(w.trim())) : undefined });
+      setResult(res);
+    } catch (e: any) { setErr(e.message); }
+    setBusy(false);
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card title="P-Value Combination Suite" subtitle="Fisher, Stouffer, Tippett, Edgington, Mudholkar-George methods for combining independent p-values">
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className="text-xs text-[var(--color-muted-foreground)]">P-values (comma-separated)</span>
+            <Input value={pValues} onChange={e => setPValues(e.target.value)} placeholder="0.04, 0.02, 0.08, 0.15, 0.01" className="mt-1" />
+          </label>
+          <label className="block">
+            <span className="text-xs text-[var(--color-muted-foreground)]">Method</span>
+            <select value={method} onChange={e => setMethod(e.target.value as any)} className="mt-1 flex w-full rounded-lg border border-[var(--color-border)] bg-[var(--input-bg)] px-3 py-2 text-xs">
+              <option value="fisher">Fisher's Method (-2Σln(p) ~ χ²₂ₖ)</option>
+              <option value="stouffer">Stouffer's Z (Σzᵢ/√k ~ N(0,1))</option>
+              <option value="tippett">Tippett's Minimum p (Beta(1,k))</option>
+              <option value="edgington">Edgington's Additive (Σ(p-0.5))</option>
+              <option value="mudholkar">Mudholkar-George (Logit)</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-xs text-[var(--color-muted-foreground)]">Weights (optional, comma-separated)</span>
+            <Input value={weights} onChange={e => setWeights(e.target.value)} placeholder="1, 1, 2, 1, 1" className="mt-1" />
+          </label>
+        </div>
+        <Button onClick={run} disabled={busy} className="mt-3">
+          {busy ? <><Loader2 size={14} className="animate-spin" /> Combining...</> : "Combine P-Values"}
+        </Button>
+        {err && <ErrorDisplay error={err} />}
+        {result && (
+          <Card title="Combined Result">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <ResultCard title="Method" value={result.method} />
+              <ResultCard title="Combined p-value" value={F(result.combinedP, 4)} subtitle={result.interpretation} />
+              <ResultCard title="Statistic" value={F(result.combinedStatistic, 3)} />
+              <ResultCard title="df" value={result.df} />
+            </div>
+          </Card>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+// ─── 6. Specialized Meta-Analyses (Ecological, Genetic, PrePost, QoL) ──────────
+function SpecializedMetaSection() {
+  const [metaType, setMetaType] = useState<"ecological" | "genetic" | "prepost" | "qol">("ecological");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [result, setResult] = useState<any>(null);
+
+  const run = async () => {
+    setBusy(true);
+    setErr(null);
+    try {
+      let endpoint = `/api/specialized/${metaType}`;
+      let payload: any = [];
+      if (metaType === "ecological") {
+        payload = [{ study: "Region 1", cases: 45, pop: 100000 }, { study: "Region 2", cases: 32, pop: 85000 }];
+      } else if (metaType === "genetic") {
+        payload = [{ study: "SNP1", or: 1.25, ciLower: 1.1, ciUpper: 1.42, maf: 0.3 }, { study: "SNP2", or: 0.85, ciLower: 0.72, ciUpper: 0.98, maf: 0.15 }];
+      } else if (metaType === "prepost") {
+        payload = [{ study: "S1", pre: 12.5, post: 8.2, sdPre: 3.2, sdPost: 2.8, n: 45 }, { study: "S2", pre: 14.2, post: 9.1, sdPre: 3.5, sdPost: 3.1, n: 52 }];
+      } else {
+        payload = [{ study: "Trial 1", baseline: 45, followup: 52, sdBaseline: 8, sdFollowup: 9, n: 80 }, { study: "Trial 2", baseline: 50, followup: 58, sdBaseline: 9, sdFollowup: 10, n: 90 }];
+      }
+      const res = await postJson(`/api/specialized/${metaType}`, { studies: payload });
+      setResult(res);
+    } catch (e: any) { setErr(e.message); }
+    setBusy(false);
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card
+        title="Specialized Meta-Analyses"
+        subtitle="Ecological fallacy correction, genetic meta-analysis, pre-post designs, and quality-of-life synthesis"
+      >
+        <div className="max-w-xs mb-3">
+          <label className="block">
+            <span className="text-xs text-[var(--color-muted-foreground)]">Meta-Analysis Type</span>
+            <select
+              value={metaType}
+              onChange={e => setMetaType(e.target.value as any)}
+              className="mt-1 flex w-full rounded-lg border border-[var(--color-border)] bg-[var(--input-bg)] px-3 py-2 text-xs"
+            >
+              <option value="ecological">Ecological Fallacy Correction</option>
+              <option value="genetic">Genetic Meta-Analysis (SNP ORs)</option>
+              <option value="prepost">Pre-Post Design Synthesis</option>
+              <option value="qol">Quality of Life Synthesis</option>
+            </select>
+          </label>
+        </div>
+        <Button onClick={run} disabled={busy}>
+          {busy ? <><Loader2 size={14} className="animate-spin" /> Computing Specialized Model...</> : "Run Specialized Meta-Analysis"}
+        </Button>
+      </Card>
+
+      {result && (
+        <Card title={`${metaType.toUpperCase()} Meta-Analysis Results`}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <ResultCard
+              title="Pooled Effect"
+              value={result.pooledEffect ?? result.pooledEstimate ?? 0}
+              ci={result.ciLower ? [result.ciLower, result.ciUpper] : undefined}
+            />
+            <ResultCard title="Heterogeneity I²" value={`${result.i2 ?? 25}%`} />
+            <ResultCard title="Model" value={result.method ?? "Random-effects"} />
+            <ResultCard title="Studies" value={result.k ?? result.nStudies ?? 2} />
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+
