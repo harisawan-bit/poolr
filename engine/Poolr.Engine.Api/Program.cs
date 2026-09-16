@@ -994,67 +994,28 @@ app.MapPost("/api/bayesian-dta", ([FromBody] BayesianDtaEngine.BayesianDtaReques
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// ── Bayesian Prognostic ───────────────────────────────────────────────
-app.MapPost("/api/bayesian-prognostic", ([FromBody] BayesianPrognosticEngine.PrognosticRequest req) =>
+
+
+
+
+
+
+
+
+
+// v0.6.1 — Profile Likelihood CI
+app.MapPost("/api/profile-likelihood", ([FromBody] ProfileLikelihoodEngine.PlRequest req) =>
 {
-    try { return Results.Ok(BayesianPrognosticEngine.Run(req)); }
+    try { return Results.Ok(ProfileLikelihoodEngine.Compute(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
-// ── Dose-Response NMA ────────────────────────────────────────────────
-app.MapPost("/api/dose-response-nma", ([FromBody] DoseResponseNmaEngine.DoseNmaRequest req) =>
+
+
+// v0.6.1 — Network Graph SVG
+app.MapPost("/api/nma/graph", ([FromBody] NetworkGraphEngine.GraphRequest req) =>
 {
-    try { return Results.Ok(DoseResponseNmaEngine.Run(req)); }
+    try { return Results.Ok(NetworkGraphEngine.Generate(req)); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
-
-// ── Qualitative Synthesis ─────────────────────────────────────────────
-app.MapPost("/api/qualitative/synthesis", ([FromBody] QualitativeSynthesisEngine.QualitativeRequest req) =>
-{
-    try { return Results.Ok(QualitativeSynthesisEngine.Run(req)); }
-    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
-});
-
-// ── Spatial Meta-Analysis ─────────────────────────────────────────────
-app.MapPost("/api/spatial", ([FromBody] SpatialMetaEngine.SpatialRequest req) =>
-{
-    try { return Results.Ok(SpatialMetaEngine.Run(req)); }
-    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
-});
-
-// ── Pharmacokinetic Meta ──────────────────────────────────────────────
-app.MapPost("/api/pharmacokinetic", ([FromBody] PharmacokineticEngine.PkRequest req) =>
-{
-    try { return Results.Ok(PharmacokineticEngine.Run(req)); }
-    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
-});
-
-// ── AI Screening ──────────────────────────────────────────────────────
-app.MapPost("/api/ai/screening-v2", ([FromBody] AiScreeningEngine.ScreeningRequest req) =>
-{
-    try { return Results.Ok(AiScreeningEngine.Run(req)); }
-    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
-});
-
-// ── Profile Likelihood CI ─────────────────────────────────────────────
-app.MapPost("/api/profile-likelihood", ([FromBody] ProfileLikelihoodEngine.ProfileRequest req) =>
-{
-    try { return Results.Ok(ProfileLikelihoodEngine.Run(req)); }
-    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
-});
-
-// ── Fractional Polynomials ────────────────────────────────────────────
-app.MapPost("/api/fractional-polynomial", ([FromBody] FractionalPolynomialEngine.FpRequest req) =>
-{
-    try { return Results.Ok(FractionalPolynomialEngine.Run(req)); }
-    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
-});
-
-// ── Time-Series Meta ──────────────────────────────────────────────────
-app.MapPost("/api/time-series-meta", ([FromBody] TimeSeriesMetaEngine.TsRequest req) =>
-{
-    try { return Results.Ok(TimeSeriesMetaEngine.Run(req)); }
-    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
-});
-
 app.Run();
