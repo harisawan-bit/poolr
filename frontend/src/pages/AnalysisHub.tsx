@@ -171,7 +171,6 @@ const CATEGORIES: CategoryMeta[] = [
     description: "Bayesian multilevel, DTA, prognostic models, profile likelihood, fractional polynomials",
   },
 ];
-}
 
 export default function AnalysisHub({ project, onProjectChange }: Props) {
   const { studies, activeStudyId, addStudy, removeStudy, switchStudy } = useStudyManager();
