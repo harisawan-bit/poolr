@@ -976,4 +976,46 @@ app.MapPost("/api/powerhouse/pvalue-combine", ([FromBody] PowerhouseEngine.PvalC
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// v0.6.1 — Complete Coverage Engines
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Bayesian Multilevel ────────────────────────────────────────────────
+app.MapPost("/api/bayesian-multilevel", ([FromBody] BayesianMultilevelEngine.MultilevelRequest req) =>
+{
+    try { return Results.Ok(BayesianMultilevelEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+// ── Bayesian DTA ──────────────────────────────────────────────────────
+app.MapPost("/api/bayesian-dta", ([FromBody] BayesianDtaEngine.BayesianDtaRequest req) =>
+{
+    try { return Results.Ok(BayesianDtaEngine.Run(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+
+
+
+
+
+
+
+
+
+// v0.6.1 — Profile Likelihood CI
+app.MapPost("/api/profile-likelihood", ([FromBody] ProfileLikelihoodEngine.PlRequest req) =>
+{
+    try { return Results.Ok(ProfileLikelihoodEngine.Compute(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
+
+
+
+// v0.6.1 — Network Graph SVG
+app.MapPost("/api/nma/graph", ([FromBody] NetworkGraphEngine.GraphRequest req) =>
+{
+    try { return Results.Ok(NetworkGraphEngine.Generate(req)); }
+    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+});
 app.Run();

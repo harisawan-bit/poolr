@@ -218,6 +218,10 @@ export interface ExtractedStudy {
   hr_upper?: number | null;
   aux_time_int?: number | null;
   aux_time_ctrl?: number | null;
+  tp?: number | null;
+  fp?: number | null;
+  fn?: number | null;
+  tn?: number | null;
   correlation?: number | null;
   n_total?: number | null;
   effect_size?: number | null;
