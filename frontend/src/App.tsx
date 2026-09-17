@@ -18,6 +18,9 @@ import {
   Workflow,
   Activity,
   Zap,
+  Scale,
+  Cloud,
+  Users,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import {
@@ -50,6 +53,9 @@ import QualitativeMeta from "./pages/QualitativeMeta";
 import ManualMode from "./pages/ManualMode";
 import AdvancedBayesian from "./pages/AdvancedBayesian";
 import AnalysisHub from "./pages/AnalysisHub";
+import Legal from "./pages/Legal";
+import DriveSync from "./pages/DriveSync";
+import Collaboration from "./pages/Collaboration";
 import { StudySelector, useStudyManager } from "./components/StudyManager";
 import DisclaimerModal from "./components/DisclaimerModal";
 import NewProjectWizard from "./components/NewProjectWizard";
@@ -80,6 +86,9 @@ const NAV = [
   { key: "advanced", label: "Advanced", Icon: Activity },
   { key: "analysisHub", label: "Analysis Hub", Icon: Zap },
   { key: "prisma", label: "PRISMA", Icon: Workflow },
+  { key: "legal", label: "Legal", Icon: Scale },
+  { key: "driveSync", label: "Drive Sync", Icon: Cloud },
+  { key: "collaboration", label: "Team", Icon: Users },
   { key: "settings", label: "Settings", Icon: Settings2 },
 ] as const;
 
@@ -96,6 +105,9 @@ const TITLES: Record<string, string> = {
   advanced: "Advanced Analyses",
   analysisHub: "Analysis Hub",
   prisma: "PRISMA 2020",
+  legal: "Legal & Policies",
+  driveSync: "Google Drive Sync",
+  collaboration: "Team Collaboration",
   settings: "Settings",
 };
 
@@ -474,6 +486,9 @@ function Shell() {
     advanced: () => <AdvancedBayesian project={current} onChange={onProjectChange} />,
     analysisHub: () => <AnalysisHub project={current} onProjectChange={onProjectChange} />,
     manual: () => <ManualMode project={current} onChange={onProjectChange} />,
+    legal: () => <Legal />,
+    driveSync: () => <DriveSync />,
+    collaboration: () => <Collaboration />,
   };
 
   // Dynamic nav based on study type
