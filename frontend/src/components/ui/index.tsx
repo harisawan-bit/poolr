@@ -116,13 +116,16 @@ export function EmptyState({ children, icon, title }: { children: React.ReactNod
 
 /* ── Pill ───────────────────────────────────────────────────────────── */
 
-export function Pill({ tone = "neutral", children }: { tone?: "include" | "exclude" | "unsure" | "neutral" | "accent"; children: React.ReactNode }) {
+export function Pill({ tone = "neutral", children }: { tone?: "include" | "exclude" | "unsure" | "neutral" | "accent" | "success" | "warning" | "info"; children: React.ReactNode }) {
   const map: Record<string, string> = {
     include: "bg-[var(--color-include)]/15 text-[var(--color-include)] border-[var(--color-include)]/30",
     exclude: "bg-[var(--color-exclude)]/15 text-[var(--color-exclude)] border-[var(--color-exclude)]/30",
     unsure: "bg-[var(--color-unsure)]/15 text-[var(--color-unsure)] border-[var(--color-unsure)]/30",
     neutral: "bg-white/[0.05] text-[var(--color-text-muted)] border-[var(--color-border)]",
     accent: "bg-white/[0.08] text-[var(--color-text)] border-[var(--color-border-strong)]",
+    success: "bg-green-500/15 text-green-400 border-green-500/30",
+    warning: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
+    info: "bg-blue-500/15 text-blue-400 border-blue-500/30",
   };
   return (
     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10.5px] font-medium ${map[tone]}`}>
