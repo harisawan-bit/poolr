@@ -1,10 +1,10 @@
 {
   "name": "poolr-frontend",
   "private": true,
-  "version": "0.6.1",
-  "description": "Frontend for Poolr \u2014 Free, open-source desktop app for Systematic Reviews & Meta-Analyses (PRISMA 2020)",
+  "version": "0.6.0",
+  "description": "Frontend for Poolr — Proprietary desktop app for Systematic Reviews & Meta-Analyses (PRISMA 2020)",
   "author": "M. Haris Awan <m.harisawan@icloud.com>",
-  "license": "MIT",
+  "license": "Proprietary",
   "repository": {
     "type": "git",
     "url": "https://github.com/harisawan-bit/poolr.git"

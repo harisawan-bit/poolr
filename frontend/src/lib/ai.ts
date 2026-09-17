@@ -1,20 +1,35 @@
-// AI provider configuration and service layer
+// AI provider configuration with OAuth + Dynamic models
+
+export interface AIModel {
+  id: string;
+  name: string;
+  contextWindow?: number;
+  inputTypes?: string[];
+  outputTypes?: string[];
+  pricing?: { prompt?: number; completion?: number };
+}
 
 export interface AIProvider {
   id: string;
   name: string;
-  provider: 'openrouter' | 'tokenrouter' | 'openai' | 'anthropic' | 'gemini' | 'mistral' | 'together' | 'groq' | 'perplexity' | 'custom';
-  apiKey: string;
+  provider: string;
   baseUrl: string;
+  apiKey: string;
   model: string;
-  freeTier: boolean;
+  models: AIModel[];
   dailyLimit: number;
   requestsUsed: number;
-  lastReset: string; // ISO date
+  lastReset: string;
   maxConcurrent: number;
   temperature: number;
   maxTokens: number;
   enabled: boolean;
+  connected: boolean;
+  oauthSupported: boolean;
+  oauthConnected: boolean;
+  oauthToken?: string;
+  oauthExpiry?: string;
+  lastModelRefresh?: string;
 }
 
 export interface AIMessage {
@@ -36,18 +51,26 @@ export interface AIResponse {
 
 const PROVIDERS_KEY = 'poolr.aiProviders';
 
-export const DEFAULT_PROVIDERS: Omit<AIProvider, 'id' | 'apiKey' | 'requestsUsed' | 'lastReset'>[] = [
-  { name: 'OpenRouter', provider: 'openrouter', baseUrl: 'https://openrouter.ai/api/v1', model: 'auto', freeTier: true, dailyLimit: 50, maxConcurrent: 10, temperature: 0.1, maxTokens: 4096, enabled: true },
-  { name: 'Token Router', provider: 'tokenrouter', baseUrl: 'https://tokenrouter.ai/api/v1', model: 'auto', freeTier: true, dailyLimit: 50, maxConcurrent: 10, temperature: 0.1, maxTokens: 4096, enabled: true },
-  { name: 'OpenAI', provider: 'openai', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini', freeTier: false, dailyLimit: 1000, maxConcurrent: 5, temperature: 0.1, maxTokens: 4096, enabled: false },
-  { name: 'Anthropic', provider: 'anthropic', baseUrl: 'https://api.anthropic.com/v1', model: 'claude-3-haiku-20240307', freeTier: false, dailyLimit: 1000, maxConcurrent: 5, temperature: 0.1, maxTokens: 4096, enabled: false },
-  { name: 'Google Gemini', provider: 'gemini', baseUrl: 'https://generativelanguage.googleapis.com/v1beta', model: 'gemini-1.5-flash', freeTier: true, dailyLimit: 150, maxConcurrent: 10, temperature: 0.1, maxTokens: 4096, enabled: false },
-  { name: 'Mistral', provider: 'mistral', baseUrl: 'https://api.mistral.ai/v1', model: 'mistral-7b-instruct', freeTier: true, dailyLimit: 100, maxConcurrent: 5, temperature: 0.1, maxTokens: 4096, enabled: false },
-  { name: 'Together AI', provider: 'together', baseUrl: 'https://api.together.xyz/v1', model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', freeTier: true, dailyLimit: 100, maxConcurrent: 5, temperature: 0.1, maxTokens: 4096, enabled: false },
-  { name: 'Groq', provider: 'groq', baseUrl: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-versatile', freeTier: true, dailyLimit: 100, maxConcurrent: 5, temperature: 0.1, maxTokens: 4096, enabled: false },
-  { name: 'Perplexity', provider: 'perplexity', baseUrl: 'https://api.perplexity.ai', model: 'llama-3.1-sonar-large-128k-online', freeTier: true, dailyLimit: 50, maxConcurrent: 5, temperature: 0.1, maxTokens: 4096, enabled: false },
-  { name: 'Custom', provider: 'custom', baseUrl: 'http://localhost:11434/v1', model: 'llama3.2', freeTier: true, dailyLimit: 9999, maxConcurrent: 3, temperature: 0.1, maxTokens: 4096, enabled: false },
-];
+export const PROVIDER_TEMPLATES: Record<string, {
+  name: string;
+  provider: string;
+  baseUrl: string;
+  defaultModel: string;
+  oauthSupported: boolean;
+  oauthUrl?: string;
+  modelsEndpoint: string;
+}> = {
+  openrouter: { name: 'OpenRouter', provider: 'openrouter', baseUrl: 'https://openrouter.ai/api/v1', defaultModel: 'auto', oauthSupported: false, modelsEndpoint: '/models' },
+  openai: { name: 'OpenAI', provider: 'openai', baseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-4o-mini', oauthSupported: false, modelsEndpoint: '/models' },
+  anthropic: { name: 'Anthropic', provider: 'anthropic', baseUrl: 'https://api.anthropic.com/v1', defaultModel: 'claude-3-haiku-20240307', oauthSupported: false, modelsEndpoint: '/models' },
+  gemini: { name: 'Google Gemini', provider: 'gemini', baseUrl: 'https://generativelanguage.googleapis.com/v1beta', defaultModel: 'gemini-1.5-flash', oauthSupported: true, oauthUrl: 'https://accounts.google.com/o/oauth2/v2/auth', modelsEndpoint: '/models' },
+  mistral: { name: 'Mistral', provider: 'mistral', baseUrl: 'https://api.mistral.ai/v1', defaultModel: 'mistral-7b-instruct', oauthSupported: false, modelsEndpoint: '/models' },
+  deepseek: { name: 'DeepSeek', provider: 'deepseek', baseUrl: 'https://api.deepseek.com/v1', defaultModel: 'deepseek-chat', oauthSupported: false, modelsEndpoint: '/models' },
+  xai: { name: 'xAI (Grok)', provider: 'xai', baseUrl: 'https://api.x.ai/v1', defaultModel: 'grok-beta', oauthSupported: false, modelsEndpoint: '/models' },
+  cohere: { name: 'Cohere', provider: 'cohere', baseUrl: 'https://api.cohere.com/v1', defaultModel: 'command-r-plus', oauthSupported: false, modelsEndpoint: '/models' },
+  groq: { name: 'Groq', provider: 'groq', baseUrl: 'https://api.groq.com/openai/v1', defaultModel: 'llama-3.3-70b-versatile', oauthSupported: false, modelsEndpoint: '/models' },
+  custom: { name: 'Custom (Ollama)', provider: 'custom', baseUrl: 'http://localhost:11434/v1', defaultModel: 'llama3.2', oauthSupported: false, modelsEndpoint: '/models' },
+};
 
 export function loadProviders(): AIProvider[] {
   try {
@@ -77,8 +100,6 @@ export function getActiveProviders(): AIProvider[] {
       p.requestsUsed = 0;
       p.lastReset = today;
     }
-    // Check limit
-    if (p.freeTier && p.requestsUsed >= p.dailyLimit) return false;
     return true;
   });
 }
@@ -135,14 +156,83 @@ export async function callAIMultiProvider(providers: AIProvider[], messages: AIM
     .map(r => r.value);
 }
 
-// ── Phase C: AI Everywhere helpers ──
+// Dynamic model refresh
+export async function refreshModels(provider: AIProvider): Promise<AIModel[]> {
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (provider.apiKey) headers['Authorization'] = `Bearer ${provider.apiKey}`;
 
-/** Suggest PICO elements from a free-text research question. */
+    const template = PROVIDER_TEMPLATES[provider.provider];
+    if (!template) return [];
+
+    const res = await fetch(`${provider.baseUrl}${template.modelsEndpoint}`, { headers });
+    if (!res.ok) throw new Error(`Failed to fetch models: ${res.statusText}`);
+
+    const data = await res.json();
+    const models: AIModel[] = (data.data || []).map((m: any) => ({
+      id: m.id,
+      name: m.name || m.id,
+      contextWindow: m.context_length || m.contextWindow,
+      inputTypes: m.architecture?.input_modalities,
+      outputTypes: m.architecture?.output_modalities,
+      pricing: m.pricing ? {
+        prompt: parseFloat(m.pricing.prompt) || 0,
+        completion: parseFloat(m.pricing.completion) || 0,
+      } : undefined,
+    }));
+
+    // Update provider with new models
+    const providers = loadProviders();
+    const p = providers.find(x => x.id === provider.id);
+    if (p) {
+      p.models = models;
+      p.lastModelRefresh = new Date().toISOString();
+      saveProviders(providers);
+    }
+
+    return models;
+  } catch (e) {
+    console.warn('Failed to refresh models:', e);
+    return [];
+  }
+}
+
+// OAuth flow
+export function initiateOAuth(provider: string): void {
+  const template = PROVIDER_TEMPLATES[provider];
+  if (!template?.oauthSupported || !template.oauthUrl) return;
+
+  const params = new URLSearchParams({
+    client_id: getOAuthClientId(provider),
+    redirect_uri: `${window.location.origin}/oauth/callback`,
+    response_type: 'code',
+    scope: getOAuthScopes(provider),
+    state: provider,
+  });
+
+  window.location.href = `${template.oauthUrl}?${params.toString()}`;
+}
+
+function getOAuthClientId(provider: string): string {
+  const ids: Record<string, string> = {
+    gemini: '163013848787-e38o0dsuvs6tuob4doshm88s6vitls39.apps.googleusercontent.com',
+  };
+  return ids[provider] || '';
+}
+
+function getOAuthScopes(provider: string): string {
+  const scopes: Record<string, string> = {
+    gemini: 'https://www.googleapis.com/auth/generative-language.retriever',
+  };
+  return scopes[provider] || '';
+}
+
+// AI helper functions (PICO, search, RoB, etc.)
 export async function suggestPICO(
   question: string
 ): Promise<{ population: string; intervention: string; comparator: string; outcomes: string }> {
   const providers = getActiveProviders();
-  const useProviders = providers.length > 0 ? providers : DEFAULT_PROVIDERS.filter(p => p.freeTier).map((p, i) => ({ ...p, id: `default-${i}`, apiKey: '', requestsUsed: 0, lastReset: new Date().toISOString().split('T')[0] }));
+
 
   const messages: AIMessage[] = [
     {
@@ -153,7 +243,7 @@ export async function suggestPICO(
     { role: 'user', content: `Research question: ${question}` },
   ];
 
-  const response = await callAI(useProviders[0], messages);
+  const response = await callAI(providers[0], messages);
   try {
     const parsed = JSON.parse(response.content);
     return {
@@ -173,7 +263,7 @@ export async function generateSearchStrategy(
   database: string
 ): Promise<string> {
   const providers = getActiveProviders();
-  const useProviders = providers.length > 0 ? providers : DEFAULT_PROVIDERS.filter(p => p.freeTier).map((p, i) => ({ ...p, id: `default-${i}`, apiKey: '', requestsUsed: 0, lastReset: new Date().toISOString().split('T')[0] }));
+
 
   const messages: AIMessage[] = [
     {
@@ -187,7 +277,7 @@ export async function generateSearchStrategy(
     },
   ];
 
-  const response = await callAI(useProviders[0], messages);
+  const response = await callAI(providers[0], messages);
   return response.content.trim();
 }
 
@@ -197,7 +287,7 @@ export async function suggestRoB(
   domain: string
 ): Promise<{ rating: string; reason: string }> {
   const providers = getActiveProviders();
-  const useProviders = providers.length > 0 ? providers : DEFAULT_PROVIDERS.filter(p => p.freeTier).map((p, i) => ({ ...p, id: `default-${i}`, apiKey: '', requestsUsed: 0, lastReset: new Date().toISOString().split('T')[0] }));
+
 
   const messages: AIMessage[] = [
     {
@@ -208,7 +298,7 @@ export async function suggestRoB(
     { role: 'user', content: `Domain: ${domain}\nAbstract: ${abstract}` },
   ];
 
-  const response = await callAI(useProviders[0], messages);
+  const response = await callAI(providers[0], messages);
   try {
     const parsed = JSON.parse(response.content);
     return { rating: parsed.rating || 'Low', reason: parsed.reason || '' };
@@ -224,7 +314,7 @@ export async function interpretResults(results: {
   measure: string;
 }): Promise<string> {
   const providers = getActiveProviders();
-  const useProviders = providers.length > 0 ? providers : DEFAULT_PROVIDERS.filter(p => p.freeTier).map((p, i) => ({ ...p, id: `default-${i}`, apiKey: '', requestsUsed: 0, lastReset: new Date().toISOString().split('T')[0] }));
+
 
   const messages: AIMessage[] = [
     {
@@ -238,7 +328,7 @@ export async function interpretResults(results: {
     },
   ];
 
-  const response = await callAI(useProviders[0], messages);
+  const response = await callAI(providers[0], messages);
   return response.content.trim();
 }
 
@@ -248,7 +338,7 @@ export async function draftManuscriptSection(
   section: 'introduction' | 'methods' | 'results' | 'discussion'
 ): Promise<string> {
   const providers = getActiveProviders();
-  const useProviders = providers.length > 0 ? providers : DEFAULT_PROVIDERS.filter(p => p.freeTier).map((p, i) => ({ ...p, id: `default-${i}`, apiKey: '', requestsUsed: 0, lastReset: new Date().toISOString().split('T')[0] }));
+
 
   const sectionPrompts: Record<string, string> = {
     introduction: 'Draft the Introduction section. State the rationale, gap in knowledge, and objective using PICO. 150-200 words.',
@@ -269,6 +359,6 @@ export async function draftManuscriptSection(
     },
   ];
 
-  const response = await callAI(useProviders[0], messages);
+  const response = await callAI(providers[0], messages);
   return response.content.trim();
 }

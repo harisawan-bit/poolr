@@ -1,9 +1,9 @@
 [package]
 name = "poolr"
-version = "0.6.1"
+version = "0.6.0"
 description = "poolr — free, no-code desktop app for Systematic Reviews & Meta-Analyses (PRISMA 2020)"
 authors = ["M. Haris Awan <m.harisawan@icloud.com>"]
-license = "MIT"
+license = "Proprietary"
 repository = "https://github.com/harisawan-bit/poolr"
 homepage = "https://github.com/harisawan-bit/poolr"
 edition = "2021"

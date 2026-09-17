@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, Input, Select, Button, Pill } from '../components/ui';
-import { loadProviders, saveProviders, DEFAULT_PROVIDERS, type AIProvider } from '../lib/ai';
+import { loadProviders, saveProviders, PROVIDER_TEMPLATES, refreshModels, initiateOAuth, type AIProvider } from '../lib/ai';
 import { loadSettings, saveSettings, type PoolrSettings } from '../lib/settings';
 import { applyThemeClass } from '../lib/theme';
 import { APP_VERSION } from '../lib/version';
@@ -52,20 +52,6 @@ export default function Settings() {
     saveProviders(next);
   };
 
-  const addProvider = () => {
-    const template = DEFAULT_PROVIDERS[0];
-    const newProvider: AIProvider = {
-      ...template,
-      id: `provider_${Date.now()}`,
-      apiKey: '',
-      requestsUsed: 0,
-      lastReset: new Date().toISOString().split('T')[0],
-    };
-    const next = [...providers, newProvider];
-    setProviders(next);
-    saveProviders(next);
-  };
-
   const removeProvider = (id: string) => {
     const next = providers.filter(p => p.id !== id);
     setProviders(next);
@@ -73,6 +59,7 @@ export default function Settings() {
   };
 
   const [testStatus, setTestStatus] = useState<Record<string, "idle" | "ok" | "fail">>({});
+  const [refreshing, setRefreshing] = useState<Record<string, boolean>>({});
   const { updateInfo, checking, checkForUpdates } = useUpdater();
 
   const testConnection = async (provider: AIProvider) => {
@@ -81,12 +68,59 @@ export default function Settings() {
       const res = await fetch(`${provider.baseUrl}/models`, {
         headers: { 'Authorization': `Bearer ${provider.apiKey}` },
       });
-      setTestStatus(prev => ({ ...prev, [provider.id]: res.ok ? "ok" : "fail" }));
+      if (res.ok) {
+        setTestStatus(prev => ({ ...prev, [provider.id]: "ok" }));
+        // Update provider connected status
+        const providers = loadProviders();
+        const p = providers.find(x => x.id === provider.id);
+        if (p) { p.connected = true; saveProviders(providers); }
+        setProviders(prev => prev.map(pp => pp.id === provider.id ? { ...pp, connected: true } : pp));
+      } else {
+        setTestStatus(prev => ({ ...prev, [provider.id]: "fail" }));
+      }
       setTimeout(() => setTestStatus(prev => ({ ...prev, [provider.id]: "idle" })), 3000);
     } catch {
       setTestStatus(prev => ({ ...prev, [provider.id]: "fail" }));
       setTimeout(() => setTestStatus(prev => ({ ...prev, [provider.id]: "idle" })), 3000);
     }
+  };
+
+  const handleRefreshModels = async (provider: AIProvider) => {
+    setRefreshing(prev => ({ ...prev, [provider.id]: true }));
+    const models = await refreshModels(provider);
+    setProviders(prev => prev.map(p => p.id === provider.id ? { ...p, models } : p));
+    setRefreshing(prev => ({ ...prev, [provider.id]: false }));
+  };
+
+  const handleOAuthConnect = (provider: string) => {
+    initiateOAuth(provider);
+  };
+
+  const addProviderFromTemplate = (providerKey: string) => {
+    const template = PROVIDER_TEMPLATES[providerKey];
+    if (!template) return;
+    const newProvider: AIProvider = {
+      id: `provider_${Date.now()}`,
+      name: template.name,
+      provider: template.provider,
+      baseUrl: template.baseUrl,
+      apiKey: '',
+      model: template.defaultModel,
+      models: [],
+      dailyLimit: 1000,
+      requestsUsed: 0,
+      lastReset: new Date().toISOString().split('T')[0],
+      maxConcurrent: 5,
+      temperature: 0.1,
+      maxTokens: 4096,
+      enabled: true,
+      connected: false,
+      oauthSupported: template.oauthSupported,
+      oauthConnected: false,
+    };
+    const next = [...providers, newProvider];
+    setProviders(next);
+    saveProviders(next);
   };
 
   const updateDbKey = (id: string, value: string) => {
@@ -119,14 +153,21 @@ export default function Settings() {
       {tab === 'ai' && (
         <div className="space-y-3">
           <Card title="AI Providers" right={
-            <Button variant="outline" size="sm" onClick={addProvider}>+ Add Provider</Button>
+            <div className="flex items-center gap-2">
+              <Select onChange={(e) => addProviderFromTemplate(e.target.value)} value="" className="text-[12px]">
+                <option value="" disabled>+ Add Provider</option>
+                {Object.keys(PROVIDER_TEMPLATES).filter(k => !providers.some(p => p.provider === k)).map(k => (
+                  <option key={k} value={k}>{PROVIDER_TEMPLATES[k].name}</option>
+                ))}
+              </Select>
+            </div>
           }>
             <p className="mb-3 text-[12px] text-[var(--color-text-muted)]">
-              Configure AI providers for screening assistance. Free tier providers track daily request limits.
+              Configure AI providers for screening assistance. All providers require an API key or OAuth connection.
             </p>
             {providers.length === 0 && (
               <div className="rounded-[5px] border border-dashed border-[var(--color-border)] p-6 text-center text-[12px] text-[var(--color-text-muted)]">
-                No providers configured. Click "+ Add Provider" to get started.
+                No providers configured. Select a provider above to get started.
               </div>
             )}
             {providers.map(p => (
@@ -135,38 +176,55 @@ export default function Settings() {
                   <div className="flex items-center gap-2">
                     <input type="checkbox" checked={p.enabled} onChange={e => updateProvider(p.id, { enabled: e.target.checked })} />
                     <span className="text-[13px] font-medium">{p.name}</span>
-                    {p.freeTier && <Pill tone="neutral">Free Tier</Pill>}
+                    {p.connected ? (
+                      <Pill tone="success">Connected</Pill>
+                    ) : (
+                      <Pill tone="warning">Disconnected</Pill>
+                    )}
+                    {p.oauthSupported && (
+                      <Pill tone="info">OAuth</Pill>
+                    )}
                   </div>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => testConnection(p)}>
+                    {p.oauthSupported && !p.oauthConnected && (
+                      <Button variant="ghost" size="sm" onClick={() => handleOAuthConnect(p.provider)}>
+                        Sign In
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="sm" onClick={() => testConnection(p)} disabled={!p.apiKey}>
                       {testStatus[p.id] === "ok" ? "✓ Connected" : testStatus[p.id] === "fail" ? "✗ Failed" : "Test"}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleRefreshModels(p)} disabled={!p.apiKey || refreshing[p.id]}>
+                      {refreshing[p.id] ? "..." : "↻"}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => removeProvider(p.id)}>Remove</Button>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[10.5px] text-[var(--color-text-muted)]">API Key</label>
-                    <Input type="password" value={p.apiKey} onChange={e => updateProvider(p.id, { apiKey: e.target.value })} placeholder="sk-..." />
-                  </div>
-                  <div>
-                    <label className="text-[10.5px] text-[var(--color-text-muted)]">Model</label>
-                    <Input value={p.model} onChange={e => updateProvider(p.id, { model: e.target.value })} placeholder="model name" />
-                  </div>
-                  <div>
-                    <label className="text-[10.5px] text-[var(--color-text-muted)]">Daily Limit</label>
-                    <Input type="number" value={p.dailyLimit} onChange={e => updateProvider(p.id, { dailyLimit: parseInt(e.target.value) || 0 })} />
-                  </div>
-                  <div>
-                    <label className="text-[10.5px] text-[var(--color-text-muted)]">Requests Used</label>
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 flex-1 rounded-full bg-[var(--color-border)]">
-                        <div className="h-full rounded-full bg-[var(--color-accent)]" style={{ width: `${Math.min(100, (p.requestsUsed / p.dailyLimit) * 100)}%` }} />
-                      </div>
-                      <span className="text-[11px] text-[var(--color-text-muted)]">{p.requestsUsed}/{p.dailyLimit}</span>
+                {!p.oauthSupported && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10.5px] text-[var(--color-text-muted)]">API Key</label>
+                      <Input type="password" value={p.apiKey} onChange={e => updateProvider(p.id, { apiKey: e.target.value })} placeholder="sk-..." />
+                    </div>
+                    <div>
+                      <label className="text-[10.5px] text-[var(--color-text-muted)]">Model</label>
+                      {p.models.length > 0 ? (
+                        <Select value={p.model} onChange={e => updateProvider(p.id, { model: e.target.value })}>
+                          {p.models.map(m => (
+                            <option key={m.id} value={m.id}>{m.name}</option>
+                          ))}
+                        </Select>
+                      ) : (
+                        <Input value={p.model} onChange={e => updateProvider(p.id, { model: e.target.value })} placeholder="model name" />
+                      )}
                     </div>
                   </div>
-                </div>
+                )}
+                {p.lastModelRefresh && (
+                  <p className="text-[10px] text-[var(--color-text-muted)] mt-1">
+                    Models refreshed: {new Date(p.lastModelRefresh).toLocaleString()}
+                  </p>
+                )}
               </div>
             ))}
           </Card>
