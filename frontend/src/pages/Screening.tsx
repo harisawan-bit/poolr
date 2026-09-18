@@ -8,6 +8,7 @@ import TeamSelector, { REVIEWER_MEMBERS } from "../components/kokonut/TeamSelect
 import AIScreeningPanel from "../components/ai/AIScreeningPanel";
 import ConflictDashboard from "../components/ConflictDashboard";
 import LivingReviews from "../components/LivingReviews";
+import { StepCommentsButton } from "../components/StepCommentsDrawer";
 
 const DECISIONS: ScreenDecision[] = ["include", "exclude", "unsure"];
 const DEC_LABEL: Record<ScreenDecision, string> = { include: "Include", exclude: "Exclude", unsure: "Unsure", unset: "Unset" };
@@ -316,31 +317,34 @@ export default function Screening({ project, onChange }: { project: Project; onC
         </div>
 
       {/* v0.5.5 — Screening workflow tabs */}
-      <div className="flex items-center gap-1 border-b border-[var(--color-border)] pb-2">
-        <button
-          className={`btn-ghost ${tab === "screening" ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
-          onClick={() => setTab("screening")}
-        >
-          Single Screening
-        </button>
-        <button
-          className={`btn-ghost ${tab === "living_review" ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
-          onClick={() => setTab("living_review")}
-        >
-          Living Review
-        </button>
-        <button
-          className={`btn-ghost ${tab === "dual_entry" ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
-          onClick={() => setTab("dual_entry")}
-        >
-          Dual Entry
-        </button>
-        <button
-          className={`btn-ghost ${tab === "conflicts" ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
-          onClick={() => setTab("conflicts")}
-        >
-          Conflicts
-        </button>
+      <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-2">
+        <div className="flex items-center gap-1">
+          <button
+            className={`btn-ghost ${tab === "screening" ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
+            onClick={() => setTab("screening")}
+          >
+            Single Screening
+          </button>
+          <button
+            className={`btn-ghost ${tab === "living_review" ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
+            onClick={() => setTab("living_review")}
+          >
+            Living Review
+          </button>
+          <button
+            className={`btn-ghost ${tab === "dual_entry" ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
+            onClick={() => setTab("dual_entry")}
+          >
+            Dual Entry
+          </button>
+          <button
+            className={`btn-ghost ${tab === "conflicts" ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
+            onClick={() => setTab("conflicts")}
+          >
+            Conflicts
+          </button>
+        </div>
+        <StepCommentsButton step="screening" stepTitle="Screening" />
       </div>
 
       {/* v0.5.5 — Conflict Dashboard */}

@@ -2,36 +2,40 @@
 
 ## Latest Release
 
-**poolr v0.6.1** — Multi-Study Powerhouse & Comprehensive Evidence Synthesis Suite
-Release date: 2026-09-15
+**poolr v0.6.3** — Commercial Platform, Google Drive BYOS & Team Collaboration
+Release date: 2026-09-18
 
-> Powerhouse update introducing seamless multi-study workflow switching, unified AnalysisHub with 34+ advanced engines, comprehensive quality assessment tools (RoB 2, ROBINS-I, QUADAS-2, AMSTAR-2, NOS, GRADE Evidence Profiles), Bayesian MCMC & NMA, GOSH influence diagnostics, RevMan 5 bidirectional import/export, and reference manager sync.
+> Major milestone release introducing commercial foundation, Google OAuth identity, Bring-Your-Own-Storage (BYOS) Google Drive sync with structured directory hierarchies, 4-tier Role-Based Access Control (Owner, Editor, Reviewer, Viewer), visual 3-way conflict resolution, inline review step discussions, ICMJE/CRediT-compliant active-time authorship tracking, and Windows WebView2 solid background rendering.
 
-### Native Desktop Installers (v0.6.1)
+### Native Desktop Installers (v0.6.3)
 
 | Platform | Architecture | Installer Package | Direct Download |
 |---|---|---|---|
-| **Windows** | x64 (Standard) | `.msi` (Enterprise) / `.exe` (NSIS) | [poolr_0.6.1_x64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_x64_en-US.msi) · [poolr_0.6.1_x64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_x64-setup.exe) |
-| **Windows** | ARM64 (Surface / Snapdragon) | `.msi` / `.exe` | [poolr_0.6.1_arm64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_arm64_en-US.msi) · [poolr_0.6.1_arm64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_arm64-setup.exe) |
-| **Windows** | x86 (32-bit Legacy) | `.msi` / `.exe` | [poolr_0.6.1_x86_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_x86_en-US.msi) · [poolr_0.6.1_x86-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_x86-setup.exe) |
-| **macOS** | Apple Silicon (M1/M2/M3/M4) | `.dmg` | [poolr_0.6.1_aarch64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_aarch64.dmg) |
-| **macOS** | Intel x64 | `.dmg` | [poolr_0.6.1_x64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_x64.dmg) |
-| **Linux** | x86_64 (Debian / Ubuntu / Mint) | `.deb` | [poolr_0.6.1_amd64.deb](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr_0.6.1_amd64.deb) |
-| **Linux** | x86_64 (Fedora / RHEL / openSUSE)| `.rpm` | [poolr_0.6.1-1.x86_64.rpm](https://github.com/harisawan-bit/poolr/releases/download/v0.6.1/poolr-0.6.1-1.x86_64.rpm) |
+| **Windows** | x64 (Standard) | `.msi` (Enterprise) / `.exe` (NSIS) | [poolr_0.6.3_x64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.3/poolr_0.6.3_x64_en-US.msi) · [poolr_0.6.3_x64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.3/poolr_0.6.3_x64-setup.exe) |
+| **Windows** | ARM64 (Surface / Snapdragon) | `.msi` / `.exe` | [poolr_0.6.3_arm64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.3/poolr_0.6.3_arm64_en-US.msi) · [poolr_0.6.3_arm64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.3/poolr_0.6.3_arm64-setup.exe) |
+| **Windows** | x86 (32-bit Legacy) | `.msi` / `.exe` | [poolr_0.6.3_x86_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.3/poolr_0.6.3_x86_en-US.msi) · [poolr_0.6.3_x86-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.3/poolr_0.6.3_x86-setup.exe) |
+| **macOS** | Apple Silicon (M1/M2/M3/M4) | `.dmg` | [poolr_0.6.3_aarch64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.3/poolr_0.6.3_aarch64.dmg) |
+| **macOS** | Intel x64 | `.dmg` | [poolr_0.6.3_x64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.3/poolr_0.6.3_x64.dmg) |
+| **Linux** | x86_64 (Debian / Ubuntu / Mint) | `.deb` | [poolr_0.6.3_amd64.deb](https://github.com/harisawan-bit/poolr/releases/download/v0.6.3/poolr_0.6.3_amd64.deb) |
+| **Linux** | x86_64 (Fedora / RHEL / openSUSE)| `.rpm` | [poolr_0.6.3-1.x86_64.rpm](https://github.com/harisawan-bit/poolr/releases/download/v0.6.3/poolr-0.6.3-1.x86_64.rpm) |
 
-### What's New in v0.6.1
+### What's New in v0.6.3
 
-- **Multi-Study Toggle & Persistence**: LocalStorage-backed `StudyManager` with quick `StudySelector` dropdown for concurrent review workflows.
-- **AnalysisHub (34+ Specialized Engines)**: Tabbed interface for Bayesian MCMC, GOSH, Permutation tests, Bootstrap CIs, Test of Excess Significance (TES), RevMan 5, IPD from KM, and more.
-- **Quality & Bias Evaluation Pages**: Dedicated UI workflows for RoB 2, ROBINS-I, QUADAS-2, AMSTAR-2, Newcastle-Ottawa Scale, and GRADE Evidence Profiles.
-- **Full Parity & Reliability**: 226 passing xUnit mathematical tests, clean TypeScript compilation, and 100% Python-free desktop packaging.
+- **Google OAuth & Identity**: Integrated Sign-in with Google, dynamic Client ID configuration, runtime GIS token acquisition, and Bearer token user profile fetching.
+- **Structured Google Drive BYOS**: Zero-server cloud sync into clean, structured folder trees (`Poolr Workspace/Projects/{Title}_{UUID}/`), RFC 2387 multipart uploads preventing data truncation, automated subfile sync (`changelog.json`, `permissions.json`, `comments.json`, `authorship.json`, `manuscript.json`), and Drive team sharing.
+- **Enterprise RBAC**: 4 granular role tiers (`owner`, `editor`, `reviewer`, `viewer`) controlling edit privileges, member invitations, and stage promotion.
+- **Concurrent Editing Protections**: Section soft locks with automatic heartbeat expiration, append-only delta logging with sha256 checksums, and visual 3-way conflict resolution.
+- **Step-Level Review Comments**: Unified inline commenting drawer across Protocol, Screening, Extraction, Risk of Bias, and Meta-Analysis with resolved/unresolved filtering.
+- **ICMJE Authorship & Active-Time Tracking**: Window focus and input monitoring generating CReDiT-compliant contribution statements with Markdown export.
+- **Window Bug Fix**: Explicit solid background rendering for Windows WebView2 preventing transparent/blank windows.
+- **Commercial Legal Protection**: Updated EULA, Terms of Service, and Privacy Policy for Muhammad Haris Awan (d/b/a The Method Lab) reserving unilateral monetization and feature gating rights.
 
 ---
 
 ## Previous Releases
 
-### poolr v0.6.0
-Release date: 2026-09-03
+### poolr v0.6.1
+Release date: 2026-09-15
 
 ### What's New in v0.6.0
 

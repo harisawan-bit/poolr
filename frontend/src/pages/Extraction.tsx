@@ -5,6 +5,7 @@ import { toCsv, downloadText } from "../lib/project";
 import { validateStudyData } from "../lib/meta";
 import { Sparkles, Loader2, Calculator, FileUp, Download, UserCheck, ShieldAlert } from "lucide-react";
 import EffectSizeCalculator from "../components/EffectSizeCalculator";
+import { StepCommentsButton } from "../components/StepCommentsDrawer";
 
 const TYPES: ExtractedStudy["type"][] = ["binary", "continuous", "survival"];
 
@@ -269,6 +270,7 @@ export default function Extraction({ project, onChange }: { project: Project; on
             <ShieldAlert className="h-3.5 w-3.5 mr-1" />
             {showValidation ? 'Hide' : 'Show'} Validation
           </Button>
+          <StepCommentsButton step="extraction" stepTitle="Data Extraction" />
         </div>
       }>
         {studies.length === 0 ? (

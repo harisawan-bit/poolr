@@ -30,6 +30,7 @@ import {
   Layers,
   RotateCcw,
 } from "lucide-react";
+import { StepCommentsButton } from "../components/StepCommentsDrawer";
 
 const MEASURES: string[] = ["OR", "RR", "RD", "MD", "SMD", "HR", "MH_OR", "PETO", "GLASS", "LOGIT_PROP", "ARS_PROP", "IRR", "IRD", "Z_CORR", "GEN_IV"];
 const METHODS: string[] = ["DL", "REML", "PM", "HS", "ML", "EB"];
@@ -439,6 +440,7 @@ export default function Meta({ project, onChange }: { project: Project; onChange
           <button className="btn-primary min-w-[120px]" onClick={run} disabled={busy}>
             {busy ? <span className="flex h-6 items-center"><ShimmerText className="!p-0 !text-sm" text="Pooling…" /></span> : "Run"}
           </button>
+          <StepCommentsButton step="meta" stepTitle="Meta-Analysis" />
         </div>
       }>
         <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">

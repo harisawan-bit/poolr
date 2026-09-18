@@ -1,20 +1,23 @@
 /**
- * Google Drive Sync Engine
+ * Google Drive Sync Engine & BYOS (Bring Your Own Storage) Architecture
  *
- * Provides bi-directional sync between local Poolr projects and Google Drive.
- * Uses the Drive API v3 with the appdata folder for metadata and
- * user-visible Drive folder for project files.
- *
- * Features:
- * - Upload/download project files to Drive
- * - Conflict detection (local vs remote modification times)
- * - Selective sync (choose which projects to sync)
- * - Background sync with progress tracking
- * - Team collaboration via shared Drive folders
+ * Provides structured, bi-directional sync between local Poolr projects and Google Drive.
+ * All project files and sub-manifests are organized in a clean hierarchy:
+ *   My Drive/
+ *   └── Poolr Workspace/
+ *       └── Projects/
+ *           └── {ProjectName}_{ProjectId}/
+ *               ├── project.json
+ *               ├── permissions.json
+ *               ├── changelog.json
+ *               ├── comments.json
+ *               ├── authorship.json
+ *               └── manuscript.json
  */
 
 import * as React from "react";
 import type { Project } from "../lib/project";
+import { normalizeProject } from "../lib/project";
 import { useAuth } from "../context/AuthContext";
 
 // ── Types ──
@@ -36,6 +39,7 @@ export interface SyncConflict {
   remoteModified: string;
   localPath: string;
   remoteFileId: string;
+  remoteData?: Project;
 }
 
 export interface SyncResult {
@@ -57,13 +61,15 @@ export interface TeamMember {
   email: string;
   name: string;
   picture?: string;
-  role: "owner" | "editor" | "viewer";
+  role: "owner" | "editor" | "reviewer" | "viewer";
   joinedAt: string;
+  activeMinutes?: number;
 }
 
 export interface SharedProject {
   id: string;
   name: string;
+  folderId: string;
   owner: TeamMember;
   members: TeamMember[];
   driveFileId: string;
@@ -111,45 +117,13 @@ export class DriveSyncEngine {
     if (this.onProgress) this.onProgress(progress);
   }
 
-  private setToken(token: string) {
-    this.token = token;
-  }
-
   /**
-   * Find or create the Poolr app folder in user's Drive.
-   * Uses appDataFolder for hidden metadata, and a user-visible "Poolr" folder.
+   * Get or create the root "Poolr Workspace" folder in user's Drive.
    */
-  async getOrCreateAppFolder(): Promise<string> {
-    // Check appdata first
-    const appDataRes = await driveFetch(
-      this.token,
-      "/files?spaces=appDataFolder&q=name='poolr-metadata'&fields=files(id,name)"
-    );
-    const appDataJson = await appDataRes.json();
-    if (appDataJson.files?.length > 0) {
-      return appDataJson.files[0].id;
-    }
-
-    // Create metadata folder in appData
-    const createRes = await driveFetch(this.token, "/files?fields=id", {
-      method: "POST",
-      body: JSON.stringify({
-        name: "poolr-metadata",
-        mimeType: "application/vnd.google-apps.folder",
-        parents: ["appDataFolder"],
-      }),
-    });
-    const created = await createRes.json();
-    return created.id;
-  }
-
-  /**
-   * Get the user-visible "Poolr" folder in their Drive root.
-   */
-  async getOrCreateVisibleFolder(): Promise<string> {
+  async getOrCreateRootFolder(): Promise<string> {
     const res = await driveFetch(
       this.token,
-      "/files?q=name='Poolr' and mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id,name,parents)"
+      "/files?q=name='Poolr Workspace' and mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id,name)"
     );
     const json = await res.json();
     if (json.files?.length > 0) {
@@ -159,8 +133,62 @@ export class DriveSyncEngine {
     const createRes = await driveFetch(this.token, "/files?fields=id", {
       method: "POST",
       body: JSON.stringify({
-        name: "Poolr",
+        name: "Poolr Workspace",
         mimeType: "application/vnd.google-apps.folder",
+      }),
+    });
+    const created = await createRes.json();
+    return created.id;
+  }
+
+  /**
+   * Get or create the "Projects" subfolder inside "Poolr Workspace".
+   */
+  async getOrCreateProjectsFolder(): Promise<string> {
+    const rootId = await this.getOrCreateRootFolder();
+    const res = await driveFetch(
+      this.token,
+      `/files?q='${rootId}' in parents and name='Projects' and mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id,name)`
+    );
+    const json = await res.json();
+    if (json.files?.length > 0) {
+      return json.files[0].id;
+    }
+
+    const createRes = await driveFetch(this.token, "/files?fields=id", {
+      method: "POST",
+      body: JSON.stringify({
+        name: "Projects",
+        mimeType: "application/vnd.google-apps.folder",
+        parents: [rootId],
+      }),
+    });
+    const created = await createRes.json();
+    return created.id;
+  }
+
+  /**
+   * Get or create an isolated folder for a specific project.
+   */
+  async getOrCreateProjectFolder(projectTitle: string, projectId: string): Promise<string> {
+    const projectsFolderId = await this.getOrCreateProjectsFolder();
+    const folderName = `${projectTitle.replace(/[/\\?%*:|"<>]/g, "-").trim() || "Untitled"}_${projectId.slice(0, 8)}`;
+    
+    const res = await driveFetch(
+      this.token,
+      `/files?q='${projectsFolderId}' in parents and name='${folderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id,name)`
+    );
+    const json = await res.json();
+    if (json.files?.length > 0) {
+      return json.files[0].id;
+    }
+
+    const createRes = await driveFetch(this.token, "/files?fields=id", {
+      method: "POST",
+      body: JSON.stringify({
+        name: folderName,
+        mimeType: "application/vnd.google-apps.folder",
+        parents: [projectsFolderId],
       }),
     });
     const created = await createRes.json();
@@ -171,75 +199,80 @@ export class DriveSyncEngine {
    * List all Poolr project files in Drive.
    */
   async listProjectFiles(): Promise<DriveFile[]> {
-    const folderId = await this.getOrCreateVisibleFolder();
     const res = await driveFetch(
       this.token,
-      `/files?q='${folderId}' in parents and mimeType='application/json' and trashed=false&fields=files(id,name,modifiedTime,size,parents,appProperties)&orderBy=modifiedTime desc`
+      `/files?q=(name contains '.poolr.json' or name = 'project.json') and trashed=false&fields=files(id,name,modifiedTime,size,parents,appProperties)&orderBy=modifiedTime desc`
     );
     const json = await res.json();
     return json.files || [];
   }
 
   /**
-   * Upload a project to Google Drive.
+   * Upload or update a project to Google Drive using RFC 2387 multipart upload.
+   * Uploads the full project payload and metadata reliably.
    */
   async uploadProject(
     project: Project,
     existingFileId?: string
   ): Promise<DriveFile> {
-    const folderId = await this.getOrCreateVisibleFolder();
-    const fileName = `${project.metadata.title || "Untitled"}.poolr.json`;
+    const safeTitle = project.metadata.title?.replace(/[/\\?%*:|"<>]/g, "-").trim() || "Untitled";
+    const projectId = (project.metadata as any).id || safeTitle;
+    const projectFolderId = await this.getOrCreateProjectFolder(safeTitle, projectId);
+    const fileName = "project.json";
+
     const metadata = {
       name: fileName,
       mimeType: "application/json",
       appProperties: {
-        poolrProjectId: project.metadata.title || "untitled",
-        poolrVersion: project.metadata.version || "0.6.0",
+        poolrProjectId: projectId,
+        poolrTitle: project.metadata.title || "Untitled",
+        poolrVersion: project.metadata.version || "0.6.3",
         poolrModified: new Date().toISOString(),
       },
-      parents: [folderId],
+      ...(!existingFileId ? { parents: [projectFolderId] } : {}),
     };
 
-    const body = JSON.stringify(project);
+    const body = JSON.stringify(project, null, 2);
+    const boundary = "poolr_boundary_" + Date.now();
+    const multipartBody = [
+      `--${boundary}`,
+      "Content-Type: application/json; charset=UTF-8",
+      "",
+      JSON.stringify(metadata),
+      `--${boundary}`,
+      "Content-Type: application/json",
+      "",
+      body,
+      `--${boundary}--`,
+    ].join("\r\n");
 
     if (existingFileId) {
-      // Update existing file
+      // Update existing file content and metadata
       const res = await fetch(
-        `${UPLOAD_API}/files/${existingFileId}?uploadType=multipart&fields=id,name,modifiedTime,size`,
+        `${UPLOAD_API}/files/${existingFileId}?uploadType=multipart&fields=id,name,modifiedTime,size,parents,appProperties`,
         {
           method: "PATCH",
           headers: {
             Authorization: `Bearer ${this.token}`,
-            "Content-Type": "application/json",
+            "Content-Type": `multipart/related; boundary=${boundary}`,
           },
-          body: JSON.stringify({ appProperties: metadata.appProperties }),
+          body: multipartBody,
         }
       );
-      if (!res.ok) throw new Error(`Update failed (${res.status})`);
-      const updated = await res.json();
-      return updated as DriveFile;
+      if (!res.ok) {
+        const err = await res.text().catch(() => "");
+        throw new Error(`Update failed (${res.status}): ${err}`);
+      }
+      return (await res.json()) as DriveFile;
     } else {
-      // Create new file using multipart upload
-      const boundary = "poolr_boundary_" + Date.now();
-      const multipartBody = [
-        `--${boundary}`,
-        "Content-Type: application/json; charset=UTF-8",
-        "",
-        JSON.stringify(metadata),
-        `--${boundary}`,
-        "Content-Type: application/json",
-        "",
-        body,
-        `--${boundary}--`,
-      ].join("\r\n");
-
+      // Create new file
       const res = await fetch(
-        `${UPLOAD_API}/files?uploadType=multipart&fields=id,name,modifiedTime,size,parents`,
+        `${UPLOAD_API}/files?uploadType=multipart&fields=id,name,modifiedTime,size,parents,appProperties`,
         {
           method: "POST",
           headers: {
             Authorization: `Bearer ${this.token}`,
-            'Content-Type': 'multipart/related; boundary=' + boundary,
+            "Content-Type": `multipart/related; boundary=${boundary}`,
           },
           body: multipartBody,
         }
@@ -253,6 +286,50 @@ export class DriveSyncEngine {
   }
 
   /**
+   * Upload or update an auxiliary subfile (changelog.json, permissions.json, etc.)
+   */
+  async uploadSubfile(folderId: string, filename: string, data: unknown): Promise<void> {
+    const listRes = await driveFetch(
+      this.token,
+      `/files?q='${folderId}' in parents and name='${filename}' and trashed=false&fields=files(id)`
+    );
+    const listJson = await listRes.json();
+    const existingId = listJson.files?.[0]?.id;
+
+    const body = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+    const boundary = "poolr_sub_" + Date.now();
+    const metadata = {
+      name: filename,
+      mimeType: "application/json",
+      ...(!existingId ? { parents: [folderId] } : {}),
+    };
+    const multipartBody = [
+      `--${boundary}`,
+      "Content-Type: application/json; charset=UTF-8",
+      "",
+      JSON.stringify(metadata),
+      `--${boundary}`,
+      "Content-Type: application/json",
+      "",
+      body,
+      `--${boundary}--`,
+    ].join("\r\n");
+
+    const endpoint = existingId
+      ? `${UPLOAD_API}/files/${existingId}?uploadType=multipart`
+      : `${UPLOAD_API}/files?uploadType=multipart`;
+
+    await fetch(endpoint, {
+      method: existingId ? "PATCH" : "POST",
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        "Content-Type": `multipart/related; boundary=${boundary}`,
+      },
+      body: multipartBody,
+    });
+  }
+
+  /**
    * Download a project from Google Drive.
    */
   async downloadProject(fileId: string): Promise<Project> {
@@ -261,19 +338,105 @@ export class DriveSyncEngine {
       `/files/${fileId}?alt=media`,
       { headers: {} }
     );
-    return (await res.json()) as Project;
+    const raw = await res.json();
+    return normalizeProject(raw);
   }
 
   /**
-   * Delete a project from Drive.
+   * Download an auxiliary subfile from a project folder.
+   */
+  async downloadSubfile<T>(folderId: string, filename: string): Promise<T | null> {
+    try {
+      const listRes = await driveFetch(
+        this.token,
+        `/files?q='${folderId}' in parents and name='${filename}' and trashed=false&fields=files(id)`
+      );
+      const listJson = await listRes.json();
+      const fileId = listJson.files?.[0]?.id;
+      if (!fileId) return null;
+
+      const res = await driveFetch(this.token, `/files/${fileId}?alt=media`);
+      return (await res.json()) as T;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Delete a project file or folder from Drive.
    */
   async deleteProject(fileId: string): Promise<void> {
     await driveFetch(this.token, `/files/${fileId}`, { method: "DELETE" });
   }
 
   /**
+   * Discover projects shared with the user by team members.
+   */
+  async fetchSharedProjects(): Promise<SharedProject[]> {
+    try {
+      const res = await driveFetch(
+        this.token,
+        "/files?q=sharedWithMe=true and trashed=false and (mimeType='application/vnd.google-apps.folder' or name contains '.poolr.json')&fields=files(id,name,owners,modifiedTime,mimeType,parents)&orderBy=modifiedTime desc"
+      );
+      const json = await res.json();
+      const files = json.files || [];
+      const shared: SharedProject[] = [];
+
+      for (const f of files) {
+        if (f.mimeType === "application/vnd.google-apps.folder") {
+          const innerRes = await driveFetch(
+            this.token,
+            `/files?q='${f.id}' in parents and (name='project.json' or name contains '.poolr.json') and trashed=false&fields=files(id,name,modifiedTime)`
+          );
+          const innerJson = await innerRes.json();
+          if (innerJson.files?.length > 0) {
+            const ownerInfo = f.owners?.[0];
+            shared.push({
+              id: f.id,
+              name: f.name,
+              folderId: f.id,
+              owner: {
+                email: ownerInfo?.emailAddress || "owner@team.org",
+                name: ownerInfo?.displayName || ownerInfo?.emailAddress || "Team Lead",
+                picture: ownerInfo?.photoLink,
+                role: "owner",
+                joinedAt: f.modifiedTime,
+              },
+              members: [],
+              driveFileId: innerJson.files[0].id,
+              lastSyncedAt: innerJson.files[0].modifiedTime,
+              status: "synced",
+            });
+          }
+        } else {
+          const ownerInfo = f.owners?.[0];
+          shared.push({
+            id: f.id,
+            name: f.name.replace(".poolr.json", ""),
+            folderId: f.parents?.[0] || f.id,
+            owner: {
+              email: ownerInfo?.emailAddress || "owner@team.org",
+              name: ownerInfo?.displayName || ownerInfo?.emailAddress || "Team Lead",
+              picture: ownerInfo?.photoLink,
+              role: "owner",
+              joinedAt: f.modifiedTime,
+            },
+            members: [],
+            driveFileId: f.id,
+            lastSyncedAt: f.modifiedTime,
+            status: "synced",
+          });
+        }
+      }
+      return shared;
+    } catch (err) {
+      console.warn("Failed to fetch shared projects:", err);
+      return [];
+    }
+  }
+
+  /**
    * Sync local projects with Drive.
-   * Detects conflicts and returns them for user resolution.
    */
   async syncProjects(
     localProjects: Array<{ path: string; project: Project; lastModified: string }>
@@ -299,7 +462,7 @@ export class DriveSyncEngine {
 
     const remoteMap = new Map<string, DriveFile>();
     for (const f of remoteFiles) {
-      const projectId = f.appProperties?.poolrProjectId || f.name;
+      const projectId = f.appProperties?.poolrProjectId || f.name.replace(".poolr.json", "");
       remoteMap.set(projectId, f);
     }
 
@@ -307,7 +470,7 @@ export class DriveSyncEngine {
       phase: "comparing",
       current: 0,
       total: localProjects.length,
-      message: "Comparing local and remote...",
+      message: "Comparing local and remote reviews...",
     });
 
     for (let i = 0; i < localProjects.length; i++) {
@@ -323,7 +486,6 @@ export class DriveSyncEngine {
       });
 
       if (!remote) {
-        // Local only — upload
         try {
           await this.uploadProject(local.project);
           result.uploaded++;
@@ -331,13 +493,11 @@ export class DriveSyncEngine {
           result.errors.push(`Upload ${projectId}: ${e instanceof Error ? e.message : String(e)}`);
         }
       } else {
-        // Both exist — check for conflict
         const remoteModified = new Date(remote.modifiedTime).toISOString();
         const localTime = new Date(local.lastModified);
         const remoteTime = new Date(remoteModified);
 
         if (localTime > remoteTime) {
-          // Local is newer — upload
           try {
             await this.uploadProject(local.project, remote.id);
             result.uploaded++;
@@ -345,29 +505,20 @@ export class DriveSyncEngine {
             result.errors.push(`Update ${projectId}: ${e instanceof Error ? e.message : String(e)}`);
           }
         } else if (remoteTime > localTime) {
-          // Remote is newer — download
           try {
-            await this.downloadProject(remote.id);
-            result.downloaded++;
+            const remoteProject = await this.downloadProject(remote.id);
+            result.conflicts.push({
+              projectId,
+              projectName: local.project.metadata.title || "Untitled",
+              localModified: local.lastModified,
+              remoteModified: remote.modifiedTime,
+              localPath: local.path,
+              remoteFileId: remote.id,
+              remoteData: remoteProject,
+            });
           } catch (e) {
-            result.errors.push(`Download ${projectId}: ${e instanceof Error ? e.message : String(e)}`);
+            result.errors.push(`Inspect remote ${projectId}: ${e instanceof Error ? e.message : String(e)}`);
           }
-        }
-        // If equal, no action needed
-      }
-    }
-
-    // Check for remote-only projects (download)
-    const localIds = new Set(
-      localProjects.map((l) => l.project.metadata.title || "untitled")
-    );
-    for (const [projectId, remote] of remoteMap) {
-      if (!localIds.has(projectId)) {
-        try {
-          await this.downloadProject(remote.id);
-          result.downloaded++;
-        } catch (e) {
-          result.errors.push(`Download new ${projectId}: ${e instanceof Error ? e.message : String(e)}`);
         }
       }
     }
@@ -377,14 +528,14 @@ export class DriveSyncEngine {
   }
 
   /**
-   * Share a project with a team member via Drive permissions.
+   * Share a project folder with a team member via Google Drive Permissions API.
    */
-  async shareProject(
-    fileId: string,
+  async shareProjectFolder(
+    folderId: string,
     email: string,
-    role: "reader" | "writer" | "commenter" = "writer"
+    role: "writer" | "commenter" | "reader" = "writer"
   ): Promise<void> {
-    await driveFetch(this.token, `/files/${fileId}/permissions?sendNotificationEmail=true`, {
+    await driveFetch(this.token, `/files/${folderId}/permissions?sendNotificationEmail=true`, {
       method: "POST",
       body: JSON.stringify({
         type: "user",
@@ -395,10 +546,10 @@ export class DriveSyncEngine {
   }
 
   /**
-   * List permissions (team members) for a shared project.
+   * List permissions (team members) for a project folder.
    */
-  async listSharedMembers(fileId: string): Promise<TeamMember[]> {
-    const url = `/files/${fileId}/permissions?fields=permissions(id,displayName,emailAddress,role,photoLink,type)`;
+  async listSharedMembers(folderId: string): Promise<TeamMember[]> {
+    const url = `/files/${folderId}/permissions?fields=permissions(id,displayName,emailAddress,role,photoLink,type)`;
     const res = await driveFetch(this.token, url);
     const json = await res.json();
     return (json.permissions || [])
@@ -415,8 +566,8 @@ export class DriveSyncEngine {
   /**
    * Remove a team member's access.
    */
-  async removePermission(fileId: string, permissionId: string): Promise<void> {
-    const url = `/files/${fileId}/permissions/${permissionId}`;
+  async removePermission(folderId: string, permissionId: string): Promise<void> {
+    const url = `/files/${folderId}/permissions/${permissionId}`;
     await driveFetch(this.token, url, {
       method: "DELETE",
     });
@@ -435,6 +586,7 @@ export function useDriveSync() {
   });
   const [lastResult, setLastResult] = React.useState<SyncResult | null>(null);
   const [isSyncing, setIsSyncing] = React.useState(false);
+  const [sharedProjects, setSharedProjects] = React.useState<SharedProject[]>([]);
 
   const sync = React.useCallback(
     async (
@@ -497,11 +649,37 @@ export function useDriveSync() {
     return engine.listProjectFiles();
   }, [getValidToken, isAuthenticated]);
 
+  const loadSharedProjects = React.useCallback(async (): Promise<SharedProject[]> => {
+    if (!isAuthenticated()) return [];
+    const token = await getValidToken();
+    if (!token) return [];
+    const engine = new DriveSyncEngine(token, setProgress);
+    const shared = await engine.fetchSharedProjects();
+    setSharedProjects(shared);
+    return shared;
+  }, [getValidToken, isAuthenticated]);
+
+  const shareWithTeammate = React.useCallback(
+    async (folderId: string, email: string, role: "editor" | "reviewer" | "viewer"): Promise<boolean> => {
+      if (!isAuthenticated()) return false;
+      const token = await getValidToken();
+      if (!token) return false;
+      const engine = new DriveSyncEngine(token);
+      const driveRole = role === "viewer" ? "reader" : role === "reviewer" ? "commenter" : "writer";
+      await engine.shareProjectFolder(folderId, email, driveRole);
+      return true;
+    },
+    [getValidToken, isAuthenticated]
+  );
+
   return {
     sync,
     uploadProject,
     downloadProject,
     listFiles,
+    loadSharedProjects,
+    shareWithTeammate,
+    sharedProjects,
     progress,
     lastResult,
     isSyncing,

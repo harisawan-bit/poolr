@@ -118,10 +118,11 @@ html.dark {
   #root {
     height: 100%;
     margin: 0;
+    background-color: var(--color-bg);
   }
 
   body {
-    background: var(--color-bg);
+    background-color: var(--color-bg);
     color: var(--color-text);
     font-family: var(--font-light);
     font-size: 12.5px;

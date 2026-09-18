@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, LogOut, Moon, Palette, Settings, Sun, User } from "lucide-react";
+import { Cloud, FileText, LogOut, Moon, Palette, Settings, Sun, User } from "lucide-react";
 import * as React from "react";
 import {
   DropdownMenu,
@@ -16,6 +16,7 @@ export interface PoolrProfile {
   name: string;
   email: string;
   avatarSvg?: React.ReactNode;
+  avatarUrl?: string;
 }
 
 interface MenuItem {
@@ -35,6 +36,10 @@ interface ProfileDropdownProps extends React.HTMLAttributes<HTMLDivElement> {
   appVersion: string;
   onOpenSettings?: () => void;
   onOpenProfile?: () => void;
+  onOpenLegal?: () => void;
+  onSignInGoogle?: () => void;
+  onSignOutGoogle?: () => void;
+  isGoogleAuthenticated?: boolean;
   onCloseWorkspace?: () => void;
 }
 
@@ -44,6 +49,10 @@ export default function ProfileDropdown({
   className,
   onOpenSettings,
   onOpenProfile,
+  onOpenLegal,
+  onSignInGoogle,
+  onSignOutGoogle,
+  isGoogleAuthenticated = false,
   onCloseWorkspace,
 }: ProfileDropdownProps) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -55,6 +64,28 @@ export default function ProfileDropdown({
       icon: <User className="h-4 w-4" />,
       onSelect: onOpenProfile,
     },
+    ...(isGoogleAuthenticated
+      ? [
+          {
+            label: "Google Drive Sync",
+            value: "Connected",
+            icon: <Cloud className="h-4 w-4 text-emerald-400" />,
+            onSelect: () => window.dispatchEvent(new CustomEvent("poolr:gopage", { detail: "driveSync" })),
+          },
+          {
+            label: "Sign out of Google",
+            icon: <LogOut className="h-4 w-4 text-[var(--color-text-muted)]" />,
+            onSelect: onSignOutGoogle,
+          },
+        ]
+      : [
+          {
+            label: "Sign in with Google",
+            value: "Sync & Team",
+            icon: <Cloud className="h-4 w-4 text-blue-400" />,
+            onSelect: onSignInGoogle,
+          },
+        ]),
     {
       label: "Appearance",
       value: theme === "dark" ? "Dark" : "Light",
@@ -69,6 +100,7 @@ export default function ProfileDropdown({
     {
       label: "Terms & Policies",
       icon: <FileText className="h-4 w-4" />,
+      onSelect: onOpenLegal || (() => window.dispatchEvent(new CustomEvent("poolr:gopage", { detail: "legal" }))),
     },
   ];
 
@@ -96,8 +128,10 @@ export default function ProfileDropdown({
               <div className="relative">
                 <div className="h-10 w-10 rounded-full border border-[var(--color-border-strong)] bg-[var(--color-surface-2)] p-0.5">
                   <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-[var(--color-surface)]">
-                    {data.avatarSvg ?? (
-                      <User className="h-5 w-5 text-[var(--color-text-muted)]" />
+                    {data.avatarUrl ? (
+                      <img src={data.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
+                    ) : (
+                      data.avatarSvg ?? <User className="h-5 w-5 text-[var(--color-text-muted)]" />
                     )}
                   </div>
                 </div>
@@ -162,7 +196,7 @@ export default function ProfileDropdown({
             <DropdownMenuSeparator className="bg-[var(--color-border)]" />
 
             <div className="flex items-center justify-between px-3 py-1.5 text-[11px] text-[var(--color-text-muted)]">
-              <span>poolr v{appVersion} · MIT License</span>
+              <span>poolr v{appVersion} · The Method Lab</span>
               {theme === "dark" ? (
                 <Moon className="h-3.5 w-3.5" aria-hidden="true" />
               ) : (

@@ -3,6 +3,7 @@ import { Card, Input, Textarea, SectionLabel, Button } from "../components/ui";
 import { suggestPICO } from "../lib/ai";
 import { Sparkles, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { StepCommentsButton } from "../components/StepCommentsDrawer";
 
 export default function Protocol({ project, onChange }: { project: Project; onChange: (p: Project) => void }) {
   const set = (patch: Partial<Project>) => onChange({ ...project, ...patch });
@@ -22,7 +23,7 @@ export default function Protocol({ project, onChange }: { project: Project; onCh
 
   return (
     <div className="space-y-3">
-      <Card title="Review title">
+      <Card title="Review title" right={<StepCommentsButton step="protocol" stepTitle="Protocol & PICO" />}>
         <Input
           value={project.metadata.title ?? ""}
           placeholder="e.g. Effect of X on Y in Z populations"

@@ -51,9 +51,18 @@ interface AuthContextValue extends AuthState {
 export const AuthContext = React.createContext<AuthContextValue | null>(null);
 
 const AUTH_STORAGE_KEY = "poolr.auth";
-const GOOGLE_CLIENT_ID =
-  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-  "poolr-app.apps.googleusercontent.com";
+export const GOOGLE_CLIENT_ID_KEY = "poolr.googleClientId";
+
+export function getGoogleClientId(): string {
+  try {
+    const custom = localStorage.getItem(GOOGLE_CLIENT_ID_KEY);
+    if (custom && custom.trim()) return custom.trim();
+  } catch {}
+  return (
+    import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+    "poolr-app.apps.googleusercontent.com"
+  );
+}
 
 const REQUIRED_SCOPES = [
   "openid",
@@ -110,14 +119,27 @@ function loadGisScript(): Promise<void> {
 // ── Token client singleton ──
 let tokenClient: GoogleTokenClient | null = null;
 
+export function resetTokenClient(): void {
+  tokenClient = null;
+}
+
+export function setGoogleClientId(id: string): void {
+  try {
+    if (id.trim()) localStorage.setItem(GOOGLE_CLIENT_ID_KEY, id.trim());
+    else localStorage.removeItem(GOOGLE_CLIENT_ID_KEY);
+    resetTokenClient();
+  } catch {}
+}
+
 async function getTokenClient(): Promise<GoogleTokenClient> {
   if (tokenClient) return tokenClient;
   await loadGisScript();
   if (!(window as any).google?.accounts?.oauth2) {
     throw new Error("Google Identity Services not available");
   }
+  const clientId = getGoogleClientId();
   tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
-    client_id: GOOGLE_CLIENT_ID,
+    client_id: clientId,
     scope: REQUIRED_SCOPES.join(" "),
     callback: () => { /* handled via promise below */ },
     error_callback: () => {},
@@ -125,10 +147,43 @@ async function getTokenClient(): Promise<GoogleTokenClient> {
   return tokenClient!;
 }
 
-// ── JWT decode helper ──
+// ── Real Google UserInfo API resolver ──
+export async function fetchGoogleUserInfo(accessToken: string): Promise<GoogleUser> {
+  try {
+    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        sub: data.sub || `user_${Date.now()}`,
+        name: data.name || (data.email ? data.email.split("@")[0] : "Google User"),
+        email: data.email || "",
+        picture: data.picture || "",
+        given_name: data.given_name,
+        family_name: data.family_name,
+        locale: data.locale,
+      };
+    }
+  } catch (err) {
+    console.warn("Could not fetch userinfo from Google API:", err);
+  }
+
+  // Fallback if userinfo fails or offline
+  const decoded = decodeJwt(accessToken) as any;
+  return {
+    sub: decoded?.sub || `user_${Date.now()}`,
+    name: decoded?.name || "Google User",
+    email: decoded?.email || "",
+    picture: decoded?.picture || "",
+  };
+}
+
+// ── JWT decode helper (fallback) ──
 function decodeJwt(token: string): Record<string, unknown> | null {
   try {
     const payload = token.split(".")[1];
+    if (!payload) return null;
     const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
     return JSON.parse(decoded);
   } catch {
@@ -210,16 +265,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         client.requestAccessToken({ prompt: "consent" });
       });
 
-      const decoded = decodeJwt(tokenRes.access_token) as any;
-      const user: GoogleUser = {
-        sub: decoded?.sub || "",
-        name: decoded?.name || "",
-        email: decoded?.email || "",
-        picture: decoded?.picture || "",
-        given_name: decoded?.given_name,
-        family_name: decoded?.family_name,
-        locale: decoded?.locale,
-      };
+      const user = await fetchGoogleUserInfo(tokenRes.access_token);
 
       const expiresAt = Date.now() + tokenRes.expires_in * 1000;
       const authData: StoredAuth = {
@@ -282,17 +328,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           };
           client.requestAccessToken({ prompt: "" });
         });
-      }).then((tokenRes) => {
-        const decoded = decodeJwt(tokenRes.access_token) as any;
-        const user: GoogleUser = {
-          sub: decoded?.sub || state.user?.sub || "",
-          name: decoded?.name || state.user?.name || "",
-          email: decoded?.email || state.user?.email || "",
-          picture: decoded?.picture || state.user?.picture || "",
-        };
+      }).then(async (tokenRes) => {
+        let user = state.user;
+        if (!user || !user.name || !user.email) {
+          user = await fetchGoogleUserInfo(tokenRes.access_token);
+        }
         const expiresAt = Date.now() + tokenRes.expires_in * 1000;
         const scopes = tokenRes.scope ? tokenRes.scope.split(" ") : [];
-        writeStoredAuth({ user, accessToken: tokenRes.access_token, expiresAt, scopes });
+        writeStoredAuth({ user: user!, accessToken: tokenRes.access_token, expiresAt, scopes });
         setState((s) => ({
           ...s,
           user,

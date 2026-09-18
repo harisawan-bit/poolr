@@ -5,18 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.3] - 2026-09-18
+
+### Added
+- **Google OAuth & Identity Resolution**: Prominent Google Sign-in across UI header, onboarding screen, and profile dropdown. Real token exchange via Google Identity Services (GIS) and Bearer auth against `/oauth2/v3/userinfo` for robust avatar and profile synchronization.
+- **Organized Google Drive BYOS (Bring-Your-Own-Storage)**: Clean folder hierarchy (`My Drive/Poolr Workspace/Projects/{Title}_{UUID}/`), RFC 2387 multipart MIME uploads for create/update without payload truncation, and automated subfile sync (`changelog.json`, `permissions.json`, `comments.json`, `authorship.json`, `manuscript.json`).
+- **Team Sharing & Collaboration**: Direct Google Drive Permissions API integration to share reviews with collaborators (`writer`, `commenter`, `reader`), plus shared review discovery (`sharedWithMe`).
+- **Role-Based Access Control (RBAC)**: 4-tier team governance (`Owner`, `Lead Methodologist / Editor`, `Reviewer`, `Auditor / Viewer`) enforcing access boundaries across Protocol, Screening, Extraction, Risk of Bias, Meta-Analysis, and Export.
+- **Concurrent Edit Protection & Audit Trail**: Real-time section soft locks preventing simultaneous overwrite collisions, append-only delta change logging (`ChangeDelta`) for PRISMA 2020 / Cochrane compliance, and an interactive 3-way visual conflict resolution modal (`ConflictResolverModal`).
+- **Step-Level Commenting Drawer**: Reusable inline discussion drawer (`StepCommentsDrawer` / `StepCommentsButton`) mounted on all review step headers (Protocol, Screening, Extraction, Risk of Bias, Meta-Analysis, Manuscript).
+- **ICMJE & CRediT Authorship Tracking**: Automatic active-time monitoring per contributor and review section, providing an audit-grade authorship table exportable to Markdown.
+- **Collaborative Manuscript Studio**: Dedicated manuscript workstation (`ManuscriptHelper`) with live Markdown editing, formatting toolbar, data/citation insertion from review phases, contributor assignment, and multi-format exports (.md, .doc, PDF).
 
 ### Fixed
-- **Galbraith/Baujat NullReferenceException**: Added null guards for `PlotInput.Effs`, `Vars`, and `Names` in `DiagnosticFigures.cs` to prevent HTTP 500 crashes when model binder receives incomplete JSON
-- **Cluster Detection IndexOutOfRange**: Added validation that `variances` count matches `effects` count in `ClusterDetectionEngine.cs`
-- **League Matrix IndexOutOfRange**: Added null/empty matrix validation in `LeagueMatrixEngine.cs`
-- **Multilevel NMA Arithmetic Overflow**: Added minimum study count guard (>= 2 treatments AND >= 2 valid studies) BEFORE matrix operations in `MultilevelHsrocEngine.cs`
-- **Multi-Arm NMA Arithmetic Overflow**: Added minimum edge count guard BEFORE matrix operations in `MultiArmNmaEngine.cs`
+- **Windows WebView2 Transparent Window Bug**: Resolved white screen / flicker on startup by disabling window transparency in `tauri.conf.json` and declaring solid fallback background color on `html`, `body`, and `#root`.
+- **Google OAuth Token Decoding**: Fixed invalid JWT decoding attempts on opaque Google access tokens (`ya29...`) by querying Google's userinfo endpoint.
+- **Drive Update Data Loss**: Fixed upload bug in `drive-sync.ts` where updating existing files sent only metadata and dropped file content.
+- **In-App Navigation & Project Loading**: Connected dead DOM event bus (`poolr:gopage` and `poolr:loadProject`) in `App.tsx` for seamless routing without page reloads.
 
-### Changed
-- **Version sync**: Updated `Poolr.Engine.Api.csproj` from `0.5.7` to `0.6.1` to match actual app version
-- **Compiler warnings**: Eliminated all 33 `CS8629 Nullable value type may be null` warnings across Bayesian, multilevel, prognostic, and grade engines
+### Legal & Commercial
+- **Proprietary License Update**: Closed-source proprietary EULA for `Muhammad Haris Awan (d/b/a The Method Lab)` featuring corporate successor assignment, unilateral rights to introduce paid subscription plans/paywalls without grandfathering, BYOS storage disclaimers, and medical evidence synthesis disclaimers.
+
+## [0.6.2] - 2026-09-17
 
 ## [0.6.1] - 2026-09-15
 

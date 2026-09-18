@@ -6,56 +6,56 @@ type LegalPage = "menu" | "tos" | "privacy" | "eula";
 
 const TOS_SECTIONS = [
   {
-    title: "1. Acceptance of Terms",
-    body: `By accessing or using Poolr ("the Software"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to all of these Terms, you may not access or use the Software. These Terms constitute a legally binding agreement between you and Muhammad Haris Awan ("Licensor", "we", "us", or "our").`,
+    title: "1. Acceptance of Terms & Contracting Parties",
+    body: `By accessing, downloading, or using Poolr ("the Software"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to all of these Terms, you may not access or use the Software. These Terms constitute a legally binding agreement between you and Muhammad Haris Awan (d/b/a "The Method Lab") ("Licensor", "we", "us", or "our").`,
   },
   {
-    title: "2. Description of Service",
-    body: `Poolr is a desktop application for conducting systematic reviews and meta-analyses (SRMA). It provides tools for protocol definition, literature search, screening, data extraction, statistical analysis, and manuscript generation. The Software is designed to operate entirely offline on the user's local machine.`,
+    title: "2. Description of Service & Architecture",
+    body: `Poolr is a high-performance desktop platform for conducting systematic reviews and meta-analyses (SRMA) compliant with PRISMA 2020 and Cochrane standards. The Software is architected with a local-first, Bring-Your-Own-Storage (BYOS) model: analytical computations run locally on your device, and cloud collaboration utilizes your own cloud storage (such as Google Drive) through direct client-to-cloud conduits.`,
   },
   {
-    title: "3. License Grant",
-    body: `Subject to your compliance with these Terms and a valid End User License Agreement (EULA), the Licensor grants you a limited, non-exclusive, non-transferable, revocable license to install and use the Software on a single computer for your personal or internal business research purposes. This license does not include the right to redistribute, sublicense, or make the Software available to third parties.`,
+    title: "3. License Grant & Restrictions",
+    body: `Subject to your ongoing compliance with these Terms and any applicable license tier, Licensor grants you a limited, personal, non-exclusive, non-transferable, revocable license to install and use the Software on supported devices solely for your academic, clinical, or internal organizational evidence synthesis. You shall NOT: reverse engineer, decompile, disassemble, or extract proprietary algorithms; distribute, resell, lease, sublicense, or white-label the Software; or defeat any license gating or authentication checks.`,
   },
   {
-    title: "4. User Responsibilities",
-    body: `You agree to: (a) use the Software only for lawful purposes and in accordance with these Terms; (b) maintain the security and confidentiality of any license keys or credentials issued to you; (c) not reverse engineer, decompile, disassemble, or otherwise attempt to derive the source code of the Software; (d) not remove, alter, or obscure any proprietary notices on the Software; (e) not use the Software to provide commercial hosting, service bureau, or time-sharing services to third parties.`,
+    title: "4. Corporate Successor & Unilateral Assignment",
+    body: `The Licensor currently operates as an individual proprietor doing business as "The Method Lab". Licensor expressly reserves the unilateral right, at any time without prior notice to or consent from any user, to transfer, assign, convey, or novate all rights, title, interests, trademarks, copyrights, and operational responsibilities in connection with the Software to any corporate entity, company, LLC, or partnership founded, organized, or controlled by Muhammad Haris Awan. All rights and protections under these Terms shall automatically inure to such corporate successor.`,
   },
   {
-    title: "5. Intellectual Property",
-    body: `The Software, including all code, graphics, user interfaces, design, documentation, and associated intellectual property, is the exclusive property of the Licensor and is protected by copyright, trademark, and other intellectual property laws. Nothing in these Terms grants you any right, title, or interest in the Software except for the limited license expressly stated herein.`,
+    title: "5. Unilateral Paid Plans, Feature Paywalling & No Grandfathering",
+    body: `Licensor reserves the absolute, unilateral right at any time in its sole discretion, without liability or prior notice: (a) To introduce commercial paid subscription plans, seat-based licenses, usage tiers, and token-based billing; (b) To gate, restrict, paywall, or discontinue any feature, including cloud synchronization, Google Drive integration, multi-user real-time collaboration, automated AI extraction, or advanced Bayesian statistical engines; (c) To convert any feature provided free of charge or in preview into a paid-only feature. No user shall acquire any perpetual, vested, or grandfathered right to free or unmetered access to any part of the Software.`,
   },
   {
-    title: "6. User Data",
-    body: `You retain all rights to the data you input into the Software ("User Data"). The Software processes and stores User Data locally on your machine. The Licensor does not access, collect, or transmit your User Data. You are solely responsible for maintaining backups of your User Data.`,
+    title: "6. Bring-Your-Own-Storage (BYOS) & Google Drive Integration",
+    body: `The Software allows users to link their Google Drive accounts via OAuth 2.0 to synchronize reviews and collaborate with invited team members. All files are stored directly in your Google Drive under a structured workspace folder ("Poolr Workspace/Projects/"). Licensor operates no intermediary servers, hosts no user reviews, and has no access to your Google credentials or project files. Licensor is not liable for any third-party service interruptions, Google API rate limits or quota exhaustion, data loss, or unauthorized access resulting from user sharing settings. You are solely responsible for maintaining backups of your research datasets.`,
   },
   {
-    title: "7. Updates and Modifications",
-    body: `The Licensor may, at its sole discretion, release updates, patches, or new versions of the Software. Continued use of the Software after any modification constitutes acceptance of the modified Terms. The Licensor reserves the right to modify, suspend, or discontinue the Software at any time without liability.`,
+    title: "7. Scientific, Academic & Medical Disclaimer",
+    body: `THE SOFTWARE IS AN ANALYTICAL AND COMPUTATIONAL AID AND IS NOT A MEDICAL DEVICE. It does not provide clinical diagnoses, medical advice, treatment recommendations, or pharmaceutical efficacy determinations. All statistical outputs (pooled effect estimates, confidence intervals, heterogeneity measures, risk of bias assessments, and GRADE certainty levels) must be independently reviewed and verified by qualified human investigators before inclusion in publications, clinical guidelines, or health policy decisions. Licensor disclaims all liability for research retractions, publication disputes, or clinical consequences.`,
   },
   {
-    title: "8. Disclaimer of Warranties",
-    body: `THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. THE LICENSOR DOES NOT WARRANT THAT THE SOFTWARE WILL BE ERROR-FREE, UNINTERRUPTED, OR FREE OF HARMFUL COMPONENTS. YOU ACKNOWLEDGE THAT RESEARCH SOFTWARE SHOULD NOT BE RELIED UPON AS THE SOLE BASIS FOR CLINICAL OR SCIENTIFIC DECISIONS.`,
+    title: "8. Intellectual Property & Trade Secrets",
+    body: `The Software, including its compiled binaries, user interfaces, mathematical algorithms, export formats, logos, and documentation, is the exclusive proprietary property and trade secret of Muhammad Haris Awan. All rights not expressly granted are reserved.`,
   },
   {
-    title: "9. Limitation of Liability",
-    body: `TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, DATA, OR USE, ARISING OUT OF OR IN CONNECTION WITH THESE TERMS OR THE USE OF THE SOFTWARE, WHETHER IN CONTRACT, TORT, OR OTHERWISE.`,
+    title: "9. Disclaimer of Warranties",
+    body: `THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. LICENSOR DOES NOT GUARANTEE UNINTERRUPTED OR ERROR-FREE OPERATION.`,
   },
   {
-    title: "10. Indemnification",
-    body: `You agree to indemnify, defend, and hold harmless the Licensor from and against any claims, liabilities, damages, losses, and expenses arising out of or related to your use of the Software, your User Data, or your violation of these Terms.`,
+    title: "10. Limitation of Liability",
+    body: `TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES (INCLUDING LOSS OF RESEARCH DATA, BUSINESS INTERRUPTION, LOSS OF REPUTATION, OR PUBLICATION DELAYS) ARISING OUT OF THE USE OF THE SOFTWARE. LICENSOR'S AGGREGATE LIABILITY SHALL NOT EXCEED THE AMOUNT PAID BY YOU FOR THE SOFTWARE OR $10.00 USD, WHICHEVER IS GREATER.`,
   },
   {
     title: "11. Termination",
-    body: `These Terms are effective until terminated. Your rights under these Terms will terminate automatically without notice if you fail to comply with any provision. Upon termination, you must cease all use of the Software and destroy all copies. Sections regarding intellectual property, disclaimer of warranties, limitation of liability, and governing law shall survive termination.`,
+    body: `These Terms are effective until terminated. Your rights terminate automatically and immediately if you breach any provision. Upon termination, you must cease using the Software and destroy all copies in your possession.`,
   },
   {
-    title: "12. Governing Law",
-    body: `These Terms shall be governed by and construed in accordance with the laws of Pakistan, without regard to conflict of law principles. Any disputes arising under these Terms shall be subject to the exclusive jurisdiction of the courts located in Pakistan.`,
+    title: "12. Governing Law & Jurisdiction",
+    body: `These Terms shall be governed by and construed in accordance with the laws of the Islamic Republic of Pakistan, without regard to conflict of law principles. Any dispute arising hereunder shall be subject to the exclusive jurisdiction of the competent courts in Islamabad/Rawalpindi, Pakistan.`,
   },
   {
     title: "13. Contact Information",
-    body: `For questions about these Terms, please contact: m.harisawan@icloud.com`,
+    body: `For licensing, institutional agreements, or inquiries: Muhammad Haris Awan (d/b/a The Method Lab) · Email: m.harisawan@icloud.com · Repository: https://github.com/harisawan-bit/poolr`,
   },
 ];
 
@@ -112,60 +112,52 @@ const PRIVACY_SECTIONS = [
 
 const EULA_SECTIONS = [
   {
-    title: "1. Grant of License",
-    body: `Subject to the terms of this End User License Agreement ("EULA"), Muhammad Haris Awan ("Licensor") grants you a limited, non-exclusive, non-transferable license to install and use Poolr ("the Software") on a single computer or device that you own or control. This EULA does not grant you any rights to the Software's source code, trade secrets, or intellectual property beyond the right to use the Software as permitted herein.`,
+    title: "1. Parties and Grant of License",
+    body: `This End User License Agreement ("EULA") is a binding agreement between you and Muhammad Haris Awan (d/b/a "The Method Lab") ("Licensor"). Licensor grants you a personal, non-exclusive, non-transferable, revocable license to install and execute Poolr ("the Software") on devices you own or control, solely for academic, clinical, or institutional evidence synthesis. All source code, binaries, and algorithms remain confidential, proprietary trade secrets of the Licensor.`,
   },
   {
-    title: "2. Permitted Uses",
+    title: "2. Corporate Successor & Entity Transfer",
+    body: `Licensor expressly reserves the unilateral right at any time, without notice or consent, to assign, transfer, or novate this EULA, the Software, and all intellectual property rights therein to any corporation, LLC, partnership, or business successor founded, operated, or controlled by Muhammad Haris Awan.`,
+  },
+  {
+    title: "3. Unilateral Paid Plans, Feature Paywalling & No Grandfathering",
+    body: `Licensor reserves the absolute right at any time to: (a) Introduce paid subscription tiers, per-seat licenses, and usage quotas; (b) Gate, limit, paywall, or remove any feature (including Drive synchronization, multi-user collaboration, AI extraction, and advanced statistical engines); (c) Convert any previously free capability into a commercial tier without grandfathering or continuing free access for existing users.`,
+  },
+  {
+    title: "4. Permitted Uses",
     body: `You may use the Software for: (a) personal academic research; (b) commercial research and consulting; (c) educational instruction and training; (d) publication of research results generated using the Software. You may create unlimited projects and analyses using the Software.`,
   },
   {
-    title: "3. Prohibited Uses",
+    title: "5. Prohibited Uses",
     body: `You shall NOT: (a) redistribute, sublicense, lease, rent, or loan the Software to third parties; (b) reverse engineer, decompile, disassemble, or otherwise attempt to discover the source code; (c) modify, translate, or create derivative works based on the Software; (d) circumvent or disable any license key, activation mechanism, or copy protection; (e) use the Software to provide commercial hosting, application service provider, or time-sharing services; (f) remove or alter any proprietary notices or labels; (g) use the Software for any illegal purpose.`,
   },
   {
-    title: "4. Intellectual Property Ownership",
-    body: `The Software and all copies thereof are the exclusive property of the Licensor. This EULA does not convey to you any ownership interest in the Software, but only a limited right of use revocable in accordance with this EULA. All title, copyrights, and other intellectual property rights in the Software are owned by the Licensor.`,
+    title: "6. Bring-Your-Own-Storage (BYOS) Integration",
+    body: `The Software interfaces directly with your own Google Drive account using your Google OAuth tokens. Datasets and collaboration artifacts are stored in your Google Drive folder. Licensor hosts no user project data and assumes no liability for Google service availability, quota limits, account restrictions, or data loss. Users are responsible for creating regular backups.`,
   },
   {
-    title: "5. User Data Ownership",
-    body: `You retain all rights, title, and interest in your research data ("User Data") input into the Software. The Licensor claims no ownership over User Data. You are solely responsible for the accuracy, quality, and legality of User Data.`,
+    title: "7. Citation & Attribution",
+    body: `If you publish research results obtained using Poolr, you are requested to cite the Software: Awan, M. H. (2026). Poolr: Desktop platform for systematic reviews & meta-analyses (Version 0.6.3). The Method Lab. https://github.com/harisawan-bit/poolr`,
   },
   {
-    title: "6. Citation Requirement",
-    body: `If you publish research results obtained using Poolr, you are requested (but not legally required) to cite the Software. Suggested citation: Awan, M. H. (2026). Poolr: Desktop platform for systematic reviews & meta-analyses (Version 0.6.0). https://github.com/harisawan-bit/poolr`,
+    title: "8. Medical & Scientific Research Disclaimer",
+    body: `THE SOFTWARE IS PROVIDED AS AN EVIDENCE SYNTHESIS AID AND IS NOT A MEDICAL DEVICE. IT DOES NOT PROVIDE MEDICAL, DIAGNOSTIC, OR TREATMENT ADVICE. USERS BEAR SOLE RESPONSIBILITY FOR VERIFYING ALL STATISTICAL ESTIMATES, HETEROGENEITY MEASURES, AND BIAS ASSESSMENTS BEFORE PUBLICATION OR CLINICAL APPLICATION.`,
   },
   {
-    title: "7. No Warranty",
-    body: `THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSOR DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. THE LICENSOR DOES NOT WARRANT THAT THE SOFTWARE WILL MEET YOUR REQUIREMENTS OR THAT OPERATION WILL BE UNINTERRUPTED OR ERROR-FREE.`,
+    title: "9. Disclaimer of Warranties",
+    body: `THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.`,
   },
   {
-    title: "8. Limitation of Liability",
-    body: `TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSOR SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES WHATSOEVER RESULTING FROM THE USE OF OR INABILITY TO USE THE SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. IN NO EVENT SHALL THE LICENSOR'S TOTAL LIABILITY EXCEED THE AMOUNT PAID BY YOU FOR THE SOFTWARE (IF ANY).`,
+    title: "10. Limitation of Liability",
+    body: `TO THE MAXIMUM EXTENT PERMITTED BY LAW, LICENSOR SHALL NOT BE LIABLE FOR ANY INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES. LICENSOR'S AGGREGATE LIABILITY SHALL NOT EXCEED $10.00 USD OR THE TOTAL FEES PAID BY YOU IN THE PRECEDING 12 MONTHS.`,
   },
   {
-    title: "9. Research Use Disclaimer",
-    body: `THE SOFTWARE IS A RESEARCH TOOL AND IS NOT A SUBSTITUTE FOR PROFESSIONAL CLINICAL, SCIENTIFIC, OR STATISTICAL JUDGMENT. USERS ARE SOLELY RESPONSIBLE FOR VERIFYING ALL OUTPUTS BEFORE PUBLICATION OR CLINICAL APPLICATION.`,
+    title: "11. Governing Law & Dispute Resolution",
+    body: `This EULA is governed by the laws of the Islamic Republic of Pakistan. Any disputes shall be subject to the exclusive jurisdiction of the competent courts in Islamabad/Rawalpindi, Pakistan.`,
   },
   {
-    title: "10. Termination",
-    body: `This EULA is effective until terminated. Your rights under this EULA will terminate automatically without notice if you fail to comply with any term. Upon termination, you must cease all use of the Software and destroy all copies in your possession. Sections regarding intellectual property, disclaimer of warranties, limitation of liability, and governing law shall survive termination.`,
-  },
-  {
-    title: "11. Governing Law and Dispute Resolution",
-    body: `This EULA shall be governed by the laws of Pakistan. Any disputes arising from this EULA shall be resolved through binding arbitration in Pakistan in accordance with applicable arbitration rules.`,
-  },
-  {
-    title: "12. Severability",
-    body: `If any provision of this EULA is held to be unenforceable, the remaining provisions shall remain in full force and effect.`,
-  },
-  {
-    title: "13. Entire Agreement",
-    body: `This EULA constitutes the entire agreement between you and the Licensor regarding the Software and supersedes all prior agreements and understandings.`,
-  },
-  {
-    title: "14. Contact",
-    body: `For licensing inquiries: m.harisawan@icloud.com`,
+    title: "12. Contact",
+    body: `Licensing & inquiries: Muhammad Haris Awan (d/b/a The Method Lab) · Email: m.harisawan@icloud.com · Repository: https://github.com/harisawan-bit/poolr`,
   },
 ];
 
@@ -186,7 +178,7 @@ export default function LegalCenter() {
         <>
           <Card title="Legal Center">
             <p className="mb-4 text-[12.5px] text-[var(--color-text-muted)]">
-              Poolr v0.6.0 — Phase 2 Commercial Platform. Please review our legal documents.
+              Poolr v0.6.3 — Commercial Platform · The Method Lab. Please review our legal documents.
             </p>
           </Card>
 
@@ -198,7 +190,7 @@ export default function LegalCenter() {
               <Scale className="mb-2 h-6 w-6 text-[var(--color-accent)]" />
               <h3 className="mb-1 text-[14px] font-semibold">Terms of Service</h3>
               <p className="text-[12px] text-[var(--color-text-muted)]">
-                Rules and conditions for using Poolr. Covers license grant, user responsibilities, intellectual property, and liability.
+                Rules and conditions for using Poolr. Covers BYOS architecture, unilateral paid tiers, corporate assignment, and research liability.
               </p>
             </button>
 
@@ -209,7 +201,7 @@ export default function LegalCenter() {
               <Shield className="mb-2 h-6 w-6 text-[var(--color-accent)]" />
               <h3 className="mb-1 text-[14px] font-semibold">Privacy Policy</h3>
               <p className="text-[12px] text-[var(--color-text-muted)]">
-                How Poolr handles your data. Spoiler: all data stays on your device. No tracking, no telemetry, no cloud uploads.
+                How Poolr handles your data. Local-first computation: no telemetry or remote tracking. Google Drive sync operates via direct user OAuth conduit.
               </p>
             </button>
 
@@ -220,16 +212,16 @@ export default function LegalCenter() {
               <FileText className="mb-2 h-6 w-6 text-[var(--color-accent)]" />
               <h3 className="mb-1 text-[14px] font-semibold">End User License Agreement</h3>
               <p className="text-[12px] text-[var(--color-text-muted)]">
-                The full legal agreement between you and the Licensor. Includes permitted uses, restrictions, warranties, and termination.
+                The full legal agreement between you and Muhammad Haris Awan (d/b/a The Method Lab). Permitted uses, restrictions, warranties, and corporate successor terms.
               </p>
             </button>
           </div>
 
           <Card title="License Notice">
             <p className="text-[12px] leading-relaxed text-[var(--color-text-muted)]">
-              Poolr is proprietary software. © 2026 Muhammad Haris Awan. All rights reserved.
-              Unauthorized copying, modification, distribution, or use of this software is strictly prohibited.
-              This software is provided under a proprietary license — see the EULA for complete terms.
+              Poolr is closed-source proprietary software. © 2026 Muhammad Haris Awan (d/b/a The Method Lab). All rights reserved.
+              Unauthorized copying, decompilation, redistribution, or modification of this software is strictly prohibited.
+              Provided under a proprietary license — see the EULA for complete terms.
             </p>
           </Card>
         </>
@@ -238,7 +230,7 @@ export default function LegalCenter() {
       {page !== "menu" && (
         <Card title={page === "tos" ? "Terms of Service" : page === "privacy" ? "Privacy Policy" : "End User License Agreement"}>
           <p className="mb-4 text-[11px] text-[var(--color-text-muted)]">
-            Effective Date: September 17, 2026 · Last Updated: September 17, 2026
+            Effective Date: September 18, 2026 · Last Updated: September 18, 2026 · Version 0.6.3
           </p>
           <div className="max-h-[calc(100vh-280px)] space-y-5 overflow-y-auto pr-2">
             {sections.map((section, i) => (
@@ -250,7 +242,7 @@ export default function LegalCenter() {
           </div>
           <div className="mt-5 flex items-center justify-between border-t border-[var(--color-border)] pt-3">
             <p className="text-[10.5px] text-[var(--color-text-muted)]">
-              © 2026 Muhammad Haris Awan. All rights reserved.
+              © 2026 Muhammad Haris Awan (d/b/a The Method Lab). All rights reserved.
             </p>
             <Button variant="ghost" size="sm" onClick={() => setPage("menu")}>
               Back to Legal Center

@@ -1,15 +1,19 @@
 # Poolr Product Roadmap
 
-Our mission is to establish Poolr as the world's most accessible, reliable, and comprehensive open-source desktop platform for systematic reviews and meta-analyses.
+Our mission is to establish Poolr as the world's most accessible, reliable, and comprehensive desktop platform for systematic reviews and meta-analyses.
 
 ---
 
-## Current Release: v0.6.1 (September 2026) :white_check_mark:
+## Current Release: v0.6.3 (September 2026) :white_check_mark:
 - [x] Full PRISMA 2020 8-stage pipeline from PICO to publication.
-- [x] Zero-warning C# engine with 67 xUnit mathematical benchmark tests.
+- [x] Zero-warning C# engine with 214+ xUnit mathematical benchmark tests.
 - [x] 100% Python-free desktop distribution across Windows (MSI/NSIS), macOS (Apple Silicon/Intel), and Linux (DEB/RPM).
-- [x] Authentic literature search: NCBI PubMed MEDLINE pipeline, OpenAlex, Crossref, ClinicalTrials.gov.
-- [x] Dual independent screening with inter-rater reliability (Cohen's Kappa $\kappa$, $95\%$ CI) and conflict resolution.
+- [x] Google OAuth Identity & Sign-In integration.
+- [x] Bring-Your-Own-Storage (BYOS) Google Drive team synchronization with structured folder hierarchy.
+- [x] Enterprise 4-tier Role-Based Access Control (Owner, Editor, Reviewer, Viewer).
+- [x] Concurrent editing protections: section soft locks, append-only delta logs, and visual 3-way conflict resolution.
+- [x] Inline review step discussions across all PRISMA phases.
+- [x] ICMJE/CRediT-compliant active-time authorship tracking and statement generator.
 - [x] Cochrane robvis-style vector SVG figures (Traffic Light and Weighted Summary Bar).
 - [x] Interactive Figure Studio: Contour-Enhanced Funnel, Galbraith radial, L'Abbé, Baujat plots with 1-click SVG export.
 - [x] Advanced Statistical Rigor: Higgins 95% Prediction Interval, Trial Sequential Analysis (TSA), and AICc Multimodel Inference.

@@ -1,6 +1,6 @@
 # Contributing to Poolr
 
-Thank you for your interest in contributing to **Poolr**! As an open-source, no-code desktop application for systematic reviews and meta-analyses, Poolr welcomes contributions from biostatisticians, clinical researchers, frontend developers, and systems engineers.
+Thank you for your interest in contributing to **Poolr**! As a leading no-code desktop application for systematic reviews and meta-analyses, Poolr welcomes contributions from biostatisticians, clinical researchers, frontend developers, and systems engineers.
 
 ---
 
@@ -108,4 +108,4 @@ Do not report security vulnerabilities via public GitHub issues. Follow the inst
 
 ## License
 
-By contributing to Poolr, you agree that your contributions will be licensed under the [MIT License](LICENSE).
+By contributing to Poolr, you agree that your contributions will be licensed under the project's [Proprietary License](LICENSE).

@@ -5,12 +5,12 @@ authors:
     given-names: "Muhammad Haris"
     email: "m.harisawan@icloud.com"
     affiliation: "Foundation University Islamabad"
-title: "Poolr: Free, Open-Source Desktop Platform for Systematic Reviews & Meta-Analyses"
-version: 0.5.7
-date-released: 2026-09-03
+title: "Poolr: Desktop Platform for Systematic Reviews & Meta-Analyses"
+version: 0.6.3
+date-released: 2026-09-18
 url: "https://github.com/harisawan-bit/poolr"
 repository-code: "https://github.com/harisawan-bit/poolr"
-license: MIT
+license: Proprietary
 keywords:
   - "systematic-review"
   - "meta-analysis"
@@ -21,13 +21,14 @@ keywords:
   - "biostatistics"
   - "robvis"
   - "epidemiology"
-  - "open-science"
+  - "collaboration"
 abstract: >-
-  Poolr is a free, open-source, no-code desktop application for conducting
+  Poolr is a commercial, no-code desktop application for conducting
   Systematic Reviews and Meta-Analyses according to the PRISMA 2020 statement and
   Cochrane Handbook guidelines. Built with a native desktop shell (Tauri 2 / Rust),
   modern React/TypeScript interface, and a high-performance C# 12 / .NET 8 statistics
   engine, Poolr provides an entirely offline, Python-free environment for protocol
   formulation, literature search, dual screening, structured extraction, risk of
   bias assessment (RoB 2, ROBINS-I, QUADAS-2, AMSTAR-2), pairwise and advanced
-  meta-analysis, trial sequential analysis, and publication-ready manuscript export.
+  meta-analysis, trial sequential analysis, Google Drive team collaboration, and
+  publication-ready manuscript export.
