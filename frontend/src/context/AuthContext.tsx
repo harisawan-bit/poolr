@@ -40,12 +40,14 @@ export interface AuthState {
   error: string | null;
 }
 
-interface AuthContextValue extends AuthState {
-  signIn: () => Promise<void>;
+export interface AuthContextValue extends AuthState {
+  signIn: (manualClientId?: string) => Promise<void>;
   signOut: () => void;
   isAuthenticated: () => boolean;
   getValidToken: () => Promise<string | null>;
   hasScope: (scope: string) => boolean;
+  setManualToken: (token: string) => Promise<void>;
+  openAuthUrlInBrowser: (clientId?: string) => Promise<void>;
 }
 
 export const AuthContext = React.createContext<AuthContextValue | null>(null);
@@ -60,17 +62,61 @@ export function getGoogleClientId(): string {
   } catch {}
   return (
     import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-    "poolr-app.apps.googleusercontent.com"
+    ""
   );
 }
 
-const REQUIRED_SCOPES = [
+export const REQUIRED_SCOPES = [
   "openid",
   "https://www.googleapis.com/auth/userinfo.profile",
   "https://www.googleapis.com/auth/userinfo.email",
   "https://www.googleapis.com/auth/drive.file",
   "https://www.googleapis.com/auth/drive.appdata",
 ];
+
+export async function openExternalUrl(url: string): Promise<boolean> {
+  // 1. Try C# Engine backend (reliable across OSes)
+  try {
+    const res = await fetch("http://127.0.0.1:5180/api/auth/open-browser", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+    if (res.ok) return true;
+  } catch {}
+
+  // 2. Try Tauri IPC if running inside Tauri
+  try {
+    const tauri = (window as any).__TAURI__ || (window as any).__TAURI_INTERNALS__;
+    if (tauri?.invoke) {
+      await tauri.invoke("open_browser", { url });
+      return true;
+    }
+  } catch {}
+
+  // 3. Fallback to standard window.open
+  try {
+    window.open(url, "_blank");
+    return true;
+  } catch {}
+
+  return false;
+}
+
+export function buildGoogleAuthUrl(customClientId?: string): string {
+  const clientId = (customClientId || getGoogleClientId()).trim();
+  const redirectUri = "http://127.0.0.1:5180/api/auth/google/callback";
+  const scopes = REQUIRED_SCOPES.join(" ");
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "token",
+    scope: scopes,
+    prompt: "consent",
+    include_granted_scopes: "true",
+  });
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+}
 
 // ── Google Identity Services loader ──
 let gisLoaded = false;
@@ -252,12 +298,123 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [state.scopes]
   );
 
-  const signIn = React.useCallback(async () => {
+  const openAuthUrlInBrowser = React.useCallback(async (customClientId?: string) => {
+    const clientId = (customClientId || getGoogleClientId()).trim();
+    if (!clientId) {
+      setState((s) => ({
+        ...s,
+        isSigningIn: false,
+        error: "Google Cloud Client ID required. Go to Settings → Google Account to enter your OAuth Client ID.",
+      }));
+      window.dispatchEvent(new CustomEvent("poolr:gopage", { detail: "settings" }));
+      return;
+    }
+    const url = buildGoogleAuthUrl(clientId);
+    await openExternalUrl(url);
+  }, []);
+
+  const setManualToken = React.useCallback(async (token: string) => {
+    if (!token.trim()) return;
     setState((s) => ({ ...s, isSigningIn: true, error: null }));
+    try {
+      const user = await fetchGoogleUserInfo(token.trim());
+      const expiresAt = Date.now() + 3600 * 1000;
+      const authData: StoredAuth = {
+        user,
+        accessToken: token.trim(),
+        expiresAt,
+        scopes: REQUIRED_SCOPES,
+      };
+      writeStoredAuth(authData);
+      setState({
+        user,
+        accessToken: token.trim(),
+        expiresAt,
+        scopes: authData.scopes,
+        isSigningIn: false,
+        error: null,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to validate token";
+      setState((s) => ({ ...s, isSigningIn: false, error: msg }));
+    }
+  }, []);
+
+  const signIn = React.useCallback(async (manualClientId?: string) => {
+    setState((s) => ({ ...s, isSigningIn: true, error: null }));
+    const clientId = (manualClientId || getGoogleClientId()).trim();
+
+    if (!clientId) {
+      setState((s) => ({
+        ...s,
+        isSigningIn: false,
+        error: "Google Cloud Client ID required. Go to Settings → Google Account to enter your OAuth Client ID and follow the setup guide.",
+      }));
+      window.dispatchEvent(new CustomEvent("poolr:gopage", { detail: "settings" }));
+      return;
+    }
+
+    // 1. Primary flow: Open real system default browser and start loopback listener
+    try {
+      const authUrl = buildGoogleAuthUrl(clientId);
+      const opened = await openExternalUrl(authUrl);
+
+      if (opened) {
+        // Poll C# engine loopback endpoint for the token
+        const pollStart = Date.now();
+        const maxWaitMs = 180000; // 3 minutes timeout
+
+        const token = await new Promise<string>((resolve, reject) => {
+          const interval = setInterval(async () => {
+            if (Date.now() - pollStart > maxWaitMs) {
+              clearInterval(interval);
+              reject(new Error("Sign-in timed out. Please try again or paste access token manually in Settings."));
+              return;
+            }
+
+            try {
+              const res = await fetch("http://127.0.0.1:5180/api/auth/google/latest-token");
+              if (res.ok) {
+                const data = await res.json();
+                if (data.ok && data.token) {
+                  clearInterval(interval);
+                  resolve(data.token);
+                }
+              }
+            } catch {
+              // Engine polling
+            }
+          }, 1000);
+        });
+
+        const user = await fetchGoogleUserInfo(token);
+        const expiresAt = Date.now() + 3600 * 1000;
+        const authData: StoredAuth = {
+          user,
+          accessToken: token,
+          expiresAt,
+          scopes: REQUIRED_SCOPES,
+        };
+        writeStoredAuth(authData);
+
+        setState({
+          user,
+          accessToken: token,
+          expiresAt,
+          scopes: authData.scopes,
+          isSigningIn: false,
+          error: null,
+        });
+        return;
+      }
+    } catch (browserFlowErr) {
+      console.warn("Browser loopback flow failed or fallback needed:", browserFlowErr);
+    }
+
+    // 2. Secondary flow: Google Identity Services in-page client (for browser dev mode)
     try {
       const client = await getTokenClient();
       const tokenRes = await new Promise<GoogleTokenResponse>((resolve, reject) => {
-                // Override callback temporarily
         (client as any).callback = (resp: GoogleTokenResponse) => {
           if (resp.error) reject(new Error(resp.error));
           else resolve(resp);
@@ -266,7 +423,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       const user = await fetchGoogleUserInfo(tokenRes.access_token);
-
       const expiresAt = Date.now() + tokenRes.expires_in * 1000;
       const authData: StoredAuth = {
         user,
@@ -358,8 +514,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated,
       getValidToken,
       hasScope,
+      setManualToken,
+      openAuthUrlInBrowser,
     }),
-    [state, signIn, signOut, isAuthenticated, getValidToken, hasScope]
+    [state, signIn, signOut, isAuthenticated, getValidToken, hasScope, setManualToken, openAuthUrlInBrowser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

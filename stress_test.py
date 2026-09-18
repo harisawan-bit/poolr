@@ -29,7 +29,7 @@ def test_health():
     r = requests.get(f"{BASE}/health", timeout=5)
     j = ok(r, "health")
     assert j["ok"] == True
-    assert j["version"] == "0.6.1"
+    assert j["version"] == "0.6.3"
 
 test("GET /health", test_health)
 
@@ -230,7 +230,7 @@ test("POST /api/figure/* (forest, funnel)", test_figures)
 # ─── Test: Export formats ──────────────────────────────────────────────────
 def test_exports():
     project = {
-        "metadata": {"version": "0.6.1", "title": "Test"},
+        "metadata": {"version": "0.6.3", "title": "Test"},
         "pico": {"population": "P", "intervention": "I", "comparator": "C", "outcomes": "O"},
         "extraction": {"studies": [
             {"study": "A", "type": "binary", "int_events": 15, "int_n": 100, "ctrl_events": 25, "ctrl_n": 100},
@@ -1289,7 +1289,7 @@ test("POST /api/mendeley/connect", test_mendeley_connect)
 
 # ─── Test: Project save/load ───────────────────────────────────────────────
 def test_project_save():
-    data = {"path": "/tmp/test_poolr.json", "project": {"title": "Test", "version": "0.6.1"}}
+    data = {"path": "/tmp/test_poolr.json", "project": {"title": "Test", "version": "0.6.3"}}
     j = ok(post("/api/project/save", data), "project_save")
     assert "saved" in j
 

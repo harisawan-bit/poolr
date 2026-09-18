@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Project } from "../lib/project";
+import { APP_VERSION } from "../lib/version";
 import { StudySelector, useStudyManager } from "../components/StudyManager";
 import { BayesianHub } from "./hub/BayesianHub";
 import { DiagnosticsHub } from "./hub/DiagnosticsHub";
@@ -208,7 +209,7 @@ export default function AnalysisHub({ project, onProjectChange }: Props) {
         <div className="flex items-center gap-1.5 text-xs text-[var(--color-muted-foreground)]">
           <CheckCircle2 size={13} className="text-green-500" />
           <span className="font-mono font-medium text-[var(--color-text)]">
-            C# Native Engine v0.6.1 · 100% Dedicated UI Coverage
+            C# Native Engine v{APP_VERSION} · 100% Dedicated UI Coverage
           </span>
         </div>
       </div>

@@ -1,9 +1,9 @@
 {
   "name": "poolr-tauri",
-  "version": "0.6.1",
+  "version": "0.6.3",
   "description": "Tauri 2 desktop shell for Poolr (PRISMA 2020 Systematic Reviews & Meta-Analyses)",
   "author": "M. Haris Awan <m.harisawan@icloud.com>",
-  "license": "MIT",
+  "license": "Proprietary",
   "private": true,
   "scripts": {
     "tauri": "tauri",

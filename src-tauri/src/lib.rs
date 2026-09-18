@@ -33,7 +33,7 @@ pub fn run() {
             Ok(())
         })
         .manage(updater::UpdaterState::default())
-        .invoke_handler(tauri::generate_handler![updater::check_for_updates])
+        .invoke_handler(tauri::generate_handler![updater::check_for_updates, open_browser])
         // Graceful close: window close / quit / Ctrl+C.
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
@@ -42,6 +42,32 @@ pub fn run() {
                 kill_engine(app);
             }
         });
+}
+
+#[tauri::command]
+fn open_browser(url: String) -> Result<(), String> {
+    #[cfg(windows)]
+    {
+        std::process::Command::new("cmd")
+            .args(["/C", "start", "", &url])
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(&url)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(target_os = "linux")]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(&url)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }
 
 struct EngineSidecar(std::sync::Mutex<Option<Child>>);

@@ -64,7 +64,16 @@ export function GoogleSignInButton({
         {isSigningIn ? "Signing in…" : "Sign in with Google"}
       </button>
       {localError && (
-        <p className="text-[12.5px] text-[var(--color-exclude)]">{localError}</p>
+        <div className="rounded-md border border-[var(--color-exclude)]/30 bg-[var(--color-exclude)]/10 p-2.5 text-left">
+          <p className="text-[12px] text-[var(--color-exclude)]">{localError}</p>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("poolr:gopage", { detail: "settings" }))}
+            className="mt-2 text-[11.5px] font-medium text-[var(--color-accent)] hover:underline"
+          >
+            Configure Google OAuth in Settings →
+          </button>
+        </div>
       )}
       <p className="text-[11px] text-[var(--color-text-muted)]">
         Poolr uses Google Drive to sync your projects across devices and enable team collaboration. Your data remains encrypted and private.
