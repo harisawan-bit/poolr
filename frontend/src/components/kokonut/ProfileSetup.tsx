@@ -78,6 +78,7 @@ export default function ProfileSetup({ onComplete, className }: ProfileSetupProp
   const [selectedAvatar, setSelectedAvatar] = useState<Avatar>(avatars[0]);
   const [username, setUsername] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const shouldReduceMotion = useReducedMotion();
 
   const handleAvatarSelect = (avatar: Avatar) => {
@@ -91,7 +92,7 @@ export default function ProfileSetup({ onComplete, className }: ProfileSetupProp
     }
   };
 
-  const isValid = username.trim().length >= 3;
+  const isValid = username.trim().length >= 3 && agreedToTerms;
   const showError = username.trim().length > 0 && username.trim().length < 3;
   const rgb = AVATAR_RGB[selectedAvatar.id];
 
@@ -128,7 +129,7 @@ export default function ProfileSetup({ onComplete, className }: ProfileSetupProp
                     key={selectedAvatar.id}
                     transition={fade ?? { duration: 0.2, ease: "easeOut" }}
                   >
-                    {selectedAvatar.svg}
+                    <div className="scale-[4]">{selectedAvatar.svg}</div>
                   </motion.div>
                 </AnimatePresence>
               </div>
@@ -250,6 +251,18 @@ export default function ProfileSetup({ onComplete, className }: ProfileSetupProp
               </AnimatePresence>
             </div>
 
+            <div className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-[var(--color-border)] accent-[var(--color-accent)]"
+              />
+              <label htmlFor="terms" className="text-[11px] text-[var(--color-text-muted)] leading-tight">
+                I agree to the <a href="/legal" className="text-[var(--color-accent)] hover:underline">Terms of Service</a> and <a href="/legal" className="text-[var(--color-accent)] hover:underline">Privacy Policy</a>
+              </label>
+            </div>
             <Button
               className="group h-10 w-full text-sm"
               disabled={!isValid}

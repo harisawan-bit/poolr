@@ -162,7 +162,7 @@ export default function ProfileDropdown({
             <DropdownMenuSeparator className="bg-[var(--color-border)]" />
 
             <div className="flex items-center justify-between px-3 py-1.5 text-[11px] text-[var(--color-text-muted)]">
-              <span>poolr v{appVersion} · MIT License</span>
+              <span>poolr v{appVersion} · The Method Lab</span>
               {theme === "dark" ? (
                 <Moon className="h-3.5 w-3.5" aria-hidden="true" />
               ) : (
