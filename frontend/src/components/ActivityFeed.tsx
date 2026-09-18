@@ -5,17 +5,16 @@ import { useCollaboration } from "../context/CollaborationContext";
 import { Activity, FileText, Users, Upload, Download, MessageSquare, Edit3, Trash2 } from "lucide-react";
 
 export function ActivityFeed({ compact = false }: { compact?: boolean }) {
-  const { activityFeed } = useCollaboration();
+  const { changeDeltas } = useCollaboration();
 
-  const recentEvents = activityFeed.slice(-50).reverse();
+  const recentEvents = (changeDeltas || []).slice(-50).reverse();
 
-  const actionIcon = (action: string) => {
-    if (action.includes("upload")) return <Upload className="h-3 w-3" />;
-    if (action.includes("download")) return <Download className="h-3 w-3" />;
-    if (action.includes("comment")) return <MessageSquare className="h-3 w-3" />;
-    if (action.includes("team member")) return <Users className="h-3 w-3" />;
-    if (action.includes("edit") || action.includes("update")) return <Edit3 className="h-3 w-3" />;
-    if (action.includes("delete") || action.includes("remove")) return <Trash2 className="h-3 w-3" />;
+  const actionIcon = (section: string) => {
+    if (section === "screening") return <Edit3 className="h-3 w-3" />;
+    if (section === "extraction") return <FileText className="h-3 w-3" />;
+    if (section === "rob") return <Activity className="h-3 w-3" />;
+    if (section === "meta") return <Activity className="h-3 w-3" />;
+    if (section === "manuscript") return <FileText className="h-3 w-3" />;
     return <FileText className="h-3 w-3" />;
   };
 
@@ -25,14 +24,14 @@ export function ActivityFeed({ compact = false }: { compact?: boolean }) {
         <Activity className="h-4 w-4 text-[var(--color-accent)]" />
         {!compact && (
           <span className="text-[12px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-            Activity
+            Activity Trail
           </span>
         )}
       </div>
 
       {recentEvents.length === 0 ? (
         <p className={`text-[11px] text-[var(--color-text-muted)] ${compact ? "" : "py-2 text-center"}`}>
-          No activity yet.
+          No audit activity logged yet.
         </p>
       ) : (
         <div className="space-y-1">
@@ -42,17 +41,17 @@ export function ActivityFeed({ compact = false }: { compact?: boolean }) {
               className="flex items-start gap-2 rounded px-2 py-1 text-[11px] hover:bg-[var(--color-border)]/20"
             >
               <span className="mt-0.5 text-[var(--color-text-muted)]">
-                {actionIcon(event.action)}
+                {actionIcon(event.section)}
               </span>
               <div className="flex-1 min-w-0">
                 <p>
-                  <span className="font-medium">{event.userName}</span>{" "}
-                  <span className="text-[var(--color-text-muted)]">{event.action}</span>{" "}
-                  <span className="font-medium">{event.target}</span>
+                  <span className="font-medium">{event.authorName}</span>{" "}
+                  <span className="text-[var(--color-text-muted)]">modified</span>{" "}
+                  <span className="font-medium">{event.section}</span>
                 </p>
-                {event.details && (
+                {event.description && (
                   <p className="truncate text-[10px] text-[var(--color-text-muted)]">
-                    {event.details}
+                    {event.description}
                   </p>
                 )}
               </div>

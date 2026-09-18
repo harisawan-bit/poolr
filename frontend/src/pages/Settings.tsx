@@ -5,8 +5,9 @@ import { loadSettings, saveSettings, type PoolrSettings } from '../lib/settings'
 import { applyThemeClass } from '../lib/theme';
 import { APP_VERSION } from '../lib/version';
 import { useUpdater } from '../lib/updater';
+import GoogleAuthSettings from '../components/GoogleAuthSettings';
 
-type Tab = 'ai' | 'databases' | 'appearance' | 'screening' | 'export' | 'updates';
+type Tab = 'ai' | 'cloud' | 'databases' | 'appearance' | 'screening' | 'export' | 'updates';
 
 const DB_KEYS = [
   { id: 'scopus', name: 'Scopus (Elsevier)', link: 'https://dev.elsevier.com' },
@@ -39,6 +40,7 @@ export default function Settings() {
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'ai', label: 'AI Providers' },
+    { key: 'cloud', label: 'Cloud & Accounts' },
     { key: 'databases', label: 'Databases' },
     { key: 'appearance', label: 'Appearance' },
     { key: 'screening', label: 'Screening' },
@@ -229,6 +231,10 @@ export default function Settings() {
             ))}
           </Card>
         </div>
+      )}
+
+      {tab === 'cloud' && (
+        <GoogleAuthSettings />
       )}
 
       {tab === 'databases' && (

@@ -2,31 +2,32 @@
  * Comments Panel — inline commenting system for collaboration.
  */
 import * as React from "react";
-import { useCollaboration, type Comment } from "../context/CollaborationContext";
+import { useCollaboration, type ReviewStep, type Comment } from "../context/CollaborationContext";
 import { MessageSquare, Check, X, Send } from "lucide-react";
 import { Button, Pill } from "./ui";
 
 export function CommentsPanel({
-  targetType,
+  targetType = "project",
   targetId,
   compact = false,
 }: {
-  targetType: Comment["targetType"];
+  targetType?: ReviewStep | string;
   targetId?: string;
   compact?: boolean;
 }) {
-  const { comments, addComment, resolveComment, removeComment, canEdit } = useCollaboration();
+  const { comments, addComment, resolveComment, removeComment, currentUserRole } = useCollaboration();
   const [newComment, setNewComment] = React.useState("");
+  const step = (targetType as ReviewStep) || "project";
 
   const filtered = comments.filter(
-    (c) => c.targetType === targetType && (targetId ? c.targetId === targetId : true)
+    (c) => c.step === step && (targetId ? c.targetId === targetId : true)
   );
   const unresolved = filtered.filter((c) => !c.resolved);
   const resolved = filtered.filter((c) => c.resolved);
 
   const handleSubmit = () => {
     if (!newComment.trim()) return;
-    addComment(newComment.trim(), targetType, targetId);
+    addComment(step, newComment.trim(), targetId);
     setNewComment("");
   };
 
@@ -36,6 +37,8 @@ export function CommentsPanel({
       handleSubmit();
     }
   };
+
+  const canComment = currentUserRole !== "viewer";
 
   return (
     <div className={`flex flex-col ${compact ? "gap-1" : "gap-3"}`}>
@@ -51,7 +54,7 @@ export function CommentsPanel({
       </div>
 
       {/* New comment input */}
-      {canEdit() && (
+      {canComment && (
         <div className="space-y-1">
           <textarea
             value={newComment}

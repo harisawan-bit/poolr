@@ -10,9 +10,10 @@
 import { Check, ChevronRight, User2 } from "lucide-react";
 import type { Variants } from "motion/react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button, Card, CardContent, Input } from "../ui";
 import { cn } from "../../lib/utils";
+import { useAuth } from "../../context/AuthContext";
 
 interface Avatar {
   id: number;
@@ -75,11 +76,19 @@ const thumbnailVariants: Variants = {
 };
 
 export default function ProfileSetup({ onComplete, className }: ProfileSetupProps) {
+  const { user, isSigningIn, signIn } = useAuth();
   const [selectedAvatar, setSelectedAvatar] = useState<Avatar>(avatars[0]);
   const [username, setUsername] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const shouldReduceMotion = useReducedMotion();
+
+  // If user signs in via Google during onboarding, complete setup
+  useEffect(() => {
+    if (user && onComplete) {
+      onComplete({ username: user.name || "Reviewer", avatarId: 1 });
+    }
+  }, [user, onComplete]);
 
   const handleAvatarSelect = (avatar: Avatar) => {
     if (avatar.id === selectedAvatar.id) return;
@@ -101,11 +110,37 @@ export default function ProfileSetup({ onComplete, className }: ProfileSetupProp
   return (
     <Card className={cn("relative mx-auto w-full max-w-[400px]", className)}>
       <CardContent className="p-8">
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Header */}
           <div className="space-y-1 text-center">
             <h2 className="font-semibold text-xl tracking-tight">Welcome to poolr</h2>
-            <p className="text-[var(--color-text-muted)] text-sm">Pick an avatar and a name to get started</p>
+            <p className="text-[var(--color-text-muted)] text-sm">Sign in with Google or create a local profile</p>
+          </div>
+
+          {/* Google Sign-in primary option */}
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={async () => {
+                setAgreedToTerms(true);
+                await signIn();
+              }}
+              disabled={isSigningIn}
+              className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-2)] p-2.5 text-[13px] font-medium text-[var(--color-text)] transition-all hover:border-[var(--color-border-strong)] hover:bg-[var(--hover-surface)] shadow-xs"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+              </svg>
+              <span>{isSigningIn ? "Connecting to Google…" : "Continue with Google"}</span>
+            </button>
+            <div className="flex items-center gap-2 pt-1">
+              <div className="h-px flex-1 bg-[var(--color-border)]" />
+              <span className="text-[11px] text-[var(--color-text-muted)]">or customize locally</span>
+              <div className="h-px flex-1 bg-[var(--color-border)]" />
+            </div>
           </div>
 
           {/* Avatar Stage */}
@@ -260,7 +295,28 @@ export default function ProfileSetup({ onComplete, className }: ProfileSetupProp
                 className="mt-1 h-4 w-4 rounded border-[var(--color-border)] accent-[var(--color-accent)]"
               />
               <label htmlFor="terms" className="text-[11px] text-[var(--color-text-muted)] leading-tight">
-                I agree to the <a href="/legal" className="text-[var(--color-accent)] hover:underline">Terms of Service</a> and <a href="/legal" className="text-[var(--color-accent)] hover:underline">Privacy Policy</a>
+                I agree to the{" "}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.dispatchEvent(new CustomEvent("poolr:gopage", { detail: "legal" }));
+                  }}
+                  className="cursor-pointer border-none bg-transparent p-0 text-[var(--color-accent)] hover:underline inline"
+                >
+                  Terms of Service
+                </button>{" "}
+                and{" "}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.dispatchEvent(new CustomEvent("poolr:gopage", { detail: "legal" }));
+                  }}
+                  className="cursor-pointer border-none bg-transparent p-0 text-[var(--color-accent)] hover:underline inline"
+                >
+                  Privacy Policy
+                </button>
               </label>
             </div>
             <Button

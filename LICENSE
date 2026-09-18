@@ -1,54 +1,74 @@
-# Proprietary License
+# Proprietary Software License & End User Agreement
 
-**Poolr — Desktop Platform for Systematic Reviews & Meta-Analyses**
+**Poolr — Desktop Platform for Systematic Reviews & Meta-Analyses (PRISMA 2020)**  
+**Version 0.6.3**
 
-Copyright © 2026 Muhammad Haris Awan. All rights reserved.
+Copyright © 2026 Muhammad Haris Awan (d/b/a The Method Lab). All rights reserved.
 
-This software is proprietary and confidential. Unauthorized copying, modification, distribution, or use of this software, in whole or in part, is strictly prohibited.
-
-## 1. Ownership
-
-This software is the exclusive property of Muhammad Haris Awan ("Licensor"). This Software is protected by copyright laws and international treaty provisions. The Licensor retains all right, title, and interest in and to the Software, including all intellectual property rights therein.
-
-## 2. Grant of License
-
-Subject to the terms and conditions of a separate End User License Agreement (EULA) executed between you and the Licensor, you may install and use the Software on a single computer for personal or commercial research purposes. No license is granted until a valid EULA is in effect.
-
-## 3. Restrictions
-
-Unless expressly authorized by the Licensor in writing, you shall NOT:
-
-a) Copy, modify, adapt, translate, reverse engineer, decompile, disassemble, or create derivative works based on the Software;
-b) Distribute, sublicense, lease, rent, loan, or otherwise transfer the Software to any third party;
-c) Remove or alter any proprietary notices, labels, or marks on the Software;
-d) Use the Software to provide service bureau, time-sharing, or similar services to third parties;
-e) Use the Software for any unlawful purpose or in violation of any applicable laws or regulations;
-f) Circumvent or attempt to circumvent any license key, activation, or copy-protection mechanism.
-
-## 4. Updates & Support
-
-The Licensor may, at its sole discretion, provide updates, patches, or support services. Any such updates are subject to the terms of this License unless accompanied by a separate license agreement.
-
-## 5. Disclaimer of Warranties
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
-
-## 6. Limitation of Liability
-
-IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-## 7. Termination
-
-This License is effective until terminated. Your rights under this License will terminate automatically without notice if you fail to comply with any term(s) of this License. Upon termination, you must destroy all copies of the Software.
-
-## 8. Governing Law
-
-This License shall be governed by and construed in accordance with the laws of Pakistan, without regard to its conflict of law provisions.
-
-## 9. Contact
-
-For licensing inquiries, please contact: m.harisawan@icloud.com
+This software, its source code, compiled binaries, documentation, algorithms, and visual interfaces are proprietary and confidential trade secrets of Muhammad Haris Awan. Unauthorized copying, reverse engineering, decompilation, distribution, or commercial exploitation is strictly prohibited under international copyright conventions and intellectual property law.
 
 ---
 
-*Poolr v0.6.0 — Phase 2 Commercial Platform*
+### 1. Ownership & Intellectual Property
+
+This Software is the exclusive intellectual property of Muhammad Haris Awan ("Licensor"). The Software is licensed, not sold. All rights, title, and interest in and to the Software—including but not limited to source code, compiled code, mathematical and statistical algorithms, user interfaces, documentation, logos, and trademarks—remain exclusively with the Licensor.
+
+### 2. Corporate Successor & Entity Assignment
+
+The Licensor currently operates as an individual proprietor doing business as "The Method Lab". Licensor expressly reserves the unilateral right at any time, without prior notice to or consent from any user or licensee, to assign, transfer, convey, or novate all rights, title, interests, copyrights, patents, trademarks, contractual licenses, and liabilities in connection with the Software to any corporate entity, company, partnership, limited liability company, or corporate successor organized, incorporated, owned, or controlled by Muhammad Haris Awan. All terms and restrictions of this License shall automatically inure to the benefit of such corporate successor.
+
+### 3. Grant of Limited License
+
+Subject to your continuous compliance with this Agreement and any applicable subscription or license key, Licensor grants you a personal, non-exclusive, non-transferable, revocable, non-sublicensable limited license to install and execute the Software on a single compatible device solely for your legitimate personal, academic, or internal organizational evidence synthesis research.
+
+### 4. Unilateral Paid Plans, Feature Paywalling & No Grandfathering
+
+The Licensor reserves the absolute, unilateral right, at any time in its sole discretion and without prior notice, obligation, or liability:
+1. **To Introduce Paid Tiers**: To establish commercial paid tiers, subscription plans (monthly/annual), per-seat pricing, token/credit consumption models, or perpetual enterprise licenses.
+2. **To Gate & Paywall Features**: To restrict, paywall, limit, or sunset any existing or future feature, including without limitation Google Drive synchronization, multi-user real-time collaboration, automated AI extraction/screening, advanced Bayesian engines, diagnostic plots, and replication script generation.
+3. **No Grandfathering Rights**: Any current provision of free, trial, or beta access to any feature does NOT create any perpetual, vested, or grandfathered rights. Licensor may convert any free feature into a paid feature at any time without compensation or continued free entitlement for existing users.
+
+### 5. Strict License Restrictions
+
+Except as expressly permitted herein, you shall NOT, directly or indirectly:
+1. Decompile, disassemble, reverse engineer, decrypt, extract, or attempt to derive source code, underlying algorithms, or data models of the Software or its compiled components;
+2. Modify, adapt, translate, enhance, or create derivative works from the Software;
+3. Rent, lease, lend, sell, sublicense, distribute, publish, white-label, or transfer the Software to any third party;
+4. Use the Software to operate a service bureau, timesharing service, or software-as-a-service (SaaS) platform;
+5. Circumvent, bypass, alter, or defeat any license validation, cryptographic check, authentication protocol, or feature-gating mechanism;
+6. Remove, obscure, or alter any copyright notices, trademarks, or proprietary markings on the Software.
+
+### 6. Bring-Your-Own-Storage (BYOS) & Google Drive Integration
+
+1. **Client-Side Conduit Only**: The Software's Google Drive sync feature operates purely as a local, client-side conduit utilizing the user's own OAuth credentials. Project datasets and collaboration files are transmitted directly between the user's machine and Google LLC's servers. Licensor does not operate intermediary servers, host user review data, or maintain remote copies of project datasets.
+2. **Third-Party Service Disclaimer**: Licensor is not affiliated with Google LLC. Licensor is not responsible or liable for Google API rate limits, service outages, credential revocations, storage quotas, data corruption, or permission misconfigurations within user Google Drive accounts.
+3. **User Backup Responsibility**: The user is solely responsible for maintaining local and external backups of all research datasets, extracted data, and PRISMA audit trails.
+
+### 7. Scientific, Academic & Medical Disclaimer
+
+1. **Analytical Research Tool Only**: The Software is designed exclusively as an organizational, computational, and statistical analysis tool for academic and clinical research.
+2. **Not a Medical Device**: The Software is NOT a medical device, diagnostic system, or clinical decision support system. It is not intended for use in patient diagnosis, treatment planning, or clinical management.
+3. **Investigator Responsibility**: The results produced by the Software—including effect estimates, confidence intervals, heterogeneity statistics, risk of bias assessments, and GRADE certainty evaluations—depend entirely on user-provided input data. Users are solely and independently responsible for verifying all statistical results before publication or clinical dissemination. Licensor disclaims all liability for research retractions, publication disputes, regulatory submission rejections, or clinical decisions.
+
+### 8. Disclaimer of Warranties
+
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF ANY KIND. TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE LICENSOR EXPRESSLY DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE, INCLUDING WITHOUT LIMITATION WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, ACCURACY, AND NON-INFRINGEMENT. LICENSOR DOES NOT WARRANT THAT THE SOFTWARE WILL OPERATE UNINTERRUPTED, ERROR-FREE, OR COMPATIBLE WITH ALL HARDWARE OR SOFTWARE CONFIGURATIONS.
+
+### 9. Limitation of Liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL MUHAMMAD HARIS AWAN, THE METHOD LAB, OR ANY AFFILIATES BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES (INCLUDING LOSS OF DATA, LOSS OF PROFITS, BUSINESS INTERRUPTION, PUBLICATION DELAYS, OR RESEARCH LOSSES) ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT OR THE USE OF THE SOFTWARE. LICENSOR'S TOTAL AGGREGATE LIABILITY UNDER ALL CAUSES OF ACTION SHALL BE STRICTLY LIMITED TO THE AMOUNT ACTUALLY PAID BY YOU TO LICENSOR FOR THE SOFTWARE IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM, OR TEN UNITED STATES DOLLARS ($10.00 USD), WHICHEVER IS GREATER.
+
+### 10. Termination
+
+This License is effective until terminated. Your rights under this License terminate immediately and automatically without notice if you fail to comply with any provision. Upon termination, you must cease all use of the Software and permanently delete all copies in your possession.
+
+### 11. Governing Law & Dispute Resolution
+
+This License shall be governed by, construed, and enforced in accordance with the laws of the Islamic Republic of Pakistan, without giving effect to conflict of laws principles. Any legal suit, action, or proceeding arising out of or related to this Agreement shall be instituted exclusively in the competent courts located in Islamabad/Rawalpindi, Pakistan.
+
+### 12. Contact & Commercial Inquiries
+
+For licensing, commercial tier inquiries, enterprise deployment, or institutional agreements:
+- **Licensor**: Muhammad Haris Awan (d/b/a The Method Lab)
+- **Email**: m.harisawan@icloud.com
+- **Repository**: https://github.com/harisawan-bit/poolr

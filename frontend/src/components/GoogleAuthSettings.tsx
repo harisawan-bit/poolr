@@ -5,12 +5,10 @@
  * (for custom GCP projects) and view current auth status.
  */
 import * as React from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth, setGoogleClientId, GOOGLE_CLIENT_ID_KEY } from "../context/AuthContext";
 import { GoogleSignInButton } from "./GoogleSignIn";
 import { Card, Input, Button, Pill } from "./ui";
 import { Shield, Key, ExternalLink, Cloud } from "lucide-react";
-
-const GOOGLE_CLIENT_ID_KEY = "poolr.googleClientId";
 
 export function GoogleAuthSettings() {
   const { user, isAuthenticated, signOut } = useAuth();
@@ -20,15 +18,9 @@ export function GoogleAuthSettings() {
   const [saved, setSaved] = React.useState(false);
 
   const handleSave = () => {
-    try {
-      if (clientId.trim()) {
-        localStorage.setItem(GOOGLE_CLIENT_ID_KEY, clientId.trim());
-      } else {
-        localStorage.removeItem(GOOGLE_CLIENT_ID_KEY);
-      }
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch {}
+    setGoogleClientId(clientId);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   };
 
   return (

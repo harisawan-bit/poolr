@@ -10,6 +10,7 @@ import { suggestRoB } from "../lib/ai";
 import { fetchRobFigure } from "../lib/api";
 import { downloadText } from "../lib/project";
 import { Sparkles, Loader2, Download } from "lucide-react";
+import { StepCommentsButton } from "../components/StepCommentsDrawer";
 
 const TOOLS = ["RoB2", "NOS", "PROBAST", "ROBINS-I", "QUADAS-2", "AMSTAR-2"] as const;
 const OVERALL = ["Low", "Some concerns", "High", "Critical", "—"] as const;
@@ -100,6 +101,7 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
             {TOOLS.map((t) => <option key={t} value={t}>{t}</option>)}
           </Select>
           <button className="btn-primary" onClick={add} disabled={!studyNames.length}>+ Add</button>
+          <StepCommentsButton step="rob" stepTitle="Risk of Bias" />
         </div>
       }>
         <p className="mb-3 text-[12.5px] text-[var(--color-text-muted)]">

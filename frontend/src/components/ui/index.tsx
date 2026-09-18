@@ -5,7 +5,7 @@ import { cn } from "../../lib/utils";
 
 /* ── Button ─────────────────────────────────────────────────────────── */
 
-type ButtonVariant = "default" | "outline" | "ghost" | "secondary";
+type ButtonVariant = "default" | "primary" | "outline" | "ghost" | "secondary";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -21,6 +21,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]/40 disabled:pointer-events-none disabled:opacity-50",
         {
           default: "bg-[var(--btn-bg)] text-[var(--btn-fg)] hover:bg-[var(--btn-hover-bg)] border border-[var(--btn-border)] shadow-sm active:scale-[0.99]",
+          primary: "bg-[var(--color-accent)] text-white hover:opacity-90 border border-transparent shadow-sm active:scale-[0.99]",
           outline: "border border-[var(--color-border)] bg-transparent text-[var(--color-text)] hover:border-[var(--color-border-strong)] hover:bg-[var(--hover-surface)]",
           ghost: "text-[var(--color-text-muted)] hover:bg-[var(--hover-surface)] hover:text-[var(--color-text)]",
           secondary: "bg-[var(--hover-surface)] text-[var(--color-text)] hover:bg-[var(--color-border)]",
