@@ -37,6 +37,8 @@ This document describes the design principles, process topology, and multi-tier 
    All statistical engines are calibrated and tested against published, gold-standard R packages (`metafor`, `robvis`, `netmeta`) through automated xUnit regression suites in CI.
 4. **Dual-Tier Inter-Process Communication (IPC)**:
    The UI communicates with the backend engine via a localhost HTTP REST API (`127.0.0.1:5180`). This decoupled design allows the C# engine to run both headlessly in automated pipelines and as a desktop sidecar.
+5. **Bring-Your-Own-Storage (BYOS) Collaboration**:
+   Multi-investigator teams collaborate using their existing institutional or personal Google Drive storage without requiring a centralized proprietary database server. Structured subfiles (`changelog.json`, `permissions.json`, `comments.json`, `authorship.json`, `manuscript.json`), section soft locks, append-only delta logging, and 3-way visual conflict resolution enable safe, concurrent systematic review workflows.
 
 ---
 

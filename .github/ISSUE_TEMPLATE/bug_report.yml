@@ -44,8 +44,8 @@ body:
     id: version
     attributes:
       label: poolr version
-      description: Shown in the app title bar / Releases page (e.g. v0.4.0)
-      placeholder: v0.4.0
+      description: Shown in the app title bar / Releases page (e.g. v0.6.3)
+      placeholder: v0.6.3
     validations:
       required: true
   - type: textarea

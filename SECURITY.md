@@ -8,12 +8,12 @@ Only the latest release receives security patches and updates.
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.5.x   | :white_check_mark: |
-| < 0.5.0 | :x:                |
+| 0.6.x   | :white_check_mark: |
+| < 0.6.0 | :x:                |
 
 ## Data Privacy & Architecture Guarantee
 
-- **100% Offline-First**: Your systematic review files (`poolr.json`), search queries, extracted data, risk of bias judgments, and patient cohorts remain on your local computer. Poolr never uploads project data to any remote cloud servers.
+- **Offline-First & BYOS Cloud**: Your systematic review files (`poolr.json`), search queries, extracted data, risk of bias judgments, and patient cohorts remain strictly local by default. When team collaboration is enabled, Poolr utilizes Bring-Your-Own-Storage (BYOS) direct Google Drive API communication. Project files reside exclusively in the user's and team members' own Google Drive accounts without passing through any intermediary third-party backend servers.
 - **No Python Execution**: Poolr does not embed or invoke Python scripts, avoiding Python dependency supply-chain risks. The statistics engine is a bundled, strongly typed C# 12 / .NET 8 binary that communicates strictly over a local-only loopback port (`127.0.0.1:5180`).
 - **Telemetry**: Poolr contains zero invasive tracking or advertising SDKs.
 
