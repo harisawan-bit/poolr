@@ -33,7 +33,10 @@ pub fn run() {
             Ok(())
         })
         .manage(updater::UpdaterState::default())
-        .invoke_handler(tauri::generate_handler![updater::check_for_updates, open_browser])
+        .invoke_handler(tauri::generate_handler![
+            updater::check_for_updates,
+            open_browser
+        ])
         // Graceful close: window close / quit / Ctrl+C.
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
