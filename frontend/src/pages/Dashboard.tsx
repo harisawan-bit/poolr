@@ -1,5 +1,5 @@
 import type { Project } from "../lib/project";
-import { Card, Pill } from "../components/ui";
+import { Card, Pill, AnimatedNumber, GlowBorderCard } from "../components/ui";
 import { RingChart } from "../components/charts/ring-chart";
 import { Ring } from "../components/charts/ring";
 import { RingCenter } from "../components/charts/ring-center";
@@ -19,14 +19,14 @@ export default function Dashboard({ project }: { project: Project; onChange: (p:
   const robDone = project.rob.assessments.length;
 
   const kpis = [
-    { k: "Studies (extracted)", v: String(studies.length) },
-    { k: "Pooled effect", v: meta ? fmt(meta.pooled.effect, meta.measure) : "—" },
-    { k: "95% CI", v: meta ? `${fmt(meta.pooled.ci_lower, meta.measure)} – ${fmt(meta.pooled.ci_upper, meta.measure)}` : "—" },
-    { k: "I²", v: meta ? `${meta.heterogeneity.i2.toFixed(0)}%` : "—" },
-    { k: "Screening incl.", v: String(included) },
-    { k: "Screening excl.", v: String(excluded) },
-    { k: "RoB done", v: String(robDone) },
-    { k: "PICO", v: project.pico.population ? "set" : "empty" },
+    { k: "Studies (extracted)", v: String(studies.length), num: studies.length },
+    { k: "Pooled effect", v: meta ? fmt(meta.pooled.effect, meta.measure) : "—", num: meta ? meta.pooled.effect : null },
+    { k: "95% CI", v: meta ? `${fmt(meta.pooled.ci_lower, meta.measure)} – ${fmt(meta.pooled.ci_upper, meta.measure)}` : "—", num: null },
+    { k: "I²", v: meta ? `${meta.heterogeneity.i2.toFixed(0)}%` : "—", num: meta ? Math.round(meta.heterogeneity.i2) : null },
+    { k: "Screening incl.", v: String(included), num: included },
+    { k: "Screening excl.", v: String(excluded), num: excluded },
+    { k: "RoB done", v: String(robDone), num: robDone },
+    { k: "PICO", v: project.pico.population ? "set" : "empty", num: null },
   ];
 
   // Bklit RingChart data — one ring per decision class, progress vs decided total.
@@ -74,10 +74,19 @@ export default function Dashboard({ project }: { project: Project; onChange: (p:
                       ? "text-[var(--color-text-muted)]"
                       : "text-[var(--color-text)]";
                 return (
-                  <div key={kpi.k} className="card p-3">
-                    <div className={`text-[20px] font-semibold tabular-nums ${valueColor}`}>{kpi.v}</div>
-                    <div className="mt-0.5 text-[10.5px] text-[var(--color-text-muted)]">{kpi.k}</div>
-                  </div>
+                  <GlowBorderCard key={kpi.k} className="p-0">
+                    <div className="card h-full rounded-[calc(var(--radius-card)-2px)] p-3">
+                      {kpi.num !== null ? (
+                        <AnimatedNumber
+                          value={kpi.num}
+                          className={`text-[20px] font-semibold tabular-nums ${valueColor}`}
+                        />
+                      ) : (
+                        <div className={`text-[20px] font-semibold tabular-nums ${valueColor}`}>{kpi.v}</div>
+                      )}
+                      <div className="mt-0.5 text-[10.5px] text-[var(--color-text-muted)]">{kpi.k}</div>
+                    </div>
+                  </GlowBorderCard>
                 );
               })}
             </div>

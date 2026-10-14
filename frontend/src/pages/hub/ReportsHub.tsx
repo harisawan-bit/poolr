@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import type { Project } from "../../lib/project";
 import { Card, Button, Input } from "../../components/ui";
+import { KineticTextLoader } from "../../components/ui";
 import { postJson } from "../../lib/api";
 import { ErrorDisplay } from "../../components/StudyManager";
 import {
@@ -658,6 +659,8 @@ function CitationsSection({ project }: Props) {
         </div>
 
         {err && <ErrorDisplay error={err} />}
+
+        {busy && <KineticTextLoader text="Building citations…" className="py-2" />}
 
         {citations && (
           <pre className="overflow-x-auto rounded-md border border-[var(--color-border)] bg-[var(--hover-surface)]/50 p-3 font-mono text-[11.5px] leading-relaxed text-[var(--color-text)] max-h-96">

@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Project } from "../lib/project";
 import { APP_VERSION } from "../lib/version";
 import { StudySelector, useStudyManager } from "../components/StudyManager";
+import { GlowBorderCard } from "../components/ui";
 import { BayesianHub } from "./hub/BayesianHub";
 import { DiagnosticsHub } from "./hub/DiagnosticsHub";
 import { NetworkHub } from "./hub/NetworkHub";
@@ -219,16 +220,8 @@ export default function AnalysisHub({ project, onProjectChange }: Props) {
         {CATEGORIES.map((cat) => {
           const isActive = activeCategory === cat.key;
           const Icon = cat.Icon;
-          return (
-            <button
-              key={cat.key}
-              onClick={() => setActiveCategory(cat.key)}
-              className={`min-w-0 flex flex-col justify-between p-3.5 rounded-lg border text-left transition-all ${
-                isActive
-                  ? "border-blue-600 dark:border-blue-500 bg-blue-500/5 dark:bg-blue-500/10 text-[var(--color-text)] shadow-xs ring-1 ring-blue-600/30 dark:ring-blue-500/30"
-                  : "border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-text-muted)] hover:border-[var(--color-border-strong)] hover:bg-[var(--hover-surface)] hover:text-[var(--color-text)]"
-              }`}
-            >
+          const cardBody = (
+            <>
               <div className="flex items-center justify-between gap-2 w-full mb-2 min-w-0">
                 <div className="flex items-center gap-2 min-w-0">
                   <Icon
@@ -250,6 +243,24 @@ export default function AnalysisHub({ project, onProjectChange }: Props) {
               <p className="text-[11px] text-[var(--color-text-muted)] leading-relaxed line-clamp-2 break-words">
                 {cat.description}
               </p>
+            </>
+          );
+          if (isActive) {
+            return (
+              <button key={cat.key} onClick={() => setActiveCategory(cat.key)} className="min-w-0 text-left">
+                <GlowBorderCard duration={6} className="h-full">
+                  <div className="border-0 bg-transparent p-0 shadow-none">{cardBody}</div>
+                </GlowBorderCard>
+              </button>
+            );
+          }
+          return (
+            <button
+              key={cat.key}
+              onClick={() => setActiveCategory(cat.key)}
+              className="min-w-0 flex flex-col justify-between p-3.5 rounded-lg border text-left transition-all border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-text-muted)] hover:border-[var(--color-border-strong)] hover:bg-[var(--hover-surface)] hover:text-[var(--color-text)]"
+            >
+              {cardBody}
             </button>
           );
         })}

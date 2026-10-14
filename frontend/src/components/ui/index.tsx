@@ -249,3 +249,20 @@ export type { ResultCardProps } from "./ResultCard";
 
 export { PlotContainer } from "./PlotContainer";
 export type { PlotContainerProps } from "./PlotContainer";
+
+/* ── Phase 2: component-library swaps (Vengeance UI + Componentry, MIT) ── */
+
+export { GlowBorderCard } from "./GlowBorderCard";
+export type { GlowBorderCardProps } from "./GlowBorderCard";
+
+export { AnimatedNumber } from "./AnimatedNumber";
+export type { AnimatedNumberProps } from "./AnimatedNumber";
+
+export { SpotlightNavItem } from "./SpotlightNavItem";
+export type { SpotlightNavItemProps } from "./SpotlightNavItem";
+
+export { KineticTextLoader } from "./KineticTextLoader";
+export type { KineticTextLoaderProps } from "./KineticTextLoader";
+
+export { AnnotatedText } from "./AnnotatedText";
+export type { AnnotatedTextProps, AnnotatedVariant } from "./AnnotatedText";
