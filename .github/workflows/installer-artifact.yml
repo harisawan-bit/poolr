@@ -42,13 +42,17 @@ jobs:
         with:
           targets: x86_64-pc-windows-msvc
 
-      - name: Frontend deps
+      - name: Frontend deps (includes @tauri-apps/cli)
         working-directory: frontend
         run: npm ci
 
-      - name: Tauri CLI deps (src-tauri)
-        working-directory: src-tauri
-        run: npm ci
+      # Build the frontend bundle explicitly (frontend/dist). tauri.conf.json's
+      # beforeBuildCommand (`npm run build`) assumes cwd=frontend; because we invoke
+      # the Tauri CLI with cwd=src-tauri below, we build the frontend here and then
+      # override beforeBuildCommand to empty so the CLI doesn't try to re-run npm.
+      - name: Frontend build
+        working-directory: frontend
+        run: npm run build
 
       # Publish the self-contained C# engine into src-tauri/resources/engine so the
       # Tauri build script (which bundles that folder) finds it. The folder is
@@ -57,17 +61,17 @@ jobs:
         working-directory: engine
         run: dotnet publish Poolr.Engine.Api/Poolr.Engine.Api.csproj -c Release -r win-x64 --self-contained true -o ../src-tauri/resources/engine
 
-      - name: Tauri build (installers)
-        uses: tauri-apps/tauri-action@v0
+      # Build the installer directly with the Tauri CLI. The CLI is installed by the
+      # frontend (@tauri-apps/cli -> frontend/node_modules/@tauri-apps/cli/tauri.js);
+      # there is no separate src-tauri npm project. We run the CLI with cwd=src-tauri
+      # (where tauri.conf.json lives and the project is discovered) and merge an
+      # inline -c config that empties beforeBuildCommand (frontend already built).
+      # No release, no tag — artifact only.
+      - name: Tauri build (Windows installer)
+        working-directory: src-tauri
+        run: node ../frontend/node_modules/@tauri-apps/cli/tauri.js build --target x86_64-pc-windows-msvc --bundles nsis msi -c "{\"build\":{\"beforeBuildCommand\":\"\"}}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          projectPath: src-tauri
-          tauriScript: npm run tauri
-          args: --target x86_64-pc-windows-msvc
-          # tauri-action tries to publish a release when tagName is set; leaving it
-          # unset keeps this job to build+upload only.
-          releaseId: ""
+          CI: true
 
       - name: Upload installer artifacts
         uses: actions/upload-artifact@v4
