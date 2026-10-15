@@ -76,7 +76,8 @@ jobs:
       - name: Upload installer artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: poolr-installer-${{ github.ref_name }}-x64
+          # Sanitize the branch name: '/' is illegal in artifact names.
+          name: poolr-installer-x64
           path: |
             src-tauri/target/**/release/bundle/**/*.msi
             src-tauri/target/**/release/bundle/**/*.exe
