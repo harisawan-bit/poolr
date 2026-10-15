@@ -69,7 +69,7 @@ jobs:
       # No release, no tag — artifact only.
       - name: Tauri build (Windows installer)
         working-directory: src-tauri
-        run: node ../frontend/node_modules/@tauri-apps/cli/tauri.js build --target x86_64-pc-windows-msvc --bundles nsis msi -c "{\"build\":{\"beforeBuildCommand\":\"\"}}"
+        run: node ../frontend/node_modules/@tauri-apps/cli/tauri.js build --target x86_64-pc-windows-msvc --bundles nsis msi -c tauri.ci-no-before-build.json
         env:
           CI: true
 
