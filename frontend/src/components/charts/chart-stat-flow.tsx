@@ -109,6 +109,7 @@ export function ChartStatFlow({
             suffix={suffix}
             value={value}
             willChange
+            style={{ ["--number-flow-mask-height" as string]: "0.5em" }}
           />
         ) : (
           staticValue

@@ -7,9 +7,14 @@
 export const chartCenterContainerClassName =
   "@container/chart-center size-full min-w-0";
 
-/** Primary stat — ~22% of center width, clamped between text-sm and text-3xl. */
+/** Primary stat — fixed rem size (NOT cqw). NumberFlow's digit-spin mask is
+ * em-based (--number-flow-mask-height: 0.25em); a container-query (cqw)
+ * font-size desyncs that math from the rendered line box, which makes the
+ * mask band collapse to full height and show every digit stacked
+ * ("012345789"). A fixed rem keeps em and the mask in sync. The chart
+ * center size is already known in px, so fluid scaling bought nothing here. */
 export const chartCenterValueClassName =
-  "font-bold tabular-nums leading-none text-[clamp(0.75rem,22cqw,1.875rem)]";
+  "font-bold tabular-nums leading-none text-[1.5rem]";
 
 /** Supporting label — ~9% of center width, clamped between 10px and text-xs. */
 export const chartCenterLabelClassName =
