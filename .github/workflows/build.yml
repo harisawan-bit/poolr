@@ -158,7 +158,7 @@ jobs:
         run: dotnet publish Poolr.Engine.Api/Poolr.Engine.Api.csproj -c Release -r ${{ matrix.rid }} --self-contained true -o ../src-tauri/resources/engine
 
       - name: Tauri build (native installer)
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
