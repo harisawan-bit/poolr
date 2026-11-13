@@ -9,7 +9,21 @@ import {
   parseCitations,
   importCitationText,
   citationsToScreeningItems,
+  exportCitationsText,
+  findDuplicateClusters,
+  priorityScoreItem,
 } from "../importScreening";
+import {
+  emptyProject,
+  formatStudyLabel,
+  linkCitationToExtractedStudy,
+  findLinkedCitation,
+  computePrismaFlow,
+  buildPrisma2020Svg,
+  countScreeningConflicts,
+  parseMetricSelection,
+  safeDocumentUrl,
+} from "../project";
 
 // ── format detection ─────────────────────────────────────────────────────────
 
@@ -280,5 +294,159 @@ describe("parseCitations / importCitationText", () => {
     expect(res.records).toBe(3);
     expect(res.items[0].pmid).toBe("27586827");
     expect(res.items[0].title).toBe("PMID 27586827");
+  });
+});
+
+// ── Rayyan / Covidence CSV, export, clustering, linking & PRISMA ─────────────
+
+describe("workflow citation & study helpers", () => {
+  it("parses Rayyan and Covidence CSV decisions, labels, and metadata", () => {
+    const rayyanCsv = [
+      "title,authors,year,journal,abstract,notes",
+      '"Statins in ACS","Smith J; Lee K",2022,Lancet,"Randomized trial of statins.","RAYYAN-INCLUSION: {""R1"":""Included""} | RAYYAN-LABELS: RCT,DoubleBlind"',
+      '"Mouse model statin","Doe A",2021,Nature,"Preclinical study.","RAYYAN-INCLUSION: {""R1"":""Excluded""} | RAYYAN-EXCLUSION-REASONS: Animal study"',
+    ].join("\n");
+    const rayyan = importCitationText(rayyanCsv, "rayyan.csv");
+    expect(rayyan.items).toHaveLength(2);
+    expect(rayyan.items[0].authors).toContain("Smith");
+    expect(rayyan.items[0].year).toBe("2022");
+    expect(rayyan.items[0].decision).toBe("include");
+    expect(rayyan.items[0].tags).toEqual(expect.arrayContaining(["RCT", "DoubleBlind"]));
+    expect(rayyan.items[1].decision).toBe("exclude");
+    expect(rayyan.items[1].exclusion_reason).toContain("Animal");
+
+    const covidenceCsv = [
+      "Title,Authors,Published Year,Journal,Abstract,DOI,Decision,Exclusion reason",
+      '"Metformin HFpEF","Patel R",2023,NEJM,"Placebo-controlled trial.",10.1056/test1,Exclude,Wrong comparator',
+    ].join("\n");
+    const covidence = importCitationText(covidenceCsv, "covidence.csv");
+    expect(covidence.items).toHaveLength(1);
+    expect(covidence.items[0].year).toBe("2023");
+    expect(covidence.items[0].doi).toBe("10.1056/test1");
+    expect(covidence.items[0].decision).toBe("exclude");
+    expect(covidence.items[0].exclusion_reason).toBe("Wrong comparator");
+  });
+
+  it("exports BibTeX, RIS, and CSV cleanly", () => {
+    const items = citationsToScreeningItems([
+      { title: "EMPACT-MI Trial", abstract: "SGLT2 after MI", authors: "Butler J", year: "2024", journal: "NEJM", doi: "10.1056/empact", pmid: "99887766", format: "csv" },
+    ]);
+    const bib = exportCitationsText(items, "bibtex");
+    expect(bib).toContain("@article{");
+    expect(bib).toContain("EMPACT-MI Trial");
+    expect(bib).toContain("10.1056/empact");
+
+    const ris = exportCitationsText(items, "ris");
+    expect(ris).toContain("TY  - JOUR");
+    expect(ris).toContain("TI  - EMPACT-MI Trial");
+    expect(ris).toContain("ER  - ");
+
+    const csv = exportCitationsText(items, "csv");
+    expect(csv).toContain("EMPACT-MI Trial");
+    expect(csv).toContain("99887766");
+  });
+
+  it("clusters duplicate citations by DOI, PMID, or normalized title", () => {
+    const items = citationsToScreeningItems([
+      { title: "DAPA-HF Randomized Trial", abstract: "Short", doi: "10.1056/dapa", format: "medline" },
+      { title: "DAPA-HF Randomized Trial", abstract: "Full abstract with longer text", doi: "https://doi.org/10.1056/DAPA", format: "ris" },
+      { title: "Unique Control Study", abstract: "Distinct", pmid: "11223344", format: "medline" },
+    ]);
+    const clusters = findDuplicateClusters(items);
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0].items).toHaveLength(2);
+    expect(clusters[0].reason).toMatch(/DOI/i);
+  });
+
+  it("ranks relevant records higher with priorityScoreItem", () => {
+    const relevant = citationsToScreeningItems([{ title: "Empagliflozin heart failure randomized trial", abstract: "Reduced hospitalization and mortality", format: "csv" }])[0];
+    const irrelevant = citationsToScreeningItems([{ title: "Botanical survey of alpine moss", abstract: "Chlorophyll measurements in tundra", format: "csv" }])[0];
+    const sRel = priorityScoreItem(relevant, ["empagliflozin heart failure randomized"], ["botanical moss"], "heart failure randomized trial");
+    const sIrr = priorityScoreItem(irrelevant, ["empagliflozin heart failure randomized"], ["botanical moss"], "heart failure randomized trial");
+    expect(sRel).toBeGreaterThan(sIrr);
+  });
+
+  it("links citations to extracted studies and computes live PRISMA flow", () => {
+    const p = emptyProject();
+    const taInc = citationsToScreeningItems([
+      { title: "DELIVER HFpEF Trial", abstract: "Dapagliflozin trial", authors: "Solomon SD, Vaduganathan M", year: "2022", doi: "10.1056/deliver", format: "medline" },
+    ])[0];
+    taInc.stage = "title_abstract";
+    taInc.decision = "include";
+    const ftInc = { ...taInc, stage: "full_text" as const, decision: "include" as const };
+    const taExc = citationsToScreeningItems([{ title: "Editorial comment", abstract: "", format: "medline" }])[0];
+    taExc.stage = "title_abstract";
+    taExc.decision = "exclude";
+    taExc.exclusion_reason = "Editorial / commentary";
+
+    const ftExc = citationsToScreeningItems([{ title: "Observational cohort", abstract: "", format: "medline" }])[0];
+    ftExc.stage = "full_text";
+    ftExc.decision = "exclude";
+    ftExc.exclusion_reason = "Wrong study design";
+
+    p.screening = {
+      title_abstract: [taInc, taExc, { ...ftExc, stage: "title_abstract", decision: "include", exclusion_reason: undefined }],
+      full_text: [ftInc, ftExc],
+    };
+    const study = linkCitationToExtractedStudy(ftInc, "binary");
+    p.extraction.studies = [study];
+
+    expect(formatStudyLabel(ftInc)).toContain("2022");
+    expect(study.sourceId).toBe(ftInc.id);
+    expect(study.year).toBe(2022);
+    expect(findLinkedCitation(p, study)?.id).toBe(ftInc.id);
+
+    const { flow, exclusionBreakdown } = computePrismaFlow(p);
+    expect(flow.screened).toBe(3);
+    expect(flow.excludedTa).toBe(1);
+    expect(flow.fullText).toBe(2);
+    expect(flow.excludedFt).toBe(1);
+    expect(flow.included).toBe(1);
+    expect(exclusionBreakdown.ta["Editorial / commentary"]).toBe(1);
+    expect(exclusionBreakdown.ft["Wrong study design"]).toBe(1);
+  });
+
+  it("counts unresolved dual-reviewer conflicts, parses highlighted stat snippets, and validates PDF URLs", () => {
+    const [pendingItem, agreedItem, resolvedItem] = citationsToScreeningItems([
+      { title: "Study A", abstract: "", format: "csv" },
+      { title: "Study B", abstract: "", format: "csv" },
+      { title: "Study C", abstract: "", format: "csv" },
+    ]);
+    pendingItem.reviewerDecisions = [
+      { reviewerId: "r1", reviewerName: "A", decision: "include", timestamp: "2026-01-01" },
+      { reviewerId: "r2", reviewerName: "B", decision: "exclude", timestamp: "2026-01-01" },
+    ];
+    agreedItem.reviewerDecisions = [
+      { reviewerId: "r1", reviewerName: "A", decision: "include", timestamp: "2026-01-01" },
+      { reviewerId: "r2", reviewerName: "B", decision: "include", timestamp: "2026-01-01" },
+    ];
+    resolvedItem.conflictStatus = "resolved";
+    resolvedItem.reviewerDecisions = [
+      { reviewerId: "r1", reviewerName: "A", decision: "include", timestamp: "2026-01-01" },
+      { reviewerId: "r2", reviewerName: "B", decision: "exclude", timestamp: "2026-01-01" },
+    ];
+
+    expect(countScreeningConflicts([pendingItem, agreedItem, resolvedItem])).toBe(1);
+
+    expect(parseMetricSelection("14/120")).toEqual({ kind: "binary", events: 14, n: 120 });
+    expect(parseMetricSelection("42.3 ± 8.1")).toEqual({ kind: "continuous", mean: 42.3, sd: 8.1 });
+    expect(parseMetricSelection("HR 0.74 (95% CI 0.58-0.95)")).toEqual({ kind: "ratio", effect: 0.74, ci_lower: 0.58, ci_upper: 0.95 });
+    expect(parseMetricSelection("no numbers here")).toBeNull();
+
+    expect(safeDocumentUrl("https://example.org/trial.pdf")).toBe("https://example.org/trial.pdf");
+    expect(safeDocumentUrl("blob:http://localhost/123")).toBe("blob:http://localhost/123");
+    expect(safeDocumentUrl("javascript:alert(1)")).toBeNull();
+
+    const p = emptyProject();
+    p.screening = {
+      ...p.screening,
+      title_abstract: [{ id: "1", title: "A", abstract: "", authors: "", year: "2022", decision: "include", stage: "title_abstract" }],
+      full_text: [{ id: "2", title: "B", abstract: "", authors: "", year: "2022", decision: "exclude", stage: "full_text", exclusion_reason: "Wrong comparator <script>" }],
+    };
+    const svg = buildPrisma2020Svg(p);
+    expect(svg).toContain("<svg");
+    expect(svg).toContain("Full-Text Excluded (n = 1)");
+    expect(svg).toContain("Wrong comparator &lt;script&gt;");
+    expect(svg).not.toContain("<script>");
   });
 });

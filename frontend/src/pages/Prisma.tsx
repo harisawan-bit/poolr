@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
-import type { Project, GradeRow, PrismaFlow } from "../lib/project";
+import { buildPrisma2020Svg, computePrismaFlow, type Project, type GradeRow, type PrismaFlow } from "../lib/project";
 import { Card, Input, Pill, EmptyState, Button, Textarea } from "../components/ui";
 import SankeyChart from "../components/charts/SankeyChart";
 import OptionsDrawer from "../components/kokonut/OptionsDrawer";
-import { ListChecks, Sparkles, Loader2, RefreshCw, Copy, Check } from "lucide-react";
-import { runGrade } from "../lib/project";
+import { ListChecks, Sparkles, Loader2, RefreshCw, Copy, Check, Download } from "lucide-react";
+import { downloadText, runGrade, toCsv } from "../lib/project";
 import { exportProject, generateGradeSof } from "../lib/api";
 import DisclaimerModal from "../components/DisclaimerModal";
 import { draftManuscriptSection } from "../lib/ai";
@@ -61,6 +61,8 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
   const [sofMarkdown, setSofMarkdown] = useState<string | null>(null);
   const [copiedSof, setCopiedSof] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [diagramMode, setDiagramMode] = useState<"prisma2020" | "sankey">("prisma2020");
+  const prismaSvg = useMemo(() => buildPrisma2020Svg(project), [project]);
 
   async function tryExport(onDone: () => void) {
     if (!project.meta.results) {
@@ -94,38 +96,9 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
     onChange({ ...project, prisma: { ...project.prisma, flow: { ...flow, [key]: v === "" ? null : Number(v) } } });
 
   const autoSyncFlow = () => {
-    const taItems = project.screening?.title_abstract ?? [];
-    const ftItems = project.screening?.full_text ?? [];
-    const extracted = project.extraction?.studies ?? [];
-
-    const identified = Math.max(taItems.length, flow.identified ?? 0);
-    const duplicates = flow.duplicates ?? 0;
-    const screened = taItems.length;
-    const excludedTa = taItems.filter((i) => i.decision === "exclude").length;
-    const fullText = ftItems.length > 0 ? ftItems.length : taItems.filter((i) => i.decision === "include").length;
-    const excludedFt = ftItems.filter((i) => i.decision === "exclude").length;
-    const included =
-      extracted.length > 0
-        ? extracted.length
-        : ftItems.length > 0
-        ? ftItems.filter((i) => i.decision === "include").length
-        : Math.max(0, fullText - excludedFt);
-
-    onChange({
-      ...project,
-      prisma: {
-        ...project.prisma,
-        flow: {
-          identified,
-          duplicates,
-          screened,
-          excludedTa,
-          fullText,
-          excludedFt,
-          included,
-        },
-      },
-    });
+    const { flow: live } = computePrismaFlow(project);
+    onChange({ ...project, prisma: { ...project.prisma, flow: live } });
+    setNotice("PRISMA flow counts synced from Search, Screening, and Study Extraction.");
   };
 
   const autoGrade = async () => {
@@ -212,14 +185,52 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
   return (
     <div className="space-y-3">
       {notice && (
-        <div className="flex items-start gap-2 rounded-[3px] border border-[var(--color-border)] bg-white/[0.04] px-2.5 py-1.5 text-[12px] text-[var(--color-text)]">
+        <div className="flex items-start gap-2 rounded-[3px] border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-2.5 py-1.5 text-[12px] text-[var(--color-text)]">
           <span className="flex-1">{notice}</span>
           <button className="shrink-0 text-[var(--color-text-muted)] hover:text-[var(--color-text)]" onClick={() => setNotice(null)} aria-label="Dismiss">✕</button>
         </div>
       )}
       {/* v0.5.3 — PRISMA flow diagram + options drawer */}
-      <Card title="PRISMA 2020 flow diagram">
-        <SankeyChart data={sankeyData} />
+      <Card
+        title="PRISMA 2020 flow diagram"
+        right={
+          <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex rounded border border-[var(--color-border)] bg-[var(--input-bg)] p-0.5 text-[11px]">
+              <button
+                type="button"
+                aria-pressed={diagramMode === "prisma2020"}
+                onClick={() => setDiagramMode("prisma2020")}
+                className={`rounded px-2 py-0.5 font-medium transition-colors ${diagramMode === "prisma2020" ? "bg-[var(--btn-bg)] text-[var(--btn-fg)]" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+              >
+                PRISMA 2020 Box
+              </button>
+              <button
+                type="button"
+                aria-pressed={diagramMode === "sankey"}
+                onClick={() => setDiagramMode("sankey")}
+                className={`rounded px-2 py-0.5 font-medium transition-colors ${diagramMode === "sankey" ? "bg-[var(--btn-bg)] text-[var(--btn-fg)]" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+              >
+                Sankey Flow
+              </button>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => downloadText("prisma_2020_flow.svg", prismaSvg, "image/svg+xml")}
+            >
+              <Download className="h-3.5 w-3.5" /> Download SVG
+            </Button>
+          </div>
+        }
+      >
+        {diagramMode === "prisma2020" ? (
+          <div className="overflow-x-auto rounded-[4px] border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-2 flex justify-center">
+            <div className="w-full max-w-[740px]" dangerouslySetInnerHTML={{ __html: prismaSvg }} />
+          </div>
+        ) : (
+          <SankeyChart data={sankeyData} />
+        )}
       </Card>
 
       <div className="flex justify-start">
@@ -242,11 +253,30 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
         </OptionsDrawer>
       </div>
 
+      {!!project.search?.runs?.length && <Card title="Search sources" right={
+        <Button size="sm" variant="outline" onClick={() => downloadText("poolr-search-appendix.csv",
+          toCsv((project.search?.runs ?? []).map(run => ({
+            source: run.source === "pubmed" ? "PubMed" : "ClinicalTrials.gov", date: run.at, query: run.query,
+            filters: JSON.stringify(run.fields), translated: run.translated, found: run.total,
+            retrieved: run.retrieved.length, imported: run.imported, duplicates: run.duplicates,
+          }))), "text/csv")}>Export search appendix</Button>
+      }>
+        <p className="mb-2 text-xs text-[var(--color-text-muted)]">Counts are per search run. Reruns may include overlapping records.</p>
+        <ul className="space-y-2 text-sm">
+          {project.search.runs.map(run => <li key={run.id}>
+            <strong>{run.source === "pubmed" ? "PubMed" : "ClinicalTrials.gov"}</strong>
+            {" · "}{new Date(run.at).toLocaleDateString()}{" · "}{run.total} found{" · "}{run.retrieved.length} retrieved
+            {" · "}{run.imported} imported{" · "}{run.duplicates} duplicates
+          </li>)}
+        </ul>
+      </Card>}
+
+      <button type="button" className="btn-ghost" onClick={() => window.dispatchEvent(new CustomEvent("poolr:gopage", { detail: "analysis-quality" }))}>Open certainty and appraisal</button>
       <Card title="PRISMA 2020 flow" right={
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={autoSyncFlow} title="Automatically extract record counts from Screening and Extraction">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={autoSyncFlow} title="Compute live PRISMA 2020 counts from Search, Screening, and Study Extraction">
             <RefreshCw className="h-3.5 w-3.5 mr-1" />
-            Auto-Sync Flow
+            Sync Live Counts
           </Button>
           <Button variant="outline" size="sm" onClick={autoGrade} disabled={busy || !project.meta.results}>
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Sparkles className="h-3.5 w-3.5 mr-1" />}
@@ -257,24 +287,74 @@ export default function Prisma({ project, onChange }: { project: Project; onChan
           </Button>
         </div>
       }>
-        <div className="max-w-[460px] space-y-2">
-          {FLOW_FIELDS.map((f) => (
-            <div key={f.key} className="flex items-center gap-3">
-              <span className="flex-1 text-[12.5px] text-[var(--color-text)]">{f.label}</span>
-              <span className="w-32 text-right text-[10.5px] text-[var(--color-text-muted)]">{f.hint}</span>
-              <Input type="number" className="w-24" value={flow[f.key] ?? ""} onChange={(e) => setFlow(f.key, e.target.value)} />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="space-y-2">
+            {FLOW_FIELDS.map((f) => {
+              const liveVal = computePrismaFlow(project).flow[f.key];
+              return (
+              <div key={f.key} className="flex items-center gap-3">
+                <span className="flex-1 text-[12.5px] text-[var(--color-text)]">{f.label}</span>
+                <span className="text-[10.5px] text-[var(--color-text-muted)]" title="Computed from live project state">
+                  live: {liveVal ?? 0}
+                </span>
+                <Input type="number" className="w-24" value={flow[f.key] ?? ""} onChange={(e) => setFlow(f.key, e.target.value)} />
+              </div>
+            );})}
+          </div>
+          <div className="rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)] p-3 text-[12px]">
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+              Screening Exclusion Reasons (PRISMA Box)
             </div>
-          ))}
+            {(() => {
+              const { exclusionBreakdown } = computePrismaFlow(project);
+              const ftEntries = Object.entries(exclusionBreakdown.ft);
+              const taEntries = Object.entries(exclusionBreakdown.ta);
+              if (ftEntries.length === 0 && taEntries.length === 0) {
+                return <p className="text-[11.5px] text-[var(--color-text-muted)]">No tagged exclusions yet. Tag exclusion reasons in Screening to populate your PRISMA exclusion table.</p>;
+              }
+              return (
+                <div className="space-y-2">
+                  {ftEntries.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between gap-2 text-[11px] font-medium text-[var(--color-text)]">
+                        <span>Full-Text Exclusions</span>
+                        {exclusionBreakdown.ft["Unspecified"] > 0 && (
+                          <button
+                            type="button"
+                            className="text-[10.5px] font-semibold text-[var(--color-unsure)] hover:underline"
+                            onClick={() => window.dispatchEvent(new CustomEvent("poolr:gopage", { detail: "screening" }))}
+                          >
+                            {exclusionBreakdown.ft["Unspecified"]} missing reason → tag in Screening
+                          </button>
+                        )}
+                      </div>
+                      <ul className="mt-1 space-y-0.5 text-[11.5px] text-[var(--color-text-muted)]">
+                        {ftEntries.map(([reason, n]) => <li key={reason} className="flex justify-between"><span>{reason}</span><strong className="text-[var(--color-text)]">{n}</strong></li>)}
+                      </ul>
+                    </div>
+                  )}
+                  {taEntries.length > 0 && (
+                    <div>
+                      <div className="text-[11px] font-medium text-[var(--color-text)]">Title / Abstract Exclusions</div>
+                      <ul className="mt-1 space-y-0.5 text-[11.5px] text-[var(--color-text-muted)]">
+                        {taEntries.map(([reason, n]) => <li key={reason} className="flex justify-between"><span>{reason}</span><strong className="text-[var(--color-text)]">{n}</strong></li>)}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
         </div>
       </Card>
 
       <Card title={`PRISMA 2020 checklist — ${doneCount}/27 complete`}>
         <div className="max-h-64 overflow-y-auto rounded-[3px] border border-[var(--color-border)]">
           {PRISMA_ITEMS.map((it) => (
-            <label key={it.n} className="flex cursor-pointer items-center gap-2.5 border-b border-[var(--color-border)] px-2.5 py-1.5 last:border-0 hover:bg-white/[0.03]">
+            <label key={it.n} className="flex cursor-pointer items-center gap-2.5 border-b border-[var(--color-border)] px-2.5 py-1.5 last:border-0 hover:bg-[var(--hover-surface)]">
               <input
                 type="checkbox"
-                className="h-3.5 w-3.5 accent-[#e6e7ea]"
+                className="h-3.5 w-3.5 accent-[var(--workspace-accent)]"
                 checked={!!checklist[String(it.n)]}
                 onChange={(e) => setItem(it.n, e.target.checked)}
               />

@@ -11,8 +11,8 @@ interface Props {
   onProjectChange?: (p: Project) => void;
 }
 
-export function FiguresHub({ project }: Props) {
-  const [subTab, setSubTab] = useState<"galbraith" | "labbe" | "baujat" | "contour" | "forest">("galbraith");
+export function FiguresHub({ project, initialPanel }: Props & { initialPanel?: string }) {
+  const [subTab, setSubTab] = useState<"galbraith" | "labbe" | "baujat" | "contour" | "forest">((["galbraith", "labbe", "baujat", "contour", "forest"] as readonly string[]).includes(initialPanel ?? "") ? initialPanel as "galbraith" | "labbe" | "baujat" | "contour" | "forest" : "galbraith");
   const extracted = useMemo(() => getExtractedData(project), [project]);
 
   return (
@@ -22,7 +22,7 @@ export function FiguresHub({ project }: Props) {
           onClick={() => setSubTab("galbraith")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "galbraith"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -33,7 +33,7 @@ export function FiguresHub({ project }: Props) {
           onClick={() => setSubTab("labbe")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "labbe"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -44,7 +44,7 @@ export function FiguresHub({ project }: Props) {
           onClick={() => setSubTab("baujat")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "baujat"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -55,7 +55,7 @@ export function FiguresHub({ project }: Props) {
           onClick={() => setSubTab("contour")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "contour"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -66,7 +66,7 @@ export function FiguresHub({ project }: Props) {
           onClick={() => setSubTab("forest")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "forest"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -102,7 +102,7 @@ function SvgViewer({ svg, filename }: { svg: string; filename: string }) {
     <div className="space-y-2">
       <div className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={handleCopy}>
-          {copied ? <><Check size={12} className="text-green-400" /> Copied SVG</> : <><Copy size={12} /> Copy SVG</>}
+          {copied ? <><Check size={12} className="text-[var(--color-include)]" /> Copied SVG</> : <><Copy size={12} /> Copy SVG</>}
         </Button>
         <Button size="sm" onClick={handleDownload}>
           <Download size={12} /> Download SVG

@@ -81,7 +81,7 @@ export function DataTable<T>({
       <table className="w-full text-left text-[12px]">
         {caption && <caption className="sr-only">{caption}</caption>}
         <thead className="text-[10.5px] uppercase tracking-wide text-[var(--color-text-muted)]">
-          <tr className="border-b border-[var(--color-border)] bg-white/[0.02]">
+          <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface-2)]">
             {columns.map((col, i) => {
               const active = sortCol === i;
               return (
@@ -118,7 +118,7 @@ export function DataTable<T>({
             sorted.map((row, rowIdx) => (
               <tr
                 key={rowKey(row, rowIdx)}
-                className="border-t border-[var(--color-border)] last:border-0 hover:bg-white/[0.02]"
+                className="border-t border-[var(--color-border)] last:border-0 hover:bg-[var(--hover-surface)]"
               >
                 {columns.map((col, colIdx) => (
                   <td

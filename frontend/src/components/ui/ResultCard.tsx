@@ -55,7 +55,7 @@ export function ResultCard({
             "rounded-full border px-2 py-0.5 text-[10.5px] font-medium",
             parseFloat(pValue) < 0.05
               ? "border-[var(--color-include)]/30 bg-[var(--color-include)]/15 text-[var(--color-include)]"
-              : "border-[var(--color-border)] bg-white/[0.05] text-[var(--color-text-muted)]"
+              : "border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-muted)]"
           )}
         >
           p = {pValue}

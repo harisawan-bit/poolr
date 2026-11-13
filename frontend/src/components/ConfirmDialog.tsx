@@ -32,9 +32,9 @@ export default function ConfirmDialog({
   };
 
   const btnColors = {
-    danger: 'bg-red-500 hover:bg-red-600 text-white',
-    warning: 'bg-amber-500 hover:bg-amber-600 text-white',
-    info: 'bg-blue-500 hover:bg-blue-600 text-white',
+    danger: 'bg-red-600 hover:bg-red-700 text-white',
+    warning: 'bg-amber-700 hover:bg-amber-800 text-white',
+    info: 'bg-[var(--btn-bg)] hover:opacity-90 text-[var(--btn-fg)]',
   };
 
   return (

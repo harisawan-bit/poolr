@@ -11,8 +11,8 @@ interface Props {
   onProjectChange?: (p: Project) => void;
 }
 
-export function BayesianHub({ project }: Props) {
-  const [subTab, setSubTab] = useState<"mcmc" | "nma" | "bmma">("mcmc");
+export function BayesianHub({ project, initialPanel, focusMethod }: Props & { initialPanel?: string; focusMethod?: string }) {
+  const [subTab, setSubTab] = useState<"mcmc" | "nma" | "bmma">((["mcmc", "nma", "bmma"] as readonly string[]).includes(initialPanel ?? "") ? initialPanel as "mcmc" | "nma" | "bmma" : "mcmc");
   const extracted = useMemo(() => getExtractedData(project), [project]);
 
   return (
@@ -23,7 +23,7 @@ export function BayesianHub({ project }: Props) {
           onClick={() => setSubTab("mcmc")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "mcmc"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -34,7 +34,7 @@ export function BayesianHub({ project }: Props) {
           onClick={() => setSubTab("nma")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "nma"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -45,7 +45,7 @@ export function BayesianHub({ project }: Props) {
           onClick={() => setSubTab("bmma")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "bmma"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -56,7 +56,7 @@ export function BayesianHub({ project }: Props) {
 
       {subTab === "mcmc" && <BayesianMcmcSection extracted={extracted} />}
       {subTab === "nma" && <BayesianNmaSection extracted={extracted} />}
-      {subTab === "bmma" && <BmmaPhyloSection extracted={extracted} />}
+      {subTab === "bmma" && <BmmaPhyloSection focusMethod={focusMethod}  extracted={extracted} />}
     </div>
   );
 }
@@ -183,7 +183,7 @@ function BayesianMcmcSection({ extracted }: { extracted: ReturnType<typeof getEx
             )}
           </div>
           {result.warnings?.length > 0 && (
-            <div className="text-xs text-yellow-400 bg-yellow-900/20 border border-yellow-800 rounded p-2.5 mt-3">
+            <div className="text-xs text-amber-900 dark:text-amber-300 bg-amber-500/12 border border-amber-600/35 rounded p-2.5 mt-3">
               {result.warnings.map((w: string, i: number) => (
                 <div key={i}>⚠ {w}</div>
               ))}
@@ -377,8 +377,8 @@ function BayesianNmaSection({ extracted: _ }: { extracted: ReturnType<typeof get
 }
 
 // ─── 3. BMMA Model Averaging & Phylogenetic ─────────────────────────────────
-function BmmaPhyloSection({ extracted }: { extracted: ReturnType<typeof getExtractedData> }) {
-  const [activeSub, setActiveSub] = useState<"bmma" | "phylo">("bmma");
+function BmmaPhyloSection({ extracted , focusMethod }: { focusMethod?: string; extracted: ReturnType<typeof getExtractedData> }) {
+  const [activeSub, setActiveSub] = useState<"bmma" | "phylo">(focusMethod === "phylo" ? "phylo" : "bmma");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [bmmaResult, setBmmaResult] = useState<any>(null);

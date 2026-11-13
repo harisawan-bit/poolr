@@ -13,7 +13,9 @@ namespace Poolr.Engine.Api;
 /// </summary>
 public static class CollaborationEngine
 {
-    private const string SnapshotDir = ".poolr/snapshots";
+    private static readonly string SnapshotDir = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "poolr", "snapshots");
 
     public class SnapshotRequest
     {
@@ -114,8 +116,10 @@ public static class CollaborationEngine
         return snap;
     }
 
-    private static string LoadSnapshot(string id)
+    public static string LoadSnapshot(string id)
     {
+        if (string.IsNullOrEmpty(id) || !id.All(char.IsLetterOrDigit))
+            throw new ArgumentException("Invalid snapshot ID.");
         var path = Path.Combine(SnapshotDir, $"{id}.json");
         if (!File.Exists(path))
             throw new ArgumentException($"Snapshot {id} not found");

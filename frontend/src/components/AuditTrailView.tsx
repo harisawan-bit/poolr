@@ -61,7 +61,7 @@ export function AuditTrailView() {
             onClick={() => setActiveTab("history")}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12.5px] font-medium transition-colors ${
               activeTab === "history"
-                ? "bg-[var(--color-accent)] text-white"
+                ? "bg-[var(--btn-bg)] text-[var(--btn-fg)]"
                 : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
             }`}
           >
@@ -71,7 +71,7 @@ export function AuditTrailView() {
             onClick={() => setActiveTab("authorship")}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12.5px] font-medium transition-colors ${
               activeTab === "authorship"
-                ? "bg-[var(--color-accent)] text-white"
+                ? "bg-[var(--btn-bg)] text-[var(--btn-fg)]"
                 : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
             }`}
           >

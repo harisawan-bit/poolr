@@ -72,7 +72,7 @@ export function BayesianHub({ project }: Props) {
       <div className="flex items-center gap-1.5 border-b border-[var(--color-border)] pb-2">
         {(["multilevel", "dta", "prognostic"] as const).map(t => (
           <button key={t} onClick={() => setSubTab(t)}
-            className={`px-3 py-1.5 text-xs rounded-md font-medium transition-colors ${subTab === t ? "bg-blue-600 text-white" : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--hover-surface)]"}`}>
+            className={`px-3 py-1.5 text-xs rounded-md font-medium transition-colors ${subTab === t ? "bg-[var(--btn-bg)] text-[var(--btn-fg)]" : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--hover-surface)]"}`}>
             {t === "multilevel" ? "Multilevel" : t === "dta" ? "DTA" : "Prognostic"}
           </button>
         ))}
@@ -121,99 +121,6 @@ export function BayesianHub({ project }: Props) {
   );
 }
 
-export function SpatialHub({ project }: Props) {
-  const [subTab, setSubTab] = useState<"spatial" | "pk">("spatial");
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const [result, setResult] = useState<any>(null);
-
-  const runSpatial = async () => {
-    setBusy(true); setErr(null);
-    try {
-      const spatialStudies = project.extraction?.studies?.filter(s => s.effect_size != null && s.effect_se != null).map((s, i) => ({
-        study: s.study || `Study ${i}`,
-        effect: s.effect_size!,
-        se: s.effect_se!,
-        lat: 40 + Math.random() * 10,
-        lon: -100 + Math.random() * 50,
-        year: 2020 + (i % 5)
-      })) || [];
-      if (spatialStudies.length < 3) { setErr("Need at least 3 studies with effect sizes"); setBusy(false); return; }
-      const res = await postJson("/api/spatial", { studies: spatialStudies, model: "car" });
-      setResult(res);
-    } catch (e: any) { setErr(e.message); }
-    setBusy(false);
-  };
-
-  const runPk = async () => {
-    setBusy(true); setErr(null);
-    try {
-      const pkStudies = project.extraction?.studies?.filter(s => s.effect_size != null).map((s, i) => ({
-        study: s.study || `Study ${i}`,
-        auc: s.effect_size! * 100,
-        cmax: s.effect_size! * 50,
-        t12: 8 + Math.random() * 4,
-        clearance: 10 + Math.random() * 5,
-        volume: 100 + Math.random() * 50,
-        dose: 200,
-        n: 20 + (i * 5)
-      })) || [];
-      if (pkStudies.length < 2) { setErr("Need at least 2 studies"); setBusy(false); return; }
-      const res = await postJson("/api/pharmacokinetic", { studies: pkStudies, parameter: "auc" });
-      setResult(res);
-    } catch (e: any) { setErr(e.message); }
-    setBusy(false);
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-1.5 border-b border-[var(--color-border)] pb-2">
-        {(["spatial", "pk"] as const).map(t => (
-          <button key={t} onClick={() => setSubTab(t)}
-            className={`px-3 py-1.5 text-xs rounded-md font-medium transition-colors ${subTab === t ? "bg-blue-600 text-white" : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--hover-surface)]"}`}>
-            {t === "spatial" ? "Spatial Meta" : "Pharmacokinetic"}
-          </button>
-        ))}
-      </div>
-
-      {subTab === "spatial" && (
-        <Card title="Spatial Meta-Analysis" subtitle="CAR/SAR models with Moran's I autocorrelation">
-          <Button onClick={runSpatial} disabled={busy}>
-            {busy ? <><Loader2 size={14} className="animate-spin" /> Computing...</> : "Run Spatial Analysis"}
-          </Button>
-        </Card>
-      )}
-      {subTab === "pk" && (
-        <Card title="Pharmacokinetic Meta-Analysis" subtitle="Population PK/PD, exposure-response pooling">
-          <Button onClick={runPk} disabled={busy}>
-            {busy ? <><Loader2 size={14} className="animate-spin" /> Computing...</> : "Run PK Meta"}
-          </Button>
-        </Card>
-      )}
-
-      {err && <ErrorDisplay error={err} />}
-      {result && (
-        <Card title="Results">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {result.pooledEffect !== undefined && <ResultCard title="Pooled Effect" value={F(result.pooledEffect)} ci={[result.ciLower, result.ciUpper]} />}
-            {result.moranI !== undefined && <ResultCard title="Moran's I" value={F(result.moranI, 3)} subtitle={result.moranIP < 0.05 ? "Significant" : "Not significant"} />}
-            {result.range !== undefined && <ResultCard title="Spatial Range" value={F(result.range, 0)} />}
-            {result.lambda !== undefined && <ResultCard title="Lambda" value={F(result.lambda, 3)} />}
-            {result.pooled !== undefined && <ResultCard title="Pooled" value={F(result.pooled, 2)} />}
-            {result.geometricMean !== undefined && <ResultCard title="Geometric Mean" value={F(result.geometricMean, 2)} />}
-            {result.geometricCv !== undefined && <ResultCard title="CV%" value={F(result.geometricCv, 1)} />}
-          </div>
-          {result.warnings?.length > 0 && (
-            <div className="text-xs text-yellow-400 bg-yellow-900/20 border border-yellow-800 rounded p-2 mt-3">
-              {result.warnings.map((w: string, i: number) => <div key={i}>⚠ {w}</div>)}
-            </div>
-          )}
-        </Card>
-      )}
-    </div>
-  );
-}
-
 export function QualitativeHub({ project }: Props) {
   const [method, setMethod] = useState<"thematic" | "meta-ethnography" | "framework">("thematic");
   const [busy, setBusy] = useState(false);
@@ -223,15 +130,12 @@ export function QualitativeHub({ project }: Props) {
   const run = async () => {
     setBusy(true); setErr(null);
     try {
-      const entries = project.extraction?.studies?.map((s, i) => ({
-        study: s.study || `Study ${i}`,
-        code: s.subgroup || `Code ${i % 5}`,
-        category: s.design || "General",
-        frequency: 1 + (i % 3),
-        theme: s.subgroup || `Theme ${i % 3}`
-      })) || [];
-      if (entries.length < 2) { setErr("Need at least 2 studies"); setBusy(false); return; }
-      const res = await postJson("/api/qualitative/synthesis", { entries, method });
+      const studies = project.extraction.studies.flatMap(study => {
+        const codes = study.subgroup?.split(/[;,]/).map(code => code.trim()).filter(Boolean) ?? [];
+        return study.study.trim() && codes.length ? [{ id: study.study, codes }] : [];
+      });
+      if (studies.length < 2) throw new Error("Enter qualitative codes in the subgroup field for at least two extracted studies.");
+      const res = await postJson("/api/qualitative/synthesis", { studies, method: method.replace("-", "_") });
       setResult(res);
     } catch (e: any) { setErr(e.message); }
     setBusy(false);
@@ -243,7 +147,7 @@ export function QualitativeHub({ project }: Props) {
         <div className="flex gap-2 mb-3">
           {(["thematic", "meta-ethnography", "framework"] as const).map(m => (
             <button key={m} onClick={() => setMethod(m)}
-              className={`px-3 py-1.5 text-xs rounded-md font-medium ${method === m ? "bg-blue-600 text-white" : "bg-[var(--hover-surface)] text-[var(--color-muted-foreground)]"}`}>
+              className={`px-3 py-1.5 text-xs rounded-md font-medium ${method === m ? "bg-[var(--btn-bg)] text-[var(--btn-fg)]" : "bg-[var(--hover-surface)] text-[var(--color-muted-foreground)]"}`}>
               {m.charAt(0).toUpperCase() + m.slice(1)}
             </button>
           ))}
@@ -330,7 +234,7 @@ export function AdvancedDiagnosticsHub({ project }: Props) {
       <div className="flex items-center gap-1.5 border-b border-[var(--color-border)] pb-2">
         {(["profile", "fp", "timeseries"] as const).map(t => (
           <button key={t} onClick={() => setSubTab(t)}
-            className={`px-3 py-1.5 text-xs rounded-md font-medium transition-colors ${subTab === t ? "bg-blue-600 text-white" : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--hover-surface)]"}`}>
+            className={`px-3 py-1.5 text-xs rounded-md font-medium transition-colors ${subTab === t ? "bg-[var(--btn-bg)] text-[var(--btn-fg)]" : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--hover-surface)]"}`}>
             {t === "profile" ? "Profile Likelihood" : t === "fp" ? "Fractional Poly" : "Time Series"}
           </button>
         ))}

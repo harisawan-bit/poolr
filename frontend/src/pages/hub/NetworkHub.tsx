@@ -11,8 +11,8 @@ interface Props {
   onProjectChange?: (p: Project) => void;
 }
 
-export function NetworkHub({ project }: Props) {
-  const [subTab, setSubTab] = useState<"frequentist" | "bayesian" | "sucra" | "cnma" | "multiarm" | "figures">("frequentist");
+export function NetworkHub({ project, initialPanel, focusMethod }: Props & { initialPanel?: string; focusMethod?: string }) {
+  const [subTab, setSubTab] = useState<"frequentist" | "bayesian" | "sucra" | "cnma" | "multiarm" | "figures">((["frequentist", "bayesian", "sucra", "cnma", "multiarm", "figures"] as readonly string[]).includes(initialPanel ?? "") ? initialPanel as "frequentist" | "bayesian" | "sucra" | "cnma" | "multiarm" | "figures" : "frequentist");
   const extracted = useMemo(() => getExtractedData(project), [project]);
 
   return (
@@ -22,7 +22,7 @@ export function NetworkHub({ project }: Props) {
           onClick={() => setSubTab("frequentist")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "frequentist"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -33,7 +33,7 @@ export function NetworkHub({ project }: Props) {
           onClick={() => setSubTab("bayesian")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "bayesian"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -44,7 +44,7 @@ export function NetworkHub({ project }: Props) {
           onClick={() => setSubTab("sucra")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "sucra"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -55,7 +55,7 @@ export function NetworkHub({ project }: Props) {
           onClick={() => setSubTab("cnma")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "cnma"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -66,7 +66,7 @@ export function NetworkHub({ project }: Props) {
           onClick={() => setSubTab("multiarm")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "multiarm"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -77,7 +77,7 @@ export function NetworkHub({ project }: Props) {
           onClick={() => setSubTab("figures")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "figures"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -89,9 +89,9 @@ export function NetworkHub({ project }: Props) {
       {subTab === "frequentist" && <FrequentistNmaSection extracted={extracted} />}
       {subTab === "bayesian" && <BayesianNmaSection extracted={extracted} />}
       {subTab === "sucra" && <SucraBootstrapSection extracted={extracted} />}
-      {subTab === "cnma" && <CnmaBucherSection extracted={extracted} />}
-      {subTab === "multiarm" && <MultiArmMultilevelRegressionSection extracted={extracted} />}
-      {subTab === "figures" && <FiguresSection extracted={extracted} />}
+      {subTab === "cnma" && <CnmaBucherSection focusMethod={focusMethod}  extracted={extracted} />}
+      {subTab === "multiarm" && <MultiArmMultilevelRegressionSection focusMethod={focusMethod} extracted={extracted} />}
+      {subTab === "figures" && <FiguresSection focusMethod={focusMethod} extracted={extracted} />}
     </div>
   );
 }
@@ -192,7 +192,7 @@ function FrequentistNmaSection({ extracted: _ }: { extracted: ReturnType<typeof 
                     </td>
                     <td className="p-2 text-right">{F(est.se)}</td>
                     <td className="p-2 text-right">{F(est.z)}</td>
-                    <td className="p-2 text-right text-emerald-400 font-mono">
+                    <td className="p-2 text-right text-[var(--color-include)] font-mono">
                       {est.p < 0.001 ? "< 0.001" : F(est.p, 4)}
                     </td>
                   </tr>
@@ -341,7 +341,7 @@ function SucraBootstrapSection({ extracted }: { extracted: ReturnType<typeof get
                       </span>
                       {r.treatment}
                     </td>
-                    <td className="p-2 text-right font-mono font-bold text-emerald-400">
+                    <td className="p-2 text-right font-mono font-bold text-[var(--color-include)]">
                       {(r.sucra * 100).toFixed(1)}%
                     </td>
                     <td className="p-2 text-right font-mono">{(r.pScore * 100).toFixed(1)}%</td>
@@ -367,8 +367,8 @@ function SucraBootstrapSection({ extracted }: { extracted: ReturnType<typeof get
 }
 
 // ─── 4. Component NMA & Bucher ──────────────────────────────────────────────
-function CnmaBucherSection({ extracted: _ }: { extracted: ReturnType<typeof getExtractedData> }) {
-  const [subType, setSubType] = useState<"cnma" | "bucher">("cnma");
+function CnmaBucherSection({ extracted: _ , focusMethod }: { focusMethod?: string; extracted: ReturnType<typeof getExtractedData> }) {
+  const [subType, setSubType] = useState<"cnma" | "bucher">(focusMethod === "bucher" ? "bucher" : "cnma");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [cnmaResult, setCnmaResult] = useState<any>(null);
@@ -528,8 +528,8 @@ function CnmaBucherSection({ extracted: _ }: { extracted: ReturnType<typeof getE
 }
 
 // ─── 5. Multi-Arm, Multilevel & Network Regression ──────────────────────────
-function MultiArmMultilevelRegressionSection({ extracted: _ }: { extracted: ReturnType<typeof getExtractedData> }) {
-  const [modelType, setModelType] = useState<"multiarm" | "multilevel" | "regression">("multiarm");
+function MultiArmMultilevelRegressionSection({ extracted: _, focusMethod }: { focusMethod?: string; extracted: ReturnType<typeof getExtractedData> }) {
+  const [modelType, setModelType] = useState<"multiarm" | "multilevel" | "regression">(focusMethod === "nma-multilevel" ? "multilevel" : focusMethod === "nma-regression" ? "regression" : "multiarm");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
@@ -632,10 +632,10 @@ function MultiArmMultilevelRegressionSection({ extracted: _ }: { extracted: Retu
 }
 
 // ─── 6. League Matrix & Bubble Plot SVG Figures ─────────────────────────────
-function FiguresSection({ extracted: _ }: { extracted: ReturnType<typeof getExtractedData> }) {
+function FiguresSection({ extracted: _, focusMethod }: { focusMethod?: string; extracted: ReturnType<typeof getExtractedData> }) {
   const [busy, setBusy] = useState(false);
   const [svgContent, setSvgContent] = useState<string | null>(null);
-  const [figType, setFigType] = useState<"league" | "bubble" | "network">("league");
+  const [figType, setFigType] = useState<"league" | "bubble" | "network">(focusMethod === "bubble-plot" ? "bubble" : "league");
 
   const loadNetwork = async () => {
     setBusy(true);
@@ -728,7 +728,7 @@ function FiguresSection({ extracted: _ }: { extracted: ReturnType<typeof getExtr
       {svgContent && (
         <Card title={figType === "league" ? "Network League Matrix" : figType === "network" ? "Network Meta-Analysis Graph" : "Meta-Regression Bubble Plot"}>
           <div
-            className="overflow-x-auto flex justify-center p-4 bg-white/5 rounded-lg border border-[var(--color-border)]"
+            className="overflow-x-auto flex justify-center p-4 bg-[var(--color-surface-subtle)] rounded-lg border border-[var(--color-border)]"
             dangerouslySetInnerHTML={{ __html: svgContent }}
           />
         </Card>

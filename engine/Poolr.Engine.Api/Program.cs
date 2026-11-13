@@ -12,6 +12,8 @@ if (args.Contains("--collaboration-command")) { Environment.ExitCode = await Col
 
 
 var builder = WebApplication.CreateBuilder(args);
+// Request-start diagnostics include query strings, which can contain an NCBI API key.
+builder.Logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Warning);
 
 // Listen on localhost only -- the Tauri shell bridges the webview to this sidecar.
 builder.WebHost.UseUrls("http://127.0.0.1:5180");
@@ -38,8 +40,39 @@ app.Use(async (ctx, next) =>
     await next();
 });
 
-app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.6.4", engine = "csharp" }));
-app.MapGet("/version", () => Results.Ok(new { version = "0.6.4" }));
+// Fixed upstreams keep the browser independent of provider CORS and redirects.
+var literatureHttp = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false })
+{
+    Timeout = TimeSpan.FromSeconds(23)
+};
+app.MapGet("/api/literature/{operation}", async (string operation, HttpContext context) =>
+{
+    var upstream = operation switch
+    {
+        "esearch" => "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
+        "efetch" => "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi",
+        "esummary" => "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi",
+        "trials" => "https://clinicaltrials.gov/api/v2/studies",
+        _ => null
+    };
+    if (upstream is null) { context.Response.StatusCode = 404; return; }
+    try
+    {
+        using var response = await literatureHttp.GetAsync(upstream + context.Request.QueryString,
+            HttpCompletionOption.ResponseHeadersRead, context.RequestAborted);
+        context.Response.StatusCode = (int)response.StatusCode is >= 300 and < 400 ? 502 : (int)response.StatusCode;
+        if (response.Headers.RetryAfter is not null)
+            context.Response.Headers.RetryAfter = response.Headers.RetryAfter.ToString();
+        if (!response.IsSuccessStatusCode) return;
+        context.Response.ContentType = response.Content.Headers.ContentType?.ToString() ?? "application/octet-stream";
+        await response.Content.CopyToAsync(context.Response.Body, context.RequestAborted);
+    }
+    catch (OperationCanceledException) when (!context.Response.HasStarted) { context.Response.StatusCode = 504; }
+    catch (HttpRequestException) when (!context.Response.HasStarted) { context.Response.StatusCode = 502; }
+});
+
+app.MapGet("/health", () => Results.Ok(new { ok = true, version = "0.6.6", engine = "csharp" }));
+app.MapGet("/version", () => Results.Ok(new { version = "0.6.6" }));
 
 app.MapPost("/api/meta", ([FromBody] MetaRequest req) =>
 {
@@ -108,9 +141,13 @@ app.MapPost("/api/export/r_code", async (HttpRequest httpReq) =>
         using var sr = new StreamReader(httpReq.Body);
         var raw = await sr.ReadToEndAsync();
         var doc = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(raw);
-        var resp = doc.GetProperty("response").Deserialize<ExtendedMetaResponse>();
-        var data = doc.GetProperty("data").Deserialize<List<Study>>();
-        return Results.Text(ExportSuite.RReplication(resp!, data ?? new()), "text/plain");
+        var resp = doc.TryGetProperty("response", out var respProp)
+            ? respProp.Deserialize<ExtendedMetaResponse>()
+            : doc.Deserialize<ExtendedMetaResponse>();
+        var data = doc.TryGetProperty("data", out var dataProp)
+            ? dataProp.Deserialize<List<Study>>()
+            : null;
+        return Results.Text(ExportSuite.RReplication(resp ?? new ExtendedMetaResponse(), data ?? new()), "text/plain");
     }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
@@ -330,21 +367,6 @@ app.MapPost("/api/report/python", ([FromBody] ReportingEngine.ManuscriptRequest 
     Results.Text(ReportingEngine.GeneratePythonReplication(req), "text/plain"));
 app.MapPost("/api/report/stata", ([FromBody] ReportingEngine.ManuscriptRequest req) =>
     Results.Text(ReportingEngine.GenerateStataReplication(req), "text/plain"));
-
-// v0.5.7 -- AI-assisted screening / extraction / RoB / GRADE
-app.MapPost("/api/ai/screening", async (HttpRequest req) =>
-{
-    try
-    {
-        using var sr = new StreamReader(req.Body);
-        var raw = await sr.ReadToEndAsync();
-        return Results.Ok(new { message = "AI screening endpoint - configure LLM in settings" });
-    }
-    catch (Exception ex)
-    {
-        return Results.BadRequest(new { error = ex.Message });
-    }
-});
 
 // v0.5.7 -- Survival extensions (RMST, IPD reconstruction)
 app.MapPost("/api/survival", async (HttpRequest req) =>
@@ -758,9 +780,15 @@ app.MapPost("/api/revman/import", async (HttpRequest req) =>
         else
         {
             var tmp = Path.GetTempFileName();
-            File.WriteAllText(tmp, json.content ?? string.Empty, Encoding.UTF8);
-            project = RevManEngine.ReadRm5(tmp);
-            File.Delete(tmp);
+            try
+            {
+                File.WriteAllText(tmp, json.content ?? string.Empty, Encoding.UTF8);
+                project = RevManEngine.ReadRm5(tmp);
+            }
+            finally
+            {
+                if (File.Exists(tmp)) File.Delete(tmp);
+            }
         }
         return Results.Ok(project);
     }
@@ -855,40 +883,6 @@ app.MapPost("/api/spatiotemporal", ([FromBody] SpatioTemporalEngine.SpatioTempor
 app.MapPost("/api/response-surface", ([FromBody] ResponseSurfaceEngine.ResponseSurfaceRequest req) =>
 {
     try { return Results.Ok(ResponseSurfaceEngine.Run(req)); }
-    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
-});
-
-// Engine -- Zotero Sync
-app.MapPost("/api/zotero/connect", ([FromBody] ZoteroSyncEngine.ZoteroConfig req) =>
-{
-    try { return Results.Ok(ZoteroSyncEngine.Connect(req)); }
-    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
-});
-app.MapPost("/api/zotero/import", ([FromBody] ZoteroSyncEngine.ZoteroConfig req) =>
-{
-    try { return Results.Ok(ZoteroSyncEngine.Import(req)); }
-    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
-});
-app.MapPost("/api/zotero/export", ([FromBody] ZoteroSyncEngine.ZoteroConfig req) =>
-{
-    try { return Results.Ok(ZoteroSyncEngine.Export(req, new List<ZoteroSyncEngine.ZoteroItem>())); }
-    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
-});
-
-// Engine -- Mendeley Sync
-app.MapPost("/api/mendeley/connect", ([FromBody] MendeleySyncEngine.MendeleyConfig req) =>
-{
-    try { return Results.Ok(MendeleySyncEngine.Connect(req)); }
-    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
-});
-app.MapPost("/api/mendeley/import", ([FromBody] MendeleySyncEngine.MendeleyConfig req) =>
-{
-    try { return Results.Ok(MendeleySyncEngine.Import(req)); }
-    catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
-});
-app.MapPost("/api/mendeley/export", ([FromBody] MendeleySyncEngine.MendeleyConfig req) =>
-{
-    try { return Results.Ok(MendeleySyncEngine.Export(req, new List<MendeleySyncEngine.MendeleyDocument>())); }
     catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
 });
 

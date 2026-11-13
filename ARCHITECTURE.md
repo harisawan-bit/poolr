@@ -66,25 +66,26 @@ This document describes the design principles, process topology, and multi-tier 
 poolr/
 ├── frontend/                  # React 19 + TypeScript + Vite UI
 │   ├── src/
-│   │   ├── pages/             # 8 Core PRISMA stages + specialized analysis pages
-│   │   ├── components/        # Modals, drawers, UI primitives, conflict dashboard
-│   │   ├── components/charts/ # Bklit UI interactive vector charts
-│   │   ├── lib/               # Engine REST API bridge, project store, NCBI search
+│   │   ├── pages/             # Core PRISMA stages, unified AnalysisHub & TeamWorkspace
+│   │   ├── components/        # CitationManager, StudySourceViewer, MetaWorkbench, modals
+│   │   ├── components/charts/ # Bklit UI & interactive vector charts
+│   │   ├── lib/               # Engine REST API clients, project store, importers, search
 │   │   └── __tests__/         # Vitest unit test suite
 │   └── package.json
-├── src-tauri/                 # Tauri 2 (Rust) desktop shell
-│   ├── src/                   # Rust application entry, sidecar supervisor
-│   ├── tauri.conf.json        # Bundle configuration (MSI, NSIS, DMG, DEB, RPM)
+├── src-tauri/                 # Tauri 2 (Rust) desktop shell & updater
+│   ├── src/                   # Rust application entry, rclone & engine sidecar supervisor
+│   ├── tauri.conf.json        # Bundle & updater config (MSI, NSIS, DMG, DEB, AppImage, RPM)
 │   └── Cargo.toml
 ├── engine/                    # C# 12 / .NET 8 High-Performance Statistics Engine
 │   ├── Poolr.Engine.Api/      # ASP.NET Core HTTP REST service (:5180)
-│   │   ├── MetaEngine.cs      # Classical pairwise meta-analysis (DL, REML, PM, HS)
+│   │   ├── MetaAnalysis.cs    # Classical & extended pairwise meta-analysis engines
 │   │   ├── AdvancedEngine.cs  # Trial sequential analysis, model averaging, DCA
 │   │   ├── SpecializedEngine.cs # Dose-response, survival RMST, health economics
-│   │   ├── FigureEngine.cs    # SkiaSharp vector SVG generator (robvis, Galbraith, Baujat)
-│   │   ├── GradeEngine.cs     # Summary of Findings (SoF) & OIS imprecision scoring
-│   │   └── Program.cs         # API route registration and CORS binding
-│   └── Poolr.Engine.Tests/    # xUnit gold-standard mathematical benchmarks
-├── docs/                      # Screenshots and documentation assets
-└── .github/                   # CI matrix, issue templates, dependabot, workflows
+│   │   ├── Figures.cs         # Vector SVG generators (robvis, Galbraith, Baujat, forest)
+│   │   ├── Grade.cs           # Summary of Findings (SoF) & OIS imprecision scoring
+│   │   ├── CollaborationEngine.cs # P-256 ECDSA signed revisions & rclone Drive sync
+│   │   └── Program.cs         # API route registration and local loopback CORS binding
+│   └── Poolr.Engine.Tests/    # xUnit gold-standard mathematical & regression benchmarks
+├── docs/                      # Screenshots, release notes, architecture & planning docs
+└── .github/                   # CI matrix, build-release workflow, issue/PR templates
 ```

@@ -28,6 +28,7 @@ export default function ExportCenterModal({ open, onClose, project }: Props) {
   const [exporting, setExporting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [previewContent, setPreviewContent] = useState<string | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   if (!open) return null;
@@ -38,6 +39,7 @@ export default function ExportCenterModal({ open, onClose, project }: Props) {
   const loadPreview = async (format: ExportType) => {
     setSelectedFormat(format);
     setPreviewContent(null);
+    setPreviewError(null);
     if (format === "docx") return; // binary format
 
     setExporting(true);
@@ -58,6 +60,7 @@ export default function ExportCenterModal({ open, onClose, project }: Props) {
             weight: s.weight,
             se: (s as any).se || Math.abs(s.ci_upper - s.ci_lower) / 3.92,
           })),
+          data: project.meta?.settings?.data ?? [],
           pooled: resp?.pooled,
           heterogeneity: resp?.heterogeneity,
           pico: project.pico,
@@ -68,7 +71,8 @@ export default function ExportCenterModal({ open, onClose, project }: Props) {
       }
     } catch (e) {
       console.error(e);
-      setPreviewContent("Failed to generate export. Please ensure engine is running.");
+      setPreviewContent(null);
+      setPreviewError("Failed to generate export. Please ensure engine is running.");
     } finally {
       setExporting(false);
     }
@@ -299,6 +303,10 @@ export default function ExportCenterModal({ open, onClose, project }: Props) {
             <div className="flex h-64 items-center justify-center text-[12px] text-[var(--color-text-muted)]">
               <Loader2 className="mr-2 h-5 w-5 animate-spin text-[var(--color-accent)]" />
               Generating {selectedFormat.toUpperCase()} package…
+            </div>
+          ) : previewError ? (
+            <div className="flex h-64 flex-col items-center justify-center gap-2 text-[12px] text-[var(--color-exclude)]" role="alert">
+              <span>{previewError}</span>
             </div>
           ) : previewContent ? (
             <div className="flex flex-col h-full space-y-3">

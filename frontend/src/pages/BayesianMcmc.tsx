@@ -124,7 +124,7 @@ export default function BayesianMcmc({ project }: { project: any }) {
                   <div className="mb-1 text-[10.5px] uppercase text-[var(--color-text-muted)]">N</div>
                   <Input type="number" value={a.n} onChange={e => updateArm(i, 'n', parseInt(e.target.value) || 0)} />
                 </div>
-                <button className="btn-ghost text-red-400 mb-1" onClick={() => removeArm(i)}>×</button>
+                <button className="btn-ghost text-[var(--color-exclude)] mb-1" onClick={() => removeArm(i)}>×</button>
               </div>
             ))}
           </div>

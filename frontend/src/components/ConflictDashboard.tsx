@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   CheckCircle2,
@@ -106,10 +106,7 @@ export default function ConflictDashboard(props: Props) {
   const [filter, setFilter] = useState<"all" | "pending" | "resolved" | "ai_adjudicated" | "discuss">("all");
   const [copied, setCopied] = useState(false);
 
-  const rawItems = project.screening?.[stage] ?? [];
-  const itemsRef = useRef(rawItems);
-  if (rawItems !== itemsRef.current) itemsRef.current = rawItems;
-  const items = itemsRef.current;
+  const items = useMemo(() => project.screening?.[stage] ?? [], [project.screening, stage]);
 
   const conflictRecords = useMemo(() => detectConflicts(items), [items]);
 

@@ -1,12 +1,45 @@
-# v0.6.4 — release candidate
-
-See [release notes](docs/RELEASE_0.6.4.md) and the draft installer builds. Prior releases below are historical.
-
 # poolr Releases
 
 ## Latest Release
 
-**poolr v0.6.3** — Commercial Platform, Google Drive BYOS & Team Collaboration
+**poolr v0.6.6** — Unified PRISMA 2020 Research Workflow, Citation Library, Source Provenance & UI Contrast Overhaul
+Release date: 2026-11-13
+
+> Major UX, workflow-linkage, and visual-contrast overhaul unifying PICO protocol setup, Reference & Citation Library, Dual Screening, Study Dossier Source Provenance, Risk-of-Bias Forest Matrices, Interactive Funnel inspection, PRISMA 2020 structured box diagrams, unified 90+ engine Analysis Workspace, and corrected Trial Sequential Analysis (TSA) API serialization. See [docs/RELEASE_0.6.6.md](docs/RELEASE_0.6.6.md) for upgrade, updater continuity, and verification gates.
+
+### Native Desktop Installers (v0.6.6)
+
+| Platform | Architecture | Installer Package | Direct Download |
+|---|---|---|---|
+| **Windows** | x64 (Standard) | `.msi` (Enterprise) / `.exe` (NSIS) | [poolr_0.6.6_x64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.6/poolr_0.6.6_x64_en-US.msi) · [poolr_0.6.6_x64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.6/poolr_0.6.6_x64-setup.exe) |
+| **Windows** | ARM64 (Surface / Snapdragon) | `.msi` / `.exe` | [poolr_0.6.6_arm64_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.6/poolr_0.6.6_arm64_en-US.msi) · [poolr_0.6.6_arm64-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.6/poolr_0.6.6_arm64-setup.exe) |
+| **Windows** | x86 (32-bit Legacy) | `.msi` / `.exe` | [poolr_0.6.6_x86_en-US.msi](https://github.com/harisawan-bit/poolr/releases/download/v0.6.6/poolr_0.6.6_x86_en-US.msi) · [poolr_0.6.6_x86-setup.exe](https://github.com/harisawan-bit/poolr/releases/download/v0.6.6/poolr_0.6.6_x86-setup.exe) |
+| **macOS** | Apple Silicon (M1/M2/M3/M4) | `.dmg` | [poolr_0.6.6_aarch64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.6/poolr_0.6.6_aarch64.dmg) |
+| **macOS** | Intel x64 | `.dmg` | [poolr_0.6.6_x64.dmg](https://github.com/harisawan-bit/poolr/releases/download/v0.6.6/poolr_0.6.6_x64.dmg) |
+| **Linux** | x86_64 (Debian / Ubuntu / Mint) | `.deb` | [poolr_0.6.6_amd64.deb](https://github.com/harisawan-bit/poolr/releases/download/v0.6.6/poolr_0.6.6_amd64.deb) |
+| **Linux** | x86_64 (Portable AppImage) | `.AppImage` | [poolr_0.6.6_amd64.AppImage](https://github.com/harisawan-bit/poolr/releases/download/v0.6.6/poolr_0.6.6_amd64.AppImage) |
+| **Linux** | x86_64 (Fedora / RHEL / openSUSE)| `.rpm` | [poolr-0.6.6-1.x86_64.rpm](https://github.com/harisawan-bit/poolr/releases/download/v0.6.6/poolr-0.6.6-1.x86_64.rpm) |
+
+*Existing `v0.6.5` users receive automatic updates via `latest.json` (`pubkey` key ID `C1C149B7917EDEF0`). Users on `v0.6.4` or earlier must install manually once to migrate onto the persistent updater key.*
+
+### What's New in v0.6.6
+
+- **End-to-End 8-Stage Pipeline Navigation**: Persistent workflow stepper linking Protocol, Search & Citation Library, Screening, Extraction, Risk of Bias, Analysis, PRISMA 2020, and Manuscript with live study/record counts.
+- **Reference & Citation Manager**: Built-in searchable bibliographic library with PubMed/MEDLINE/RIS/BibTeX/Rayyan/Covidence imports, PDF/URL attachment, tag management, and 1-click handoff to Extraction.
+- **Study Source Viewer & Quote Provenance**: Highlight-to-field provenance linking source text/abstract excerpts to extracted outcomes and RoB rationales.
+- **RoB-Integrated Forest Matrix & Interactive Funnel**: Direct RoB domain traffic lights rendered beside study weights in Meta-Analysis plus clickable funnel study inspection.
+- **PRISMA 2020 Structured Box Diagram**: Official Page et al. box-flow SVG synced with Screening exclusion reasons and Search retrieval counts.
+- **Trial Sequential Analysis Fix & Unified Version `0.6.6`**: Resolved integer sample-size serialization on `/api/advanced/sequential` and synchronized versions across UI, Tauri, and C# engine.
+
+---
+
+## Previous Releases
+
+### poolr v0.6.5
+Release date: 2026-11-04
+> Signed cross-platform release establishing persistent updater key `C1C149B7917EDEF0`, multi-format PubMed importer, reactive screening filters, continuous `Int. n` / `Ctrl n` extraction, and Linux Wayland/Mesa AppImage compatibility. See [RELEASE_0.6.4.md](docs/RELEASE_0.6.4.md) and [UPDATER_SIGNING.md](docs/UPDATER_SIGNING.md).
+
+### poolr v0.6.3 — Commercial Platform, Google Drive BYOS & Team Collaboration
 Release date: 2026-09-18
 
 > Major milestone release introducing commercial foundation, Google OAuth identity, Bring-Your-Own-Storage (BYOS) Google Drive sync with structured directory hierarchies, 4-tier Role-Based Access Control (Owner, Editor, Reviewer, Viewer), visual 3-way conflict resolution, inline review step discussions, ICMJE/CRediT-compliant active-time authorship tracking, and Windows WebView2 solid background rendering.

@@ -1,7 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { Project, ScreeningItem, ScreenDecision } from "../lib/project";
-import { CITATION_ACCEPT, importCitationText, mergeScreeningItems, dedupeRecords } from "../lib/project";
-import { readTextFiles, runPriorityScreening } from "../lib/api";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  CITATION_ACCEPT,
+  countScreeningConflicts,
+  dedupeRecords,
+  importCitationText,
+  linkCitationToExtractedStudy,
+  mergeScreeningItems,
+  priorityScoreItem,
+  type Project,
+  type ScreeningItem,
+  type ScreenDecision,
+} from "../lib/project";
+import { openExternalUrl, readTextFiles, runPriorityScreening } from "../lib/api";
 import { Card, Pill, Input, Textarea, EmptyState } from "../components/ui";
 import FunnelChart from "../components/charts/FunnelChart";
 import TeamSelector, { REVIEWER_MEMBERS } from "../components/kokonut/TeamSelector";
@@ -9,6 +19,7 @@ import AIScreeningPanel from "../components/ai/AIScreeningPanel";
 import ConflictDashboard from "../components/ConflictDashboard";
 import LivingReviews from "../components/LivingReviews";
 import { StepCommentsButton } from "../components/StepCommentsDrawer";
+import { ExternalLink, Eye, EyeOff, FilePlus2, Keyboard } from "lucide-react";
 
 const DECISIONS: ScreenDecision[] = ["include", "exclude", "unsure"];
 const DEC_LABEL: Record<ScreenDecision, string> = { include: "Include", exclude: "Exclude", unsure: "Unsure", unset: "Unset" };
@@ -37,7 +48,7 @@ function StageTabs({ stage, setStage }: { stage: "title_abstract" | "full_text";
   return (
     <div className="flex items-center gap-1">
       {(["title_abstract", "full_text"] as const).map((s) => (
-        <button key={s} className={`btn-ghost ${stage === s ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
+        <button key={s} type="button" className="btn-ghost" aria-pressed={stage === s}
           onClick={() => setStage(s)}>{s === "title_abstract" ? "Title / Abstract" : "Full text"}</button>
       ))}
     </div>
@@ -51,6 +62,12 @@ export default function Screening({ project, onChange }: { project: Project; onC
   const [scrollTop, setScrollTop] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [editingAbstract, setEditingAbstract] = useState(false);
+  const [autoAdvance, setAutoAdvance] = useState(true);
+  const [includeKeywords, setIncludeKeywords] = useState(() =>
+    [project.pico.intervention, project.pico.outcomes].filter(Boolean).join(", ")
+  );
+  const [excludeKeywords, setExcludeKeywords] = useState("case report, protocol, editorial, animal, letter");
   const noticeTimer = useRef<number | null>(null);
 
   useEffect(() => () => { if (noticeTimer.current != null) window.clearTimeout(noticeTimer.current); }, []);
@@ -64,27 +81,90 @@ export default function Screening({ project, onChange }: { project: Project; onC
   const fileRef = useRef<HTMLInputElement>(null);
 
   const items = project.screening?.[stage] ?? [];
-  const itemsRef = useRef(items);
-  if (items !== itemsRef.current) itemsRef.current = items;
+  const blinded = Boolean(project.screening?.blinded);
+  const conflictCount = useMemo(() => countScreeningConflicts(items), [items]);
+  const setBlinded = (next: boolean) =>
+    onChange({ ...project, screening: { ...project.screening, blinded: next } });
   const visible = useMemo(() => {
-    let list = itemsRef.current;
+    let list = items;
     if (filter !== "all") list = list.filter((i) => i.decision === filter);
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter((i) => i.title.toLowerCase().includes(q) || i.abstract.toLowerCase().includes(q));
     }
     return list;
-  }, [filter, query]);
+  }, [items, filter, query]);
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { all: itemsRef.current.length, include: 0, exclude: 0, unsure: 0, unset: 0 };
-    for (const it of itemsRef.current) c[it.decision]++;
+    const c: Record<string, number> = { all: items.length, include: 0, exclude: 0, unsure: 0, unset: 0 };
+    for (const it of items) c[it.decision]++;
     return c;
-  }, []);
+  }, [items]);
 
-  const setDecision = (id: string, decision: ScreenDecision) => {
+  const setDecision = useCallback((id: string, decision: ScreenDecision) => {
     const next = items.map((it) => (it.id === id ? { ...it, decision } : it));
     onChange({ ...project, screening: { ...project.screening, [stage]: next } });
+    if (autoAdvance) {
+      const curIdx = visible.findIndex((x) => x.id === id);
+      const nextItem = visible.slice(curIdx + 1).find((x) => x.decision === "unset") ?? visible[curIdx + 1];
+      if (nextItem) setSelectedId(nextItem.id);
+    }
+  }, [items, project, stage, onChange, autoAdvance, visible]);
+
+  const sendFtToExtraction = () => {
+    const ftIncluded = (project.screening?.full_text ?? []).filter((i) => i.decision === "include");
+    if (ftIncluded.length === 0) return;
+    const existingIds = new Set((project.extraction?.studies ?? []).map((s) => s.sourceId).filter(Boolean));
+    const existingNames = new Set((project.extraction?.studies ?? []).map((s) => s.study.trim().toLowerCase()));
+    const toAdd = ftIncluded
+      .map((item) => linkCitationToExtractedStudy(item))
+      .filter((s) => !(s.sourceId && existingIds.has(s.sourceId)) && !existingNames.has(s.study.trim().toLowerCase()));
+    if (toAdd.length === 0) {
+      setNotice("All full-text included studies are already in Study Manager & Extraction.");
+      return;
+    }
+    onChange({ ...project, extraction: { studies: [...(project.extraction?.studies ?? []), ...toAdd] } });
+    setNotice(`Sent ${toAdd.length} included stud${toAdd.length === 1 ? "y" : "ies"} to Study Manager & Extraction.`);
+  };
+
+  useEffect(() => {
+    if (tab !== "screening" || visible.length === 0) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable)) {
+        return;
+      }
+      const curIdx = selectedId ? visible.findIndex((i) => i.id === selectedId) : 0;
+      const cur = visible[curIdx >= 0 ? curIdx : 0];
+      if (!cur) return;
+      const key = e.key.toLowerCase();
+      if (key === "i") { e.preventDefault(); setDecision(cur.id, "include"); }
+      else if (key === "e") { e.preventDefault(); setDecision(cur.id, "exclude"); }
+      else if (key === "u") { e.preventDefault(); setDecision(cur.id, "unsure"); }
+      else if (key === "j" || e.key === "ArrowDown") {
+        e.preventDefault();
+        const next = visible[Math.min(visible.length - 1, (curIdx >= 0 ? curIdx : 0) + 1)];
+        if (next) setSelectedId(next.id);
+      } else if (key === "k" || e.key === "ArrowUp") {
+        e.preventDefault();
+        const prev = visible[Math.max(0, (curIdx >= 0 ? curIdx : 0) - 1)];
+        if (prev) setSelectedId(prev.id);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [tab, visible, selectedId, setDecision]);
+
+  const localPriorityRank = () => {
+    const includedTexts = items.filter((i) => i.decision === "include").map((i) => `${i.title} ${i.abstract}`);
+    const excludedTexts = items.filter((i) => i.decision === "exclude").map((i) => `${i.title} ${i.abstract}`);
+    const picoText = `${project.pico.population} ${project.pico.intervention} ${project.pico.comparator} ${project.pico.outcomes} ${project.protocol.inclusionCriteria ?? ""}`;
+    const decided = items.filter((i) => i.decision !== "unset");
+    const undecided = items
+      .filter((i) => i.decision === "unset")
+      .sort((a, b) => priorityScoreItem(b, includedTexts, excludedTexts, picoText) - priorityScoreItem(a, includedTexts, excludedTexts, picoText));
+    onChange({ ...project, screening: { ...project.screening, [stage]: [...undecided, ...decided] } });
+    setNotice(`Active-learning priority sorted ${undecided.length} unscreened records (${includedTexts.length} included priors, PICO criteria weighted).`);
   };
 
   const setNote = (id: string, note: string) => {
@@ -289,8 +369,8 @@ export default function Screening({ project, onChange }: { project: Project; onC
         <AIScreeningPanel
           items={items}
           pico={project.pico}
-          inclusionCriteria={project.protocol.objective || ""}
-          exclusionCriteria=""
+          inclusionCriteria={project.protocol.inclusionCriteria || project.protocol.objective || ""}
+          exclusionCriteria={project.protocol.exclusionCriteria || ""}
           onDecisions={(decisions) => {
             const next = items.map(item => {
               const d = decisions.find(x => x.id === item.id);
@@ -319,31 +399,19 @@ export default function Screening({ project, onChange }: { project: Project; onC
         </div>
 
       {/* v0.5.5 — Screening workflow tabs */}
-      <div className="flex items-center justify-between border-b border-[var(--color-border)] pb-2">
-        <div className="flex items-center gap-1">
-          <button
-            className={`btn-ghost ${tab === "screening" ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
-            onClick={() => setTab("screening")}
-          >
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-border)] pb-2">
+        <div className="flex flex-wrap items-center gap-1">
+          <button type="button" className="btn-ghost" aria-pressed={tab === "screening"} onClick={() => setTab("screening")}>
             Single Screening
           </button>
-          <button
-            className={`btn-ghost ${tab === "living_review" ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
-            onClick={() => setTab("living_review")}
-          >
+          <button type="button" className="btn-ghost" aria-pressed={tab === "living_review"} onClick={() => setTab("living_review")}>
             Living Review
           </button>
-          <button
-            className={`btn-ghost ${tab === "dual_entry" ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
-            onClick={() => setTab("dual_entry")}
-          >
-            Dual Entry
+          <button type="button" className="btn-ghost" aria-pressed={tab === "dual_entry"} onClick={() => setTab("dual_entry")}>
+            Dual Entry {blinded && <Pill tone="accent">Blinded</Pill>}
           </button>
-          <button
-            className={`btn-ghost ${tab === "conflicts" ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
-            onClick={() => setTab("conflicts")}
-          >
-            Conflicts
+          <button type="button" className="btn-ghost" aria-pressed={tab === "conflicts"} onClick={() => setTab("conflicts")}>
+            Conflicts {blinded ? <Pill tone="neutral">Hidden</Pill> : conflictCount > 0 ? <Pill tone="exclude">{conflictCount}</Pill> : <Pill tone="include">0</Pill>}
           </button>
         </div>
         <StepCommentsButton step="screening" stepTitle="Screening" />
@@ -351,21 +419,55 @@ export default function Screening({ project, onChange }: { project: Project; onC
 
       {/* v0.5.5 — Conflict Dashboard */}
       {tab === "conflicts" && (
-        <ConflictDashboard
-          project={project}
-          onChange={onChange}
-          stage={stage}
-          reviewers={reviewers}
-        />
+        blinded ? (
+          <Card title="Blinded Screening Active">
+            <div className="flex flex-wrap items-center justify-between gap-3 text-[12.5px]">
+              <p className="text-[var(--color-text-muted)]">
+                Dual-reviewer decisions and disagreements are intentionally masked while <strong className="text-[var(--color-text)]">Blinded Mode</strong> is enabled. Unblind when all reviewers finish their independent pass to adjudicate conflicts ({conflictCount} pending).
+              </p>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => setBlinded(false)}
+              >
+                <Eye className="h-3.5 w-3.5" /> Unblind &amp; Reveal Conflicts ({conflictCount})
+              </button>
+            </div>
+          </Card>
+        ) : (
+          <ConflictDashboard
+            project={project}
+            onChange={onChange}
+            stage={stage}
+            reviewers={reviewers}
+          />
+        )
       )}
 
       {/* v0.5.5 — Dual Entry Mode */}
       {tab === "dual_entry" && (
         <Card title="Dual Screening Entry" right={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="btn-ghost"
+              aria-pressed={blinded}
+              onClick={() => setBlinded(!blinded)}
+              title="Mask other reviewers' decisions and conflict indicators until ready to adjudicate"
+            >
+              {blinded ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              {blinded ? "Blinded ON" : "Blinded OFF"}
+            </button>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() => { setBlinded(false); setTab("conflicts"); }}
+            >
+              Reveal &amp; Adjudicate ({conflictCount})
+            </button>
             <span className="text-[11px] text-[var(--color-text-muted)]">Active reviewer:</span>
             <select
-              className="rounded-[3px] border border-[var(--color-border)] bg-[var(--input-bg)] px-2 py-1 text-[12px] text-[var(--color-text)]"
+              className="rounded-[4px] border border-[var(--color-border-strong)] bg-[var(--input-bg)] px-2 py-1 text-[12px] text-[var(--color-text)]"
               value={activeReviewerIdx}
               onChange={(e) => setActiveReviewerIdx(Number(e.target.value))}
             >
@@ -375,8 +477,15 @@ export default function Screening({ project, onChange }: { project: Project; onC
             </select>
           </div>
         }>
-          <div className="mb-3 text-[12px] text-[var(--color-text-muted)]">
-            Record decisions independently for each reviewer. Conflicts will be flagged automatically.
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-[12px] text-[var(--color-text-muted)]">
+            <span>
+              {blinded
+                ? "Blinded dual mode: other reviewers' decisions and conflict tags are masked until unblinded."
+                : "Record decisions independently for each reviewer. Conflicts are flagged automatically."}
+            </span>
+            <Pill tone="accent">
+              My votes: {items.filter((i) => i.reviewerDecisions?.some((d) => d.reviewerId === REVIEWER_MEMBERS[activeReviewerIdx]?.id && d.decision !== "unset")).length} / {items.length}
+            </Pill>
           </div>
           <div className="max-h-[400px] space-y-2 overflow-y-auto">
             {items.length === 0 ? (
@@ -393,7 +502,9 @@ export default function Screening({ project, onChange }: { project: Project; onC
                         <div className="truncate text-[12.5px] font-medium text-[var(--color-text)]">{it.title}</div>
                         <div className="truncate text-[11px] text-[var(--color-text-muted)]">{it.abstract}</div>
                       </div>
-                      {it.conflictStatus && (
+                      {blinded ? (
+                        <Pill tone="neutral">Masked while blinded</Pill>
+                      ) : it.conflictStatus && (
                         <Pill tone={statusTone}>
                           {it.conflictStatus}
                         </Pill>
@@ -450,12 +561,28 @@ export default function Screening({ project, onChange }: { project: Project; onC
                 Promote Included ({counts.include})
               </button>
             )}
+            {stage === "full_text" && counts.include > 0 && (
+              <button
+                className="btn-ghost !border-[var(--color-include)]/50 !text-[var(--color-include)]"
+                onClick={sendFtToExtraction}
+                title="Send full-text included studies directly to Study Manager & Extraction"
+              >
+                <FilePlus2 className="mr-1 inline h-3.5 w-3.5" /> Send to Extraction ({counts.include})
+              </button>
+            )}
             <button
               className="btn-ghost"
               onClick={handlePrioritySort}
-              title="Sort unreviewed records by relevance to PICO criteria (Living Review ML)"
+              title="Sort unreviewed records by relevance (engine AI + active-learning fallback)"
             >
               Priority Sort
+            </button>
+            <button
+              className="btn-ghost"
+              onClick={localPriorityRank}
+              title="Instant offline ASReview-style active-learning rank using your Include/Exclude decisions & PICO"
+            >
+              Active Rank
             </button>
             <button className="btn-ghost" onClick={() => fileRef.current?.click()}>Import</button>
             <button className="btn-primary" onClick={addSample}>+ Add</button>
@@ -474,11 +601,11 @@ export default function Screening({ project, onChange }: { project: Project; onC
             }}
           />
           {notice && (
-            <div className="mb-2 rounded-[3px] border border-[var(--color-border)] bg-white/[0.04] px-2.5 py-1.5 text-[12.5px] text-[var(--color-text)]">
+            <div className="mb-2 rounded-[3px] border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-2.5 py-1.5 text-[12.5px] text-[var(--color-text)]">
               {notice}
             </div>
           )}
-          <div className="mb-3 flex flex-wrap items-center gap-1.5">
+          <div className="mb-2 flex flex-wrap items-center gap-1.5">
             {(["all", "include", "exclude", "unsure", "unset"] as const).map((f) => (
               <button key={f} className={`btn-ghost ${filter === f ? "!text-[var(--color-text)] !border-[var(--color-border-strong)]" : ""}`}
                 onClick={() => setFilter(f)}>
@@ -488,30 +615,63 @@ export default function Screening({ project, onChange }: { project: Project; onC
             <Input className="ml-auto w-44" placeholder="Filter titles…" value={query} onChange={(e) => setQuery(e.target.value)} />
           </div>
 
+          {/* Rayyan-style Include/Exclude keyword highlighting + keyboard screening options */}
+          <div className="mb-3 grid grid-cols-1 gap-2 rounded-[4px] border border-[var(--color-border)] bg-[var(--input-bg)] px-2.5 py-2 md:grid-cols-12 md:items-center">
+            <div className="md:col-span-4">
+              <Input
+                aria-label="Include highlight keywords"
+                className="h-7 text-[11px]"
+                placeholder="Include keywords (comma-separated, emerald highlight)"
+                value={includeKeywords}
+                onChange={(e) => setIncludeKeywords(e.target.value)}
+              />
+            </div>
+            <div className="md:col-span-4">
+              <Input
+                aria-label="Exclude highlight keywords"
+                className="h-7 text-[11px]"
+                placeholder="Exclude keywords (comma-separated, rose highlight)"
+                value={excludeKeywords}
+                onChange={(e) => setExcludeKeywords(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-3 text-[11px] text-[var(--color-text-muted)] md:col-span-4">
+              <label className="flex cursor-pointer items-center gap-1.5">
+                <input type="checkbox" checked={autoAdvance} onChange={(e) => setAutoAdvance(e.target.checked)} />
+                <span>Auto-advance</span>
+              </label>
+              <span className="inline-flex items-center gap-1" title="Keyboard shortcuts">
+                <Keyboard className="h-3.5 w-3.5" /> I / E / U · J / K
+              </span>
+            </div>
+          </div>
+
           {total === 0 ? (
             <EmptyState>
               No records at this stage. Use <span className="text-[var(--color-text)]">+ Add</span> to create screening items, or{" "}
-              <span className="text-[var(--color-text)]">Import</span> a PubMed MEDLINE / RIS / .nbib / CSV / EndNote export.
+              <span className="text-[var(--color-text)]">Import</span> a PubMed MEDLINE / RIS / .nbib / Rayyan CSV / Covidence CSV / EndNote export.
             </EmptyState>
           ) : (
             <div className="flex gap-3" style={{ height: 520 }}>
               {/* Virtualized list */}
               <div ref={viewportRef}
                 onScroll={(e) => setScrollTop((e.target as HTMLDivElement).scrollTop)}
-                className="w-[56%] overflow-y-auto rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)]">
+                className="contain-pane w-[52%] overflow-y-auto rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)]">
                 <div style={{ height: total * ROW_H, position: "relative" }}>
                   <div style={{ transform: `translateY(${start * ROW_H}px)` }}>
                     {slice.map((it) => {
                       const idx = visible.indexOf(it);
                       return (
                         <div key={it.id}
-                          onClick={() => setSelectedId(it.id)}
-                          className={`flex cursor-pointer items-start gap-2 border-b border-[var(--color-border)] px-3 py-2 transition-colors ${sel === idx ? "bg-white/[0.06]" : "hover:bg-white/[0.03]"}`}
+                          onClick={() => { setSelectedId(it.id); setEditingAbstract(false); }}
+                          className={`flex cursor-pointer items-start gap-2 border-b border-[var(--color-border)] px-3 py-2 transition-colors ${sel === idx ? "bg-[var(--color-row-active)]" : "hover:bg-[var(--hover-surface)]"}`}
                           style={{ height: ROW_H }}>
                           <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${dotClass(it.decision)}`} />
                           <div className="min-w-0 flex-1">
                             <div className="truncate text-[12.5px] text-[var(--color-text)]">{it.title}</div>
-                            <div className="truncate text-[11px] text-[var(--color-text-muted)]">{it.abstract}</div>
+                            <div className="truncate text-[11px] text-[var(--color-text-muted)]">
+                              {[it.authors, it.year, it.journal].filter(Boolean).join(" · ") || it.abstract}
+                            </div>
                           </div>
                         </div>
                       );
@@ -521,38 +681,69 @@ export default function Screening({ project, onChange }: { project: Project; onC
               </div>
 
               {/* Detail + decisions */}
-              <div className="flex w-[44%] flex-col rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)] p-3">
+              <div className="contain-pane flex w-[48%] flex-col rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)] p-3">
                 {sel == null ? (
-                  <EmptyState>Select a record to screen.</EmptyState>
+                  <EmptyState>Select a record to screen (or press I / E / U).</EmptyState>
                 ) : (
                   (() => {
                     const it = visible[sel];
                     return (
                       <>
-                        <div className="mb-2 flex items-center justify-between">
-                          <Pill tone={DEC_TONE[it.decision]}>{DEC_LABEL[it.decision]}</Pill>
-                          <span className="text-[10.5px] text-[var(--color-text-muted)]">{sel + 1} / {total}</span>
+                        <div className="mb-1.5 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5">
+                            <Pill tone={DEC_TONE[it.decision]}>{DEC_LABEL[it.decision]}</Pill>
+                            {it.year && <Pill tone="neutral">{it.year}</Pill>}
+                            {it.doi && (
+                              <button type="button" className="text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text)] inline-flex items-center gap-0.5"
+                                onClick={() => void openExternalUrl(`https://doi.org/${it.doi}`)}>
+                                DOI <ExternalLink className="h-3 w-3" />
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button type="button" className="text-[11px] text-[var(--color-text-muted)] underline" onClick={() => setEditingAbstract((v) => !v)}>
+                              {editingAbstract ? "Done editing" : "Edit abstract"}
+                            </button>
+                            <span className="text-[10.5px] text-[var(--color-text-muted)]">{sel + 1} / {total}</span>
+                          </div>
                         </div>
-                        <div className="text-[13px] font-semibold text-[var(--color-text)]">{it.title}</div>
-                        <Textarea className="mt-2 flex-1" rows={8} value={it.abstract} onChange={(e) => {
-                          const next = items.map((x) => (x.id === it.id ? { ...x, abstract: e.target.value } : x));
-                          onChange({ ...project, screening: { ...project.screening, [stage]: next } });
-                        }} />
+                        <div className="text-[13px] font-semibold text-[var(--color-text)]">
+                          <HighlightedText text={it.title} includeWords={includeKeywords} excludeWords={excludeKeywords} />
+                        </div>
+                        {(it.authors || it.journal) && (
+                          <div className="mt-0.5 text-[11px] text-[var(--color-text-muted)]">
+                            {[it.authors, it.journal].filter(Boolean).join(" — ")}
+                          </div>
+                        )}
+                        {editingAbstract ? (
+                          <Textarea className="mt-2 flex-1" rows={8} value={it.abstract} onChange={(e) => {
+                            const next = items.map((x) => (x.id === it.id ? { ...x, abstract: e.target.value } : x));
+                            onChange({ ...project, screening: { ...project.screening, [stage]: next } });
+                          }} />
+                        ) : (
+                          <div className="mt-2 flex-1 overflow-y-auto rounded-[4px] border border-[var(--color-border)] bg-[var(--color-surface)] p-2.5 text-[12px] leading-relaxed text-[var(--color-text)]">
+                            {it.abstract ? (
+                              <HighlightedText text={it.abstract} includeWords={includeKeywords} excludeWords={excludeKeywords} />
+                            ) : (
+                              <span className="text-[var(--color-text-muted)]">No abstract text attached.</span>
+                            )}
+                          </div>
+                        )}
                         <Input className="mt-2" placeholder="Note (optional)" value={it.note ?? ""} onChange={(e) => setNote(it.id, e.target.value)} />
-                        {it.decision === "exclude" && (
+                        {(it.decision === "exclude" || stage === "full_text") && (
                           <select
                             className="mt-2 w-full rounded-[3px] border border-[var(--color-border)] bg-[var(--input-bg)] px-2 py-1.5 text-[12px] text-[var(--color-text)]"
-                            value={(it as ScreeningItem).exclusion_reason ?? ""}
+                            value={it.exclusion_reason ?? ""}
                             onChange={(e) => {
                               const next = items.map((x) => (x.id === it.id ? { ...x, exclusion_reason: e.target.value } : x));
                               onChange({ ...project, screening: { ...project.screening, [stage]: next } });
                             }}>
-                            <option value="">Exclusion reason…</option>
+                            <option value="">Exclusion reason (PRISMA tracked)…</option>
                             {EXCLUSION_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
                           </select>
                         )}
-                        {(it as ScreeningItem).exclusion_reason && (
-                          <div className="mt-1 text-[10.5px] text-[var(--color-text-muted)]">Reason: {(it as ScreeningItem).exclusion_reason}</div>
+                        {it.exclusion_reason && (
+                          <div className="mt-1 text-[10.5px] text-[var(--color-text-muted)]">Reason: {it.exclusion_reason}</div>
                         )}
                         <div className="mt-3 grid grid-cols-3 gap-1.5">
                           {DECISIONS.map((d) => (
@@ -588,4 +779,31 @@ function dotClass(d: ScreenDecision) {
 }
 function decisionColor(d: ScreenDecision) {
   return d === "include" ? "var(--color-include)" : d === "exclude" ? "var(--color-exclude)" : d === "unsure" ? "var(--color-unsure)" : "#e6e7ea";
+}
+
+function HighlightedText({ text, includeWords, excludeWords }: { text: string; includeWords: string; excludeWords: string }) {
+  const inc = includeWords.split(/[,;]+/).map((s) => s.trim()).filter((s) => s.length >= 2);
+  const exc = excludeWords.split(/[,;]+/).map((s) => s.trim()).filter((s) => s.length >= 2);
+  const all = [...inc, ...exc];
+  if (!text || all.length === 0) return <>{text}</>;
+  const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const incSet = new Set(inc.map((s) => s.toLowerCase()));
+  const rx = new RegExp(`(${all.map(esc).join("|")})`, "gi");
+  const parts = text.split(rx);
+  return (
+    <>
+      {parts.map((part, idx) => {
+        if (idx % 2 === 0) return <span key={idx}>{part}</span>;
+        const isInc = incSet.has(part.toLowerCase());
+        return (
+          <mark
+            key={idx}
+            className={isInc ? "rounded px-0.5 bg-[var(--color-include)]/25 text-[var(--color-text)]" : "rounded px-0.5 bg-[var(--color-exclude)]/25 text-[var(--color-text)]"}
+          >
+            {part}
+          </mark>
+        );
+      })}
+    </>
+  );
 }

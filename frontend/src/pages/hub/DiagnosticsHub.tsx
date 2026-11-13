@@ -21,10 +21,10 @@ interface Props {
   onProjectChange?: (p: Project) => void;
 }
 
-export function DiagnosticsHub({ project }: Props) {
+export function DiagnosticsHub({ project, initialPanel, focusMethod }: Props & { initialPanel?: string; focusMethod?: string }) {
   const [subTab, setSubTab] = useState<
     "gosh" | "influence" | "robust" | "tes" | "mi" | "prediction" | "proportion" | "pvalue" | "cluster"
-  >("gosh");
+  >((["gosh", "influence", "robust", "tes", "mi", "prediction", "proportion", "pvalue", "cluster"] as readonly string[]).includes(initialPanel ?? "") ? initialPanel as "gosh" | "influence" | "robust" | "tes" | "mi" | "prediction" | "proportion" | "pvalue" | "cluster" : "gosh");
   const extracted = useMemo(() => getExtractedData(project), [project]);
 
   return (
@@ -35,7 +35,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("gosh")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "gosh"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -46,7 +46,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("influence")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "influence"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -57,7 +57,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("robust")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "robust"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -68,7 +68,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("tes")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "tes"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -79,7 +79,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("mi")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "mi"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -90,7 +90,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("prediction")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "prediction"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -101,7 +101,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("proportion")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "proportion"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -112,7 +112,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("pvalue")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "pvalue"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -123,7 +123,7 @@ export function DiagnosticsHub({ project }: Props) {
           onClick={() => setSubTab("cluster")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "cluster"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -134,13 +134,13 @@ export function DiagnosticsHub({ project }: Props) {
 
       {subTab === "gosh" && <GoshSection extracted={extracted} />}
       {subTab === "influence" && <InfluenceSection extracted={extracted} />}
-      {subTab === "robust" && <RobustSection extracted={extracted} />}
-      {subTab === "tes" && <TesLocationScaleSection extracted={extracted} />}
+      {subTab === "robust" && <RobustSection focusMethod={focusMethod}  extracted={extracted} />}
+      {subTab === "tes" && <TesLocationScaleSection focusMethod={focusMethod}  extracted={extracted} />}
       {subTab === "mi" && <MultipleImputationSection extracted={extracted} />}
-      {subTab === "prediction" && <PredictionAveragingSection extracted={extracted} />}
+      {subTab === "prediction" && <PredictionAveragingSection focusMethod={focusMethod}  extracted={extracted} />}
       {subTab === "proportion" && <ProportionSection />}
       {subTab === "pvalue" && <PValueCombineSection extracted={extracted} />}
-      {subTab === "cluster" && <ClusterSection extracted={extracted} />}
+      {subTab === "cluster" && <ClusterSection focusMethod={focusMethod}  extracted={extracted} />}
     </div>
   );
 }
@@ -193,7 +193,7 @@ function GoshSection({ extracted }: { extracted: ReturnType<typeof getExtractedD
           </div>
 
           {result.clusterWarnings?.length > 0 && (
-            <div className="text-xs text-yellow-400 bg-yellow-900/20 border border-yellow-800 rounded p-2.5 mt-3">
+            <div className="text-xs text-amber-900 dark:text-amber-300 bg-amber-500/12 border border-amber-600/35 rounded p-2.5 mt-3">
               {result.clusterWarnings.map((w: string, i: number) => (
                 <div key={i}>⚠ {w}</div>
               ))}
@@ -249,7 +249,7 @@ function InfluenceSection({ extracted }: { extracted: ReturnType<typeof getExtra
           </div>
 
           {result.flaggedStudies?.length > 0 && (
-            <div className="text-xs text-yellow-400 bg-yellow-900/20 border border-yellow-800 rounded p-2.5">
+            <div className="text-xs text-amber-900 dark:text-amber-300 bg-amber-500/12 border border-amber-600/35 rounded p-2.5">
               {result.flaggedStudies.map((s: string, i: number) => (
                 <div key={i}>⚠ Flagged: {s} exerts substantial leverage on pooled estimate</div>
               ))}
@@ -291,22 +291,22 @@ function InfluenceSection({ extracted }: { extracted: ReturnType<typeof getExtra
                         </td>
                         <td
                           className={`p-2 text-right font-mono ${
-                            Math.abs(s.dffits) > result.thresholdDffits ? "text-yellow-400 font-bold" : ""
+                            Math.abs(s.dffits) > result.thresholdDffits ? "text-[var(--color-unsure)] font-bold" : ""
                           }`}
                         >
                           {F(s.dffits, 2)}
                         </td>
                         <td className="p-2 text-center">
                           {s.isInfluential ? (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] bg-red-500/20 text-red-400 font-semibold">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--color-exclude)]/12 text-[var(--color-exclude)] font-semibold">
                               Influential
                             </span>
                           ) : s.isOutlier ? (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] bg-yellow-500/20 text-yellow-400 font-semibold">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--color-unsure)]/12 text-[var(--color-unsure)] font-semibold">
                               Outlier
                             </span>
                           ) : (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] bg-green-500/20 text-green-400 font-semibold">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--color-include)]/12 text-[var(--color-include)] font-semibold">
                               ✓ Normal
                             </span>
                           )}
@@ -325,8 +325,8 @@ function InfluenceSection({ extracted }: { extracted: ReturnType<typeof getExtra
 }
 
 // ─── 3. Permutation & Bootstrap Section ─────────────────────────────────────
-function RobustSection({ extracted }: { extracted: ReturnType<typeof getExtractedData> }) {
-  const [subType, setSubType] = useState<"perm" | "boot">("perm");
+function RobustSection({ extracted , focusMethod }: { focusMethod?: string; extracted: ReturnType<typeof getExtractedData> }) {
+  const [subType, setSubType] = useState<"perm" | "boot">(focusMethod === "bootstrap" ? "boot" : "perm");
   const [nPerm, setNPerm] = useState(5000);
   const [nBoot, setNBoot] = useState(5000);
   const [bootMethod, setBootMethod] = useState("percentile");
@@ -469,8 +469,8 @@ function RobustSection({ extracted }: { extracted: ReturnType<typeof getExtracte
 }
 
 // ─── 4. Excess Significance & Location-Scale ────────────────────────────────
-function TesLocationScaleSection({ extracted }: { extracted: ReturnType<typeof getExtractedData> }) {
-  const [section, setSection] = useState<"tes" | "locscale">("tes");
+function TesLocationScaleSection({ extracted , focusMethod }: { focusMethod?: string; extracted: ReturnType<typeof getExtractedData> }) {
+  const [section, setSection] = useState<"tes" | "locscale">(focusMethod === "locationscale" ? "locscale" : "tes");
   const [alpha, setAlpha] = useState(0.05);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -574,8 +574,8 @@ function TesLocationScaleSection({ extracted }: { extracted: ReturnType<typeof g
           <div
             className={`text-xs rounded-lg p-3 mt-3 font-medium border ${
               tesResult.excessSignificance
-                ? "text-yellow-400 bg-yellow-900/20 border-yellow-800"
-                : "text-green-400 bg-green-900/20 border-green-800"
+                ? "text-amber-900 dark:text-amber-300 bg-amber-500/12 border-amber-600/35"
+                : "text-emerald-800 dark:text-emerald-300 bg-emerald-500/12 border-emerald-600/35"
             }`}
           >
             {tesResult.interpretation}
@@ -685,9 +685,9 @@ function MultipleImputationSection({ extracted }: { extracted: ReturnType<typeof
                   <td className="p-2 text-right font-mono">{missingMask[i] ? "— (Missing)" : F(extracted.variances[i], 4)}</td>
                   <td className="p-2 text-center">
                     {missingMask[i] ? (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] bg-red-500/20 text-red-400 font-semibold">Missing</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--color-exclude)]/12 text-[var(--color-exclude)] font-semibold">Missing</span>
                     ) : (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] bg-green-500/20 text-green-400 font-semibold">Complete</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] bg-[var(--color-include)]/12 text-[var(--color-include)] font-semibold">Complete</span>
                     )}
                   </td>
                   <td className="p-2 text-center">
@@ -731,8 +731,8 @@ function MultipleImputationSection({ extracted }: { extracted: ReturnType<typeof
 }
 
 // ─── 6. Prediction Intervals & Model Averaging ──────────────────────────────
-function PredictionAveragingSection({ extracted }: { extracted: ReturnType<typeof getExtractedData> }) {
-  const [subTab, setSubTab] = useState<"pi" | "bma">("pi");
+function PredictionAveragingSection({ extracted , focusMethod }: { focusMethod?: string; extracted: ReturnType<typeof getExtractedData> }) {
+  const [subTab, setSubTab] = useState<"pi" | "bma">(focusMethod === "modelaverage" ? "bma" : "pi");
   const [pooledEffect, setPooledEffect] = useState(0.45);
   const [se, setSe] = useState(0.12);
   const [tau2, setTau2] = useState(0.08);
@@ -1123,8 +1123,8 @@ function PValueCombineSection({ extracted }: { extracted: ReturnType<typeof getE
           <div
             className={`text-xs rounded-lg p-3 font-medium border ${
               result.combinedP < 0.05
-                ? "text-green-400 bg-green-900/20 border-green-800"
-                : "text-yellow-400 bg-yellow-900/20 border-yellow-800"
+                ? "text-emerald-800 dark:text-emerald-300 bg-emerald-500/12 border-emerald-600/35"
+                : "text-amber-900 dark:text-amber-300 bg-amber-500/12 border-amber-600/35"
             }`}
           >
             {result.interpretation || (result.combinedP < 0.05 ? "Statistically significant pooled evidence." : "Failed to achieve significance threshold.")}
@@ -1136,8 +1136,8 @@ function PValueCombineSection({ extracted }: { extracted: ReturnType<typeof getE
 }
 
 // ─── 9. Funnel Cluster Detection & Cluster-Robust Egger ─────────────────────
-function ClusterSection({ extracted }: { extracted: ReturnType<typeof getExtractedData> }) {
-  const [tab, setTab] = useState<"detect" | "cr_egger">("detect");
+function ClusterSection({ extracted , focusMethod }: { focusMethod?: string; extracted: ReturnType<typeof getExtractedData> }) {
+  const [tab, setTab] = useState<"detect" | "cr_egger">(focusMethod === "clusterrobust" ? "cr_egger" : "detect");
   const [epsMult, setEpsMult] = useState(1.5);
   const [minPts, setMinPts] = useState(3);
   const [busy, setBusy] = useState(false);
@@ -1311,8 +1311,8 @@ function ClusterSection({ extracted }: { extracted: ReturnType<typeof getExtract
           <div
             className={`text-xs rounded-lg p-3 font-medium border ${
               eggerResult.significant
-                ? "text-yellow-400 bg-yellow-900/20 border-yellow-800"
-                : "text-green-400 bg-green-900/20 border-green-800"
+                ? "text-amber-900 dark:text-amber-300 bg-amber-500/12 border-amber-600/35"
+                : "text-emerald-800 dark:text-emerald-300 bg-emerald-500/12 border-emerald-600/35"
             }`}
           >
             {eggerResult.interpretation}

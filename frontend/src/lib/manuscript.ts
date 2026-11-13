@@ -1,4 +1,4 @@
-import type { Project } from './project';
+import { findLinkedCitation, type Project } from './project';
 
 export interface ManuscriptSections {
   title: string;
@@ -8,6 +8,7 @@ export interface ManuscriptSections {
   results: string;
   discussion: string;
   conclusion: string;
+  references: string;
 }
 
 /**
@@ -69,19 +70,24 @@ export function draftManuscriptTemplate(project: Project, customNotes = ''): Man
   if (customNotes) introDraft += `\n\n**Author context:** ${customNotes}`;
 
   // ── Methods ──
-  let methodsDraft = `This systematic review and meta-analysis was conducted according to the PRISMA 2020 statement and prospectively registered.\n\n`;
-  methodsDraft += `**Search strategy:** A comprehensive search of electronic databases (PubMed, Embase, Cochrane CENTRAL, Scopus) was conducted from inception to ${new Date().getFullYear()}. The search strategy combined Medical Subject Headings (MeSH) and free-text terms for: `;
+  const dbList = project.protocol.databases || 'PubMed, Embase, Cochrane CENTRAL, Scopus';
+  const regText = project.protocol.registration && project.protocol.registration !== 'Not registered'
+    ? `registered (${project.protocol.registration})`
+    : 'prospectively registered';
+  let methodsDraft = `This systematic review and meta-analysis was conducted according to the PRISMA 2020 statement and ${regText}.\n\n`;
+  methodsDraft += `**Search strategy:** A comprehensive search of electronic databases (${dbList}) was conducted from inception to ${new Date().getFullYear()}. The search strategy combined Medical Subject Headings (MeSH) and free-text terms for: `;
   methodsDraft += `(Population: "${population}") AND (Intervention: "${intervention}") AND (Comparator: "${comparator}") AND (Outcomes: "${outcomes}"). `;
   methodsDraft += `No language restrictions were applied.\n\n`;
-  methodsDraft += `**Eligibility criteria:** Randomized controlled trials (RCTs) comparing ${intervention} with ${comparator} in ${population} were eligible. Studies reporting on ${outcomes} were included.\n\n`;
+  methodsDraft += `**Eligibility criteria:** ${project.protocol.inclusionCriteria ? `Inclusion criteria: ${project.protocol.inclusionCriteria}. ` : `Studies comparing ${intervention} with ${comparator} in ${population} reporting on ${outcomes} were eligible.`}${project.protocol.exclusionCriteria ? ` Exclusion criteria: ${project.protocol.exclusionCriteria}.` : ''}\n\n`;
   methodsDraft += `**Study selection and data extraction:** Two reviewers independently screened titles, abstracts, and full texts. Disagreements were resolved by consensus or third-party adjudication. Data extraction was performed using a standardized form.\n\n`;
-  methodsDraft += `**Risk of bias:** Two reviewers independently assessed risk of bias using the Cochrane Risk of Bias tool (RoB 2). Disagreements were resolved by discussion.\n\n`;
+  methodsDraft += `**Risk of bias:** Two reviewers independently assessed risk of bias using structured appraisal tools (${Array.from(new Set(robAssessments.map(a => a.tool))).join(', ') || 'RoB 2'}). Disagreements were resolved by discussion.\n\n`;
   methodsDraft += `**Data synthesis:** A random-effects meta-analysis was performed using the DerSimonian-Laird method. Heterogeneity was quantified using I² and τ². Publication bias was assessed using funnel plots and Egger's test where appropriate (≥10 studies). The GRADE framework was used to assess certainty of evidence.\n\n`;
   methodsDraft += `**Subgroup analyses:** Pre-specified subgroup analyses examined the influence of study characteristics on effect estimates.\n\n`;
   methodsDraft += `**Sensitivity analyses:** Leave-one-out sensitivity analysis was conducted to assess the robustness of pooled estimates.`;
 
   // ── Results ──
-  let resultsDraft = `**Study selection:** The search identified records for screening. After removing duplicates, records were screened at the title/abstract level, and full texts were assessed. ${k} studies (${totalN.toLocaleString()} participants) met inclusion criteria.\n\n`;
+  const flow = project.prisma.flow;
+  let resultsDraft = `**Study selection:** ${flow.identified != null ? `The search identified ${flow.identified} records.` : 'The search identified records for screening.'} ${flow.duplicates != null ? `After removing ${flow.duplicates} duplicates, ` : ''}${flow.screened != null ? `${flow.screened} records were screened at the title/abstract level` : 'records were screened at the title/abstract level'}${flow.fullText != null ? `, and ${flow.fullText} full texts were assessed` : ''}. ${k} studies (${totalN.toLocaleString()} participants) met inclusion criteria.\n\n`;
   resultsDraft += `**Study characteristics:** Included studies enrolled ${totalN.toLocaleString()} participants. ${studyCount} studies were RCTs. Studies varied in sample size, intervention duration, and follow-up periods.\n\n`;
   resultsDraft += `**Risk of bias:** ${robLow} studies were rated as low risk of bias, ${robSome} as having some concerns, and ${robHigh} as high risk of bias.\n\n`;
 
@@ -120,12 +126,34 @@ export function draftManuscriptTemplate(project: Project, customNotes = ''): Man
   discussionDraft += `\n- Limitations include ${robHigh > 0 ? 'risk of bias in some included studies, ' : ''}${i2 != null && i2 > 50 ? 'substantial heterogeneity, ' : ''}and ${k < 10 ? 'a small number of included studies' : 'potential for publication bias'}.`;
   discussionDraft += `\n- The generalizability of findings may be limited by the characteristics of included populations.\n\n`;
   discussionDraft += `**Implications for practice:** ${sig ? `These findings support the use of ${intervention} in clinical practice for ${population}.` : `Current evidence does not support a clear advantage of ${intervention} over ${comparator}.`} Clinicians should consider individual patient factors when making treatment decisions.\n\n`;
-  discussionDraft += `**Implications for research:** Further large-scale, high-quality RCTs are needed to ${sig ? 'confirm these findings and explore moderators of effect' : 'establish the effectiveness of ${intervention}'}. Future studies should standardize outcome reporting and include long-term follow-up.`;
+  discussionDraft += `**Implications for research:** Further large-scale, high-quality RCTs are needed to ${sig ? 'confirm these findings and explore moderators of effect' : `establish the effectiveness of ${intervention}`}. Future studies should standardize outcome reporting and include long-term follow-up.`;
 
   // ── Conclusion ──
   let conclusionDraft = `This systematic review ${hasResults ? 'and meta-analysis' : ''} ${sig ? `provides evidence for a statistically significant effect of ${intervention} compared to ${comparator} in ${population}` : `did not find a statistically significant difference between ${intervention} and ${comparator} for ${population}`}. `;
   conclusionDraft += `The certainty of evidence was ${robHigh > 0 || (i2 != null && i2 > 50) ? 'low to moderate' : 'moderate to high'}. `;
   conclusionDraft += `These findings ${sig ? 'support' : 'do not support'} the use of ${intervention} in clinical practice. Further research is needed to strengthen the evidence base.`;
+
+  // ── References (linked from extracted studies + screening citations) ──
+  const referencesDraft = studies.length === 0
+    ? '1. No studies extracted yet. Include citations in Screening and send them to Study Manager & Extraction to generate a formatted reference list.'
+    : studies.map((s, idx) => {
+        const linked = findLinkedCitation(project, { sourceId: s.sourceId, study: s.study, doi: s.doi, pmid: s.pmid });
+        const authors = s.authors || linked?.authors || s.study;
+        const year = s.year || linked?.year || '';
+        const title = linked?.title || s.study;
+        const journal = linked?.journal || '';
+        const doi = s.doi || linked?.doi;
+        const pmid = s.pmid || linked?.pmid;
+        const parts = [
+          authors,
+          year ? `(${year}).` : '',
+          `${title}.`,
+          journal ? `*${journal}*.` : '',
+          doi ? `doi:${doi}.` : '',
+          pmid ? `PMID:${pmid}.` : '',
+        ].filter(Boolean);
+        return `${idx + 1}. ${parts.join(' ')}`;
+      }).join('\n');
 
   return {
     title: titleDraft,
@@ -135,5 +163,6 @@ export function draftManuscriptTemplate(project: Project, customNotes = ''): Man
     results: resultsDraft,
     discussion: discussionDraft,
     conclusion: conclusionDraft,
+    references: referencesDraft,
   };
 }

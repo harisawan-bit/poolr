@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, Loader2, ChevronDown } from 'lucide-react';
 import { Card, Button, Pill } from '../../components/ui';
-import { getActiveProviders, callAIMultiProvider, type AIProvider } from '../../lib/ai';
+import { getActiveProviders, callAIMultiProvider, type AIProvider, type AIResponse } from '../../lib/ai';
 import { loadSettings } from '../../lib/settings';
 import type { ScreeningItem } from '../../lib/project';
 
@@ -22,9 +22,43 @@ interface RecordResult {
   agreement: number;
 }
 
+export function aggregateResults(batch: Pick<ScreeningItem, 'id'>[], responses: AIResponse[]): RecordResult[] {
+  const providers = responses.flatMap(response => {
+    try {
+      const records: unknown = JSON.parse(response.content);
+      return Array.isArray(records) ? [{ response, records }] : [];
+    } catch {
+      return [];
+    }
+  });
+
+  return batch.flatMap(({ id }) => {
+    const decisions = providers.flatMap(({ response, records }) => {
+      const match = records.find(record => record?.id === id);
+      if (!match || !['include', 'exclude', 'unsure'].includes(match.decision) ||
+          !Number.isFinite(match.confidence) || match.confidence < 0 || match.confidence > 1) return [];
+      return [{
+        provider: response.providerName, model: response.model, decision: match.decision,
+        reason: typeof match.reason === 'string' ? match.reason : '', confidence: match.confidence,
+      }];
+    });
+    if (decisions.length === 0) return [];
+    const votes = { include: 0, exclude: 0, unsure: 0 };
+    for (const decision of decisions) votes[decision.decision as keyof typeof votes]++;
+    const ranked = (Object.keys(votes) as (keyof typeof votes)[]).sort((a, b) => votes[b] - votes[a]);
+    const consensus = votes[ranked[0]] === votes[ranked[1]] ? 'unsure' : ranked[0];
+    return {
+      id, decisions, consensus,
+      avgConfidence: decisions.reduce((sum, decision) => sum + decision.confidence, 0) / decisions.length,
+      agreement: votes[consensus] / decisions.length,
+    };
+  });
+}
+
 export default function AIScreeningPanel({ items, pico, inclusionCriteria, exclusionCriteria, onDecisions }: Props) {
   const [allProviders, setAllProviders] = useState<AIProvider[]>(getActiveProviders());
   const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState({ current: 0, total: 0, perModel: {} as Record<string, number> });
   const [results, setResults] = useState<RecordResult[]>([]);
   const [expandedRecord, setExpandedRecord] = useState<string | null>(null);
@@ -38,31 +72,41 @@ export default function AIScreeningPanel({ items, pico, inclusionCriteria, exclu
     if (providers.length === 0) return;
 
     setProcessing(true);
+    setError(null);
     setResults([]);
     setProgress({ current: 0, total: items.length, perModel: {} });
 
-    const batchSize = settings.ai.batchSize;
+    const configuredBatchSize = settings.ai.batchSize;
+    const batchSize = Number.isSafeInteger(configuredBatchSize) && configuredBatchSize > 0 ? configuredBatchSize : 50;
     const allResults: RecordResult[] = [];
 
-    for (let i = 0; i < items.length; i += batchSize) {
-      const batch = items.slice(i, i + batchSize);
-      setProgress(prev => ({
-        ...prev,
-        current: Math.min(i + batchSize, items.length),
-      }));
+    try {
+      for (let i = 0; i < items.length; i += batchSize) {
+        const batch = items.slice(i, i + batchSize);
+        setProgress(prev => ({
+          ...prev,
+          current: Math.min(i + batchSize, items.length),
+        }));
 
-      const prompt = buildPrompt(batch, pico, inclusionCriteria, exclusionCriteria);
-      const responses = await callAIMultiProvider(providers, [
-        { role: 'system', content: 'You are a systematic review screening assistant. Respond with ONLY a JSON array.' },
-        { role: 'user', content: prompt },
-      ]);
+        const prompt = buildPrompt(batch, pico, inclusionCriteria, exclusionCriteria);
+        const responses = await callAIMultiProvider(providers, [
+          { role: 'system', content: 'You are a systematic review screening assistant. Respond with ONLY a JSON array.' },
+          { role: 'user', content: prompt },
+        ]);
 
-      const batchResults = aggregateResults(batch, responses);
-      allResults.push(...batchResults);
-      setResults([...allResults]);
+        const batchResults = aggregateResults(batch, responses);
+        if (batchResults.length === 0) {
+          setError('AI screening returned no valid decisions. Check your providers and retry.');
+          return;
+        }
+        allResults.push(...batchResults);
+      }
+      setResults(allResults);
+    } catch {
+      setError('AI screening failed. Check your providers and retry.');
+    } finally {
+      setProcessing(false);
     }
-
-    setProcessing(false);
   };
 
   const buildPrompt = (batch: ScreeningItem[], pico: any, inclusion: string, exclusion: string) => {
@@ -84,37 +128,6 @@ Records:
 ${batch.map((r, i) => `${i + 1}. ID: ${r.id}\n   Title: ${r.title}\n   Abstract: ${r.abstract}`).join('\n')}
 
 Return ONLY a JSON array. No markdown.`;
-  };
-
-  const aggregateResults = (batch: ScreeningItem[], responses: any[]): RecordResult[] => {
-    return batch.map(item => {
-      const decisions = responses.map(r => {
-        try {
-          const parsed = JSON.parse(r.content);
-          const match = parsed.find((d: any) => d.id === item.id);
-          return {
-            provider: r.providerName,
-            model: r.model,
-            decision: match?.decision || 'unsure',
-            reason: match?.reason || '',
-            confidence: match?.confidence || 0.5,
-          };
-        } catch {
-          return { provider: r.providerName, model: r.model, decision: 'unsure', reason: 'parse error', confidence: 0.5 };
-        }
-      });
-
-      const votes = decisions.reduce((acc, d) => {
-        acc[d.decision] = (acc[d.decision] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      const consensus = Object.entries(votes).sort((a, b) => b[1] - a[1])[0][0] as 'include' | 'exclude' | 'unsure';
-      const avgConfidence = decisions.reduce((s, d) => s + d.confidence, 0) / decisions.length;
-      const agreement = votes[consensus] / decisions.length;
-
-      return { id: item.id, decisions, consensus, avgConfidence, agreement };
-    });
   };
 
   const applyDecisions = () => {
@@ -159,6 +172,8 @@ Return ONLY a JSON array. No markdown.`;
           No AI providers configured. Go to Settings → AI Providers to set up.
         </div>
       )}
+
+      {error && <p role="alert" className="mb-3 text-[var(--color-exclude)]">{error}</p>}
 
       {processing && (
         <div className="mb-3 space-y-2">

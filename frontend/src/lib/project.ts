@@ -1,4 +1,5 @@
 // Shared project model + engine client helpers for Phase D pages.
+import { APP_VERSION } from "./version";
 
 // ── Engine request/response types (mirror engine/Poolr.Engine.Api/*.cs) ──
 export interface Study {
@@ -187,10 +188,19 @@ export interface ScreeningItem {
   decision: ScreenDecision;
   stage: "title_abstract" | "full_text";
   note?: string;
+  // Bibliographic & library metadata linking citation -> screening -> extraction -> RoB -> manuscript
+  authors?: string;
+  year?: string;
+  journal?: string;
+  url?: string;
+  pdfUrl?: string;
+  tags?: string[];
+  source?: string;
   // v0.6.3 — structured exclusion reason (PICO-failure tags) + dedup key
   exclusion_reason?: string;
   doi?: string;
   pmid?: string;
+  searchRunIds?: string[];
   // v0.5.5 — dual screening workflow fields
   reviewerDecisions?: { reviewerId: string; reviewerName: string; decision: ScreenDecision; note?: string; exclusion_reason?: string; timestamp: string }[];
   finalDecision?: ScreenDecision;
@@ -201,10 +211,19 @@ export interface ProtocolData {
   databases: string;
   registration: string;
   objective: string;
+  inclusionCriteria?: string;
+  exclusionCriteria?: string;
+  studyDesigns?: string;
 }
 export interface ExtractedStudy {
   study: string;
   type: "binary" | "continuous" | "survival" | "proportion" | "rate" | "correlation" | "generic";
+  sourceId?: string;
+  authors?: string;
+  doi?: string;
+  pmid?: string;
+  url?: string;
+  pdfUrl?: string;
   int_events?: number | null;
   int_n?: number | null;
   ctrl_events?: number | null;
@@ -229,13 +248,17 @@ export interface ExtractedStudy {
   subgroup?: string;
   design?: string;
   year?: number | null;
+  customFields?: Record<string, string | number | boolean>;
+  provenance?: Record<string, string>;
 }
 export interface RobAssessment {
   id: string;
   study: string;
+  sourceId?: string;
   tool: "RoB2" | "NOS" | "PROBAST" | "ROBINS-I" | "QUADAS-2" | "AMSTAR-2";
   overall: "Low" | "Some concerns" | "High" | "Critical" | "—";
   domains: Record<string, string>;
+  provenance?: Record<string, string>;
 }
 export interface SearchDb {
   name: string;
@@ -296,17 +319,32 @@ export interface AIScreeningResult {
   confidence: number;
 }
 
+export interface LiteratureRun {
+  id: string;
+  source: 'pubmed' | 'clinicaltrials';
+  query: string;
+  sort: string;
+  fields: Record<string, string>;
+  at: string;
+  total: number;
+  translated?: string;
+  warnings: string[];
+  retrieved: string[];
+  imported: number;
+  duplicates: number;
+}
+
 export interface Project {
-  metadata: { id?: string; revision?: number; version: string; created: string; title?: string; studyType?: string; config?: ProjectConfig };
+  metadata: { id?: string; revision?: number; version: string; created: string; title?: string; studyType?: string; searchDatabases?: string[]; savedSearchStrategies?: Record<string, string>; config?: ProjectConfig };
   manuscript?: { sections: Record<string, string>; sectionMetas: Record<string, { assignedTo?: string; reviewer?: string; dueDate?: string; status: "draft" | "review" | "changes_requested" | "approved" }>; comments?: { id: string; section: string; text: string; author: string; timestamp: string }[]; history?: { id: string; section: string; text: string; timestamp: string }[] };
   pico: Pico;
   protocol: ProtocolData;
-  screening: { title_abstract: ScreeningItem[]; full_text: ScreeningItem[] };
+  screening: { title_abstract: ScreeningItem[]; full_text: ScreeningItem[]; blinded?: boolean };
   extraction: { studies: ExtractedStudy[] };
   rob: { assessments: RobAssessment[] };
   meta: { results: MetaResponse | null; settings: MetaRequest };
   prisma: { flow: PrismaFlow; grade: GradeOutcomeInput[] };
-  search?: { databases: SearchDb[] };
+  search?: { databases: SearchDb[]; runs?: LiteratureRun[] };
   // v0.5.5 — advanced modes
   network?: NetworkData;
   ipd?: IPDData;
@@ -332,7 +370,7 @@ export interface ProjectConfig {
 
 export function emptyProject(): Project {
   return {
-    metadata: { id: crypto.randomUUID(), revision: 0, version: "0.6.4", created: new Date().toISOString(), title: "Untitled review" },
+    metadata: { id: crypto.randomUUID(), revision: 0, version: APP_VERSION, created: new Date().toISOString(), title: "Untitled review" },
     pico: { population: "", intervention: "", comparator: "", outcomes: "" },
     protocol: { databases: "PubMed, Embase, Cochrane CENTRAL, Scopus", registration: "Not registered", objective: "" },
     screening: { title_abstract: [], full_text: [] },
@@ -384,9 +422,17 @@ export function normalizeProject(raw: unknown): Project {
           decision: validDecision(i.decision),
           stage: i.stage === "full_text" || i.stage === "title_abstract" ? i.stage : stage,
           ...(typeof i.note === "string" ? { note: i.note } : {}),
+          ...(typeof i.authors === "string" ? { authors: i.authors } : {}),
+          ...(typeof i.year === "string" ? { year: i.year } : {}),
+          ...(typeof i.journal === "string" ? { journal: i.journal } : {}),
+          ...(typeof i.url === "string" ? { url: i.url } : {}),
+          ...(typeof i.pdfUrl === "string" ? { pdfUrl: i.pdfUrl } : {}),
+          ...(Array.isArray(i.tags) ? { tags: i.tags.filter((t: unknown) => typeof t === "string") } : {}),
+          ...(typeof i.source === "string" ? { source: i.source } : {}),
           ...(typeof i.exclusion_reason === "string" ? { exclusion_reason: i.exclusion_reason } : {}),
           ...(typeof i.doi === "string" ? { doi: i.doi } : {}),
           ...(typeof i.pmid === "string" ? { pmid: i.pmid } : {}),
+          ...(Array.isArray(i.searchRunIds) ? { searchRunIds: i.searchRunIds.filter((id: unknown) => typeof id === "string") } : {}),
           // v0.5.5 — dual screening fields
           ...(Array.isArray(i.reviewerDecisions) ? { reviewerDecisions: i.reviewerDecisions.map((rd: any) => ({
             reviewerId: str(rd.reviewerId),
@@ -432,10 +478,14 @@ export function normalizeProject(raw: unknown): Project {
       databases: str(protocol.databases, base.protocol.databases),
       registration: str(protocol.registration, base.protocol.registration),
       objective: str(protocol.objective),
+      ...(typeof protocol.inclusionCriteria === "string" ? { inclusionCriteria: protocol.inclusionCriteria } : {}),
+      ...(typeof protocol.exclusionCriteria === "string" ? { exclusionCriteria: protocol.exclusionCriteria } : {}),
+      ...(typeof protocol.studyDesigns === "string" ? { studyDesigns: protocol.studyDesigns } : {}),
     },
     screening: {
       title_abstract: items(screening.title_abstract, "title_abstract"),
       full_text: items(screening.full_text, "full_text"),
+      ...(typeof screening.blinded === "boolean" ? { blinded: screening.blinded } : {}),
     },
     extraction: {
       studies: arr<Record<string, any>>(extraction.studies)
@@ -444,6 +494,7 @@ export function normalizeProject(raw: unknown): Project {
           ...(s as ExtractedStudy),
           study: str(s.study),
           type: ["binary", "continuous", "survival", "proportion", "rate", "correlation", "generic"].includes(s.type) ? s.type : "binary",
+          ...(s.provenance && typeof s.provenance === "object" ? { provenance: obj(s.provenance) as Record<string, string> } : {}),
         })),
     },
     rob: {
@@ -452,9 +503,11 @@ export function normalizeProject(raw: unknown): Project {
         .map((a, idx) => ({
           id: str(a.id) || `r${idx}_${Math.random().toString(36).slice(2, 8)}`,
           study: str(a.study),
+          ...(typeof a.sourceId === "string" ? { sourceId: a.sourceId } : {}),
           tool: validTool(a.tool),
           overall: validOverall(a.overall),
           domains: obj(a.domains) as Record<string, string>,
+          ...(a.provenance && typeof a.provenance === "object" ? { provenance: obj(a.provenance) as Record<string, string> } : {}),
         })),
     },
     meta: {
@@ -473,7 +526,18 @@ export function normalizeProject(raw: unknown): Project {
       },
       grade: arr<GradeOutcomeInput>(prisma.grade),
     },
-    search: { databases: arr<Record<string, any>>(search.databases).filter((d) => d && typeof d === "object").map((d) => ({ name: str(d.name), query: str(d.query), results: numOrNull(d.results) })) },
+    search: { databases: arr<Record<string, any>>(search.databases).filter((d) => d && typeof d === "object").map((d) => ({ name: str(d.name), query: str(d.query), results: numOrNull(d.results) })),
+      runs: arr<Record<string, any>>(search.runs)
+        .filter(run => run && typeof run.id === "string" && (run.source === "pubmed" || run.source === "clinicaltrials"))
+        .map(run => ({
+          id: run.id, source: run.source, query: str(run.query), sort: str(run.sort), at: str(run.at),
+          fields: Object.fromEntries(Object.entries(obj(run.fields)).filter(([, value]) => typeof value === "string")) as Record<string, string>,
+          total: numOrNull(run.total) ?? 0, translated: str(run.translated),
+          warnings: arr<string>(run.warnings).filter(value => typeof value === "string"),
+          retrieved: arr<string>(run.retrieved).filter(value => typeof value === "string"),
+          imported: numOrNull(run.imported) ?? 0, duplicates: numOrNull(run.duplicates) ?? 0,
+        })),
+    },
     ...(r.network ? { network: { ...obj(r.network), treatments: arr<string>(r.network.treatments), comparisons: arr(r.network.comparisons), results: r.network.results ?? null } as NetworkData } : {}),
     ...(r.ipd ? { ipd: { datasets: arr(r.ipd.datasets), results: r.ipd.results ?? null } as IPDData } : {}),
     ...(r.multilevel ? { multilevel: { effectSizes: arr(r.multilevel.effectSizes), results: r.multilevel.results ?? null } as MultilevelData } : {}),
@@ -560,12 +624,15 @@ export function dedupeRecords(
   return { kept, duplicatesRemoved: incoming.length - kept.length, duplicateIds };
 }
 
-// ── Citation import (see lib/importScreening.ts) ──
+// ── Citation import & library utilities (see lib/importScreening.ts) ──
 export {
   CITATION_ACCEPT,
   citationsToScreeningItems,
   detectFormat,
   importCitationText,
+  exportCitationsText,
+  findDuplicateClusters,
+  priorityScoreItem,
   parseCitations,
   parseCsv,
   parseEndnote,
@@ -575,7 +642,111 @@ export {
   parsePubmedAbstract,
   parsePmidList,
 } from "./importScreening";
-export type { CitationFormat, CitationRecord, ImportResult } from "./importScreening";
+export type { CitationFormat, CitationRecord, DuplicateCluster, ImportResult } from "./importScreening";
+
+/** Format a compact Cochrane-style study label ("Smith 2021") while keeping full citation linked via sourceId. */
+export function formatStudyLabel(item: Pick<ScreeningItem, "title" | "authors" | "year">): string {
+  const rawAuthor = item.authors?.split(/[;,]/)[0]?.trim();
+  const surname = rawAuthor ? rawAuthor.split(/\s+/)[0] : "";
+  if (surname && item.year) return `${surname} ${item.year}`;
+  const cleanTitle = item.title.trim();
+  if (cleanTitle.length <= 72) return cleanTitle;
+  const cut = cleanTitle.slice(0, 72);
+  const lastSpace = cut.lastIndexOf(" ");
+  return (lastSpace > 40 ? cut.slice(0, lastSpace) : cut).trim();
+}
+
+/** Build a linked ExtractedStudy record from an included ScreeningItem without dropping bibliographic identity. */
+export function linkCitationToExtractedStudy(
+  item: ScreeningItem,
+  type: ExtractedStudy["type"] = "binary"
+): ExtractedStudy {
+  const yearText = item.year == null ? "" : String(item.year).trim();
+  const yr = /^\d{4}$/.test(yearText) ? Number(yearText) : null;
+  return {
+    study: formatStudyLabel(item),
+    type,
+    sourceId: item.id,
+    ...(item.authors ? { authors: item.authors } : {}),
+    ...(item.doi ? { doi: item.doi } : {}),
+    ...(item.pmid ? { pmid: item.pmid } : {}),
+    ...(item.url ? { url: item.url } : {}),
+    ...(item.pdfUrl ? { pdfUrl: item.pdfUrl } : {}),
+    ...(yr ? { year: yr } : {}),
+  };
+}
+
+/** Look up the linked citation (Title/Abstract or Full-Text) for an ExtractedStudy or RobAssessment. */
+export function findLinkedCitation(
+  project: Project,
+  ref: { sourceId?: string; study?: string; doi?: string; pmid?: string }
+): ScreeningItem | undefined {
+  const all = [...(project.screening?.full_text ?? []), ...(project.screening?.title_abstract ?? [])];
+  if (ref.sourceId) {
+    const byId = all.find((c) => c.id === ref.sourceId);
+    if (byId) return byId;
+  }
+  if (ref.doi) {
+    const normDoi = ref.doi.trim().toLowerCase();
+    const byDoi = all.find((c) => c.doi?.trim().toLowerCase() === normDoi);
+    if (byDoi) return byDoi;
+  }
+  if (ref.pmid) {
+    const byPmid = all.find((c) => c.pmid?.trim() === ref.pmid?.trim());
+    if (byPmid) return byPmid;
+  }
+  if (ref.study) {
+    const target = ref.study.trim().toLowerCase();
+    return all.find((c) => formatStudyLabel(c).toLowerCase() === target || c.title.toLowerCase().startsWith(target));
+  }
+  return undefined;
+}
+
+/** Compute live PRISMA 2020 flow counts and exclusion-reason tally directly from project state. */
+export function computePrismaFlow(project: Project): {
+  flow: PrismaFlow;
+  exclusionBreakdown: { ta: Record<string, number>; ft: Record<string, number> };
+} {
+  const ta = project.screening?.title_abstract ?? [];
+  const ft = project.screening?.full_text ?? [];
+  const runs = project.search?.runs ?? [];
+
+  const runTotal = runs.reduce((s, r) => s + (r.total ?? 0), 0);
+  const duplicates = runs.reduce((s, r) => s + (r.duplicates ?? 0), 0);
+  const identified = runTotal > ta.length ? runTotal : ta.length + duplicates;
+  const screened = ta.length;
+  const excludedTaItems = ta.filter((i) => i.decision === "exclude");
+  const taIncluded = ta.filter((i) => i.decision === "include").length;
+  const fullText = ft.length > 0 ? ft.length : taIncluded;
+  const excludedFtItems = ft.filter((i) => i.decision === "exclude");
+  const ftIncluded = ft.filter((i) => i.decision === "include").length;
+  const included = project.extraction?.studies?.length || ftIncluded;
+
+  const tally = (list: ScreeningItem[]) => {
+    const map: Record<string, number> = {};
+    for (const item of list) {
+      const reason = item.exclusion_reason?.trim() || "Unspecified";
+      map[reason] = (map[reason] ?? 0) + 1;
+    }
+    return map;
+  };
+
+  return {
+    flow: {
+      identified,
+      duplicates,
+      screened,
+      excludedTa: excludedTaItems.length,
+      fullText,
+      excludedFt: excludedFtItems.length,
+      included,
+    },
+    exclusionBreakdown: {
+      ta: tally(excludedTaItems),
+      ft: tally(excludedFtItems),
+    },
+  };
+}
 
 /** Append screening items to a stage, returning a new Project (autosave-friendly). */
 export function mergeScreeningItems(
@@ -619,4 +790,137 @@ export function downloadText(filename: string, text: string, mime = "text/plain"
   document.body.appendChild(a);
   a.click();
   setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 0);
+}
+
+/** Count screening items with unresolved reviewer disagreements or flagged pending status. */
+export function countScreeningConflicts(items: ScreeningItem[]): number {
+  let total = 0;
+  for (const item of items) {
+    if (item.conflictStatus === "pending") {
+      total++;
+      continue;
+    }
+    if (item.conflictStatus === "resolved" || item.conflictStatus === "ai_adjudicated") continue;
+    const settled = (item.reviewerDecisions ?? []).filter((d) => d.decision !== "unset");
+    if (settled.length >= 2 && settled.some((d) => d.decision !== settled[0].decision)) total++;
+  }
+  return total;
+}
+
+export interface ParsedMetricSnippet {
+  kind: "binary" | "continuous" | "ratio" | "scalar";
+  events?: number;
+  n?: number;
+  mean?: number;
+  sd?: number;
+  effect?: number;
+  ci_lower?: number;
+  ci_upper?: number;
+  value?: number;
+}
+
+/** Parse common clinical trial stat snippets highlighted from full-text PDFs/abstracts. */
+export function parseMetricSelection(raw: string): ParsedMetricSnippet | null {
+  const s = raw.trim().replace(/[–—−]/g, "-");
+  if (!s) return null;
+
+  // e.g. "HR 0.74 (95% CI 0.58-0.95)" or "OR 1.45 (1.02 to 2.06)"
+  const ratioMatch = s.match(/(?:HR|OR|RR|MD|SMD)?\s*(-?\d+(?:\.\d+)?)\s*\((?:95%?\s*CI[:\s]*)?(-?\d+(?:\.\d+)?)\s*(?:-|to|,)\s*(-?\d+(?:\.\d+)?)\)/i);
+  if (ratioMatch) {
+    const effect = Number(ratioMatch[1]);
+    const ci_lower = Number(ratioMatch[2]);
+    const ci_upper = Number(ratioMatch[3]);
+    if (Number.isFinite(effect) && Number.isFinite(ci_lower) && Number.isFinite(ci_upper) && ci_upper >= ci_lower) {
+      return { kind: "ratio", effect, ci_lower, ci_upper };
+    }
+  }
+
+  // e.g. "42.3 (SD 8.1)" or "42.3 ± 8.1" or "mean 42.3, SD 8.1"
+  const contMatch = s.match(/(-?\d+(?:\.\d+)?)\s*(?:\(\s*(?:SD)?\s*[:=]?\s*(-?\d+(?:\.\d+)?)\s*\)|±|\+\/-)\s*(-?\d+(?:\.\d+)?)?/i);
+  if (contMatch && (contMatch[2] || contMatch[3])) {
+    const mean = Number(contMatch[1]);
+    const sd = Number(contMatch[2] ?? contMatch[3]);
+    if (Number.isFinite(mean) && Number.isFinite(sd) && sd >= 0) {
+      return { kind: "continuous", mean, sd };
+    }
+  }
+
+  // e.g. "14/120" or "14 of 120"
+  const binMatch = s.match(/(\d+)\s*(?:\/|of)\s*(\d+)/i);
+  if (binMatch) {
+    const events = Number(binMatch[1]);
+    const n = Number(binMatch[2]);
+    if (Number.isFinite(events) && Number.isFinite(n) && n > 0) {
+      return { kind: "binary", events, n };
+    }
+  }
+
+  const single = s.match(/-?\d+(?:\.\d+)?/);
+  if (single) {
+    const value = Number(single[0]);
+    if (Number.isFinite(value)) return { kind: "scalar", value };
+  }
+  return null;
+}
+
+/** Validate that an external document/PDF URL uses a safe navigable protocol. */
+export function safeDocumentUrl(url?: string): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith("blob:")) return trimmed;
+  try {
+    const u = new URL(trimmed);
+    return u.protocol === "https:" || u.protocol === "http:" ? u.href : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Generate a self-contained PRISMA 2020 official flow box SVG from live project counts. */
+export function buildPrisma2020Svg(project: Project): string {
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const computed = computePrismaFlow(project);
+  const f = {
+    identified: project.prisma.flow.identified ?? computed.flow.identified ?? 0,
+    duplicates: project.prisma.flow.duplicates ?? computed.flow.duplicates ?? 0,
+    screened: project.prisma.flow.screened ?? computed.flow.screened ?? 0,
+    excludedTa: project.prisma.flow.excludedTa ?? computed.flow.excludedTa ?? 0,
+    fullText: project.prisma.flow.fullText ?? computed.flow.fullText ?? 0,
+    excludedFt: project.prisma.flow.excludedFt ?? computed.flow.excludedFt ?? 0,
+    included: project.prisma.flow.included ?? computed.flow.included ?? 0,
+  };
+  const ftReasons = Object.entries(computed.exclusionBreakdown.ft)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4);
+  const reasonLines = ftReasons.length > 0
+    ? ftReasons.map(([r, n], idx) => `<text x="415" y="${262 + idx * 14}" font-size="11" fill="#475569">• ${esc(r.slice(0, 28))} (n = ${n})</text>`).join("")
+    : `<text x="415" y="262" font-size="11" fill="#64748b">Tag exclusion reasons in Screening</text>`;
+
+  const box = (x: number, y: number, w: number, h: number, title: string, lines: string[], accent = "#1e293b") =>
+    `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="#ffffff" stroke="${accent}" stroke-width="1.4"/>` +
+    `<rect x="${x}" y="${y}" width="${w}" height="24" rx="6" fill="#f1f5f9"/>` +
+    `<text x="${x + 12}" y="${y + 16}" font-size="11.5" font-weight="700" fill="${accent}">${esc(title)}</text>` +
+    lines.map((ln, idx) => `<text x="${x + 12}" y="${y + 42 + idx * 15}" font-size="11.5" fill="#1e293b">${esc(ln)}</text>`).join("");
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 430" width="720" height="430" font-family="Inter, system-ui, sans-serif">
+  <rect width="720" height="430" fill="#f8fafc" rx="8"/>
+  <defs><marker id="prisma-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 1 L10 5 L0 9 z" fill="#475569"/></marker></defs>
+  ${box(24, 18, 320, 74, "Identification", [`Records identified from search: n = ${f.identified}`], "#1d4ed8")}
+  ${box(400, 18, 296, 74, "Removed Before Screening", [`Duplicate records removed: n = ${f.duplicates}`], "#475569")}
+  <line x1="344" y1="55" x2="396" y2="55" stroke="#475569" stroke-width="1.4" marker-end="url(#prisma-arrow)"/>
+  <line x1="184" y1="92" x2="184" y2="118" stroke="#475569" stroke-width="1.4" marker-end="url(#prisma-arrow)"/>
+  ${box(24, 122, 320, 74, "Title & Abstract Screening", [`Records screened: n = ${f.screened}`], "#0f766e")}
+  ${box(400, 122, 296, 74, "Records Excluded (Title/Abstract)", [`Excluded at initial screen: n = ${f.excludedTa}`], "#b45309")}
+  <line x1="344" y1="159" x2="396" y2="159" stroke="#475569" stroke-width="1.4" marker-end="url(#prisma-arrow)"/>
+  <line x1="184" y1="196" x2="184" y2="222" stroke="#475569" stroke-width="1.4" marker-end="url(#prisma-arrow)"/>
+  ${box(24, 226, 320, 88, "Full-Text Eligibility", [`Reports assessed for eligibility: n = ${f.fullText}`, `Excluded with reasons: n = ${f.excludedFt}`], "#0f766e")}
+  <rect x="400" y="226" width="296" height="98" rx="6" fill="#ffffff" stroke="#b91c1c" stroke-width="1.4"/>
+  <rect x="400" y="226" width="296" height="24" rx="6" fill="#fef2f2"/>
+  <text x="412" y="242" font-size="11.5" font-weight="700" fill="#b91c1c">Full-Text Excluded (n = ${f.excludedFt})</text>
+  ${reasonLines}
+  <line x1="344" y1="270" x2="396" y2="270" stroke="#475569" stroke-width="1.4" marker-end="url(#prisma-arrow)"/>
+  <line x1="184" y1="314" x2="184" y2="340" stroke="#475569" stroke-width="1.4" marker-end="url(#prisma-arrow)"/>
+  ${box(24, 344, 320, 68, "Included in Review & Synthesis", [`Studies included in meta-analysis: n = ${f.included}`], "#15803d")}
+</svg>`;
 }

@@ -22,7 +22,7 @@ import {
   Printer,
   Sparkles,
 } from "lucide-react";
-import type { Project } from "../lib/project";
+import { computePrismaFlow, findLinkedCitation, formatStudyLabel, type Project } from "../lib/project";
 import { draftManuscriptTemplate } from "../lib/manuscript";
 import { useCollaboration } from "../context/CollaborationContext";
 
@@ -38,9 +38,11 @@ interface SectionMeta {
 export default function ManuscriptHelper({
   project,
   onChange,
+  practice = false,
 }: {
   project: Project;
   onChange: (p: Project) => void;
+  practice?: boolean;
 }) {
   const { recordChange, setActiveSection: setCollabSection } = useCollaboration();
   const drive = useDrive();
@@ -62,14 +64,14 @@ export default function ManuscriptHelper({
 
   const sections: Record<string, string> = project.manuscript?.sections ?? { ...defaultTemplate };
   const sectionMetas: Record<string, SectionMeta> = project.manuscript?.sectionMetas ?? {};
-  useEffect(() => { setCollabSection("manuscript"); }, [setCollabSection]);
+  useEffect(() => { if (!practice) setCollabSection("manuscript"); }, [practice, setCollabSection]);
 
   const currentText = sections[activeTab] ?? defaultTemplate[activeTab as keyof typeof defaultTemplate] ?? "";
 
   const updateCurrentText = (newVal: string) => {
     if (!canEditManuscript()) return;
     onChange({ ...project, manuscript: { ...project.manuscript, sections: { ...sections, [activeTab]: newVal }, sectionMetas, history: project.manuscript?.history ?? [] } });
-    recordChange("manuscript", activeTab, currentText, newVal, `Edited ${activeTab} section`);
+    if (!practice) recordChange("manuscript", activeTab, currentText, newVal, `Edited ${activeTab} section`);
   };
 
   const updateSectionMeta = (tab: string, patch: Partial<SectionMeta>) => {
@@ -107,8 +109,27 @@ export default function ManuscriptHelper({
 
   const insertPrismaData = () => {
     const flow = project.prisma.flow;
-    const snippet = `\n\n**PRISMA 2020 Study Flow:**\n- Records identified: ${flow.identified ?? "N/A"}\n- Duplicates removed: ${flow.duplicates ?? "N/A"}\n- Records screened: ${flow.screened ?? "N/A"}\n- Excluded at title/abstract: ${flow.excludedTa ?? "N/A"}\n- Full-text reports assessed: ${flow.fullText ?? "N/A"}\n- Excluded at full-text: ${flow.excludedFt ?? "N/A"}\n- Studies included in qualitative synthesis: ${project.extraction.studies.length}\n\n`;
+    const ftReasons = Object.entries(computePrismaFlow(project).exclusionBreakdown.ft);
+    const reasonText = ftReasons.length
+      ? `\n- Full-text exclusion reasons: ${ftReasons.map(([r, n]) => `${r} (*n* = ${n})`).join("; ")}`
+      : "";
+    const snippet = `\n\n**PRISMA 2020 Study Flow:**\n- Records identified: ${flow.identified ?? "N/A"}\n- Duplicates removed: ${flow.duplicates ?? "N/A"}\n- Records screened: ${flow.screened ?? "N/A"}\n- Excluded at title/abstract: ${flow.excludedTa ?? "N/A"}\n- Full-text reports assessed: ${flow.fullText ?? "N/A"}\n- Excluded at full-text: ${flow.excludedFt ?? "N/A"}${reasonText}\n- Studies included in synthesis: ${project.extraction.studies.length}\n\n`;
     applyFormat(snippet);
+  };
+
+  const insertRobAndGrade = () => {
+    const rob = project.rob.assessments ?? [];
+    const low = rob.filter((r) => r.overall === "Low").length;
+    const some = rob.filter((r) => r.overall === "Some concerns").length;
+    const high = rob.filter((r) => r.overall === "High" || r.overall === "Critical").length;
+    const robLine = rob.length
+      ? `- **Risk of Bias (${rob.length} studies):** ${low} low risk, ${some} some concerns/moderate, ${high} high/critical risk.`
+      : "- **Risk of Bias:** Assessments not yet recorded.";
+    const gradeRows = (project.prisma.grade ?? []) as { outcome?: string; studies?: number; final_certainty?: string; downgrade_reasons?: string }[];
+    const gradeLines = gradeRows.length
+      ? gradeRows.map((g) => `- **${g.outcome || "Outcome"}** (*k* = ${g.studies ?? 0}): **${g.final_certainty || "Moderate"}** certainty${g.downgrade_reasons && g.downgrade_reasons !== "None" ? ` (downgraded for ${g.downgrade_reasons})` : ""}.`).join("\n")
+      : "- **GRADE Certainty:** Run Auto-GRADE in PRISMA & GRADE to populate certainty ratings.";
+    applyFormat(`\n\n**Quality & Certainty of Evidence:**\n${robLine}\n${gradeLines}\n\n`);
   };
 
   const insertCitation = () => {
@@ -117,8 +138,11 @@ export default function ManuscriptHelper({
       applyFormat(" (Author et al., Year)");
       return;
     }
-    const names = studies.slice(0, 3).map((s) => s.study).join("; ");
-    applyFormat(` (${names}${studies.length > 3 ? " et al." : ""})`);
+    const labels = studies.slice(0, 3).map((s) => {
+      const linked = findLinkedCitation(project, { sourceId: s.sourceId, study: s.study });
+      return linked ? formatStudyLabel(linked) : s.study;
+    });
+    applyFormat(` (${labels.join("; ")}${studies.length > 3 ? " et al." : ""})`);
   };
 
   // ── Exports ──
@@ -220,13 +244,13 @@ export default function ManuscriptHelper({
                 onClick={() => setActiveTab(s.key)}
                 className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-medium transition-colors ${
                   activeTab === s.key
-                    ? "bg-[var(--color-accent)] text-white shadow-xs"
+                    ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] shadow-xs"
                     : "text-[var(--color-text-muted)] hover:bg-[var(--hover-surface)] hover:text-[var(--color-text)]"
                 }`}
               >
                 <span>{s.label}</span>
                 {sectionMetas[s.key]?.status === "approved" && (
-                  <Check className="h-3 w-3 text-green-400" />
+                  <Check className={`h-3 w-3 ${activeTab === s.key ? "text-current" : "text-[var(--color-include)]"}`} />
                 )}
               </button>
             ))}
@@ -341,32 +365,24 @@ export default function ManuscriptHelper({
             <Button size="sm" variant="ghost" className="text-[11px] h-7" onClick={insertPrismaData}>
               <TableIcon className="h-3 w-3 mr-1" /> Insert PRISMA Flow
             </Button>
+            <Button size="sm" variant="ghost" className="text-[11px] h-7" onClick={insertRobAndGrade}>
+              <UserCheck className="h-3 w-3 mr-1" /> Insert RoB &amp; GRADE
+            </Button>
             <div className="h-4 w-px bg-[var(--color-border)] mx-1" />
             <div className="flex rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-0.5">
-              <button
-                onClick={() => setEditMode("edit")}
-                className={`rounded px-2 py-0.5 text-[11px] font-medium ${
-                  editMode === "edit" ? "bg-[var(--color-accent)] text-white" : "text-[var(--color-text-muted)]"
-                }`}
-              >
-                Raw
-              </button>
-              <button
-                onClick={() => setEditMode("split")}
-                className={`rounded px-2 py-0.5 text-[11px] font-medium ${
-                  editMode === "split" ? "bg-[var(--color-accent)] text-white" : "text-[var(--color-text-muted)]"
-                }`}
-              >
-                Split
-              </button>
-              <button
-                onClick={() => setEditMode("preview")}
-                className={`rounded px-2 py-0.5 text-[11px] font-medium ${
-                  editMode === "preview" ? "bg-[var(--color-accent)] text-white" : "text-[var(--color-text-muted)]"
-                }`}
-              >
-                Preview
-              </button>
+              {(["edit", "split", "preview"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  aria-pressed={editMode === m}
+                  onClick={() => setEditMode(m)}
+                  className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                    editMode === m ? "bg-[var(--btn-bg)] text-[var(--btn-fg)]" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                  }`}
+                >
+                  {m === "edit" ? "Raw" : m === "split" ? "Split" : "Preview"}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -382,7 +398,7 @@ export default function ManuscriptHelper({
                 onChange={(e) => updateCurrentText(e.target.value)}
                 disabled={!canEditManuscript()}
                 placeholder={`Write or refine ${activeTab} text here using Markdown...`}
-                className="h-full min-h-[380px] w-full rounded-lg border border-[var(--color-border)] bg-[var(--input-bg)] p-3 text-[12.5px] leading-relaxed font-mono text-[var(--color-text)] outline-none focus:border-[var(--color-accent)]"
+                className="h-full min-h-[380px] w-full rounded-lg border border-[var(--color-border)] bg-[var(--input-bg)] p-3 text-[12.5px] leading-relaxed font-mono text-[var(--color-text)] outline-none focus:border-[var(--color-accent)] focus-visible:ring-2 focus-visible:ring-[var(--workspace-accent)]"
               />
             </div>
           )}

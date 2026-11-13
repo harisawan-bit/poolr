@@ -127,12 +127,14 @@ public static class ReportingEngine
     public static string GenerateHtmlReport(HtmlReportRequest req)
     {
         var p = req.project;
+        static string E(string? s) => System.Net.WebUtility.HtmlEncode(s ?? "");
+        var certaintyClass = E(p.certainty.ToLowerInvariant().Replace(" ", "-"));
         return $@"
 <!DOCTYPE html>
 <html lang='en'>
 <head>
 <meta charset='UTF-8'>
-<title>{p.title}</title>
+<title>{E(p.title)}</title>
 <style>
 body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 900px; margin: 0 auto; padding: 2rem; color: #333; line-height: 1.6; }}
 h1 {{ color: #1a1a1a; border-bottom: 2px solid #eee; padding-bottom: 0.5rem; }}
@@ -152,8 +154,8 @@ footer {{ margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #eee; font-
 </style>
 </head>
 <body>
-<h1>{p.title}</h1>
-<p><strong>Objective:</strong> {p.objective}</p>
+<h1>{E(p.title)}</h1>
+<p><strong>Objective:</strong> {E(p.objective)}</p>
 
 <h2>Summary Statistics</h2>
 <div>
@@ -166,8 +168,8 @@ footer {{ margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #eee; font-
 <h2>Pooled Result</h2>
 <table>
 <tr><th>Measure</th><th>Effect (95% CI)</th><th>Certainty</th></tr>
-<tr><td>{p.measure}</td><td>{p.pooledEffect:F2} [{p.ciLower:F2}, {p.ciUpper:F2}]</td>
-<td><span class='certainty certainty-{p.certainty.ToLower().Replace(" ", "-")}'>{p.certainty}</span></td></tr>
+<tr><td>{E(p.measure)}</td><td>{p.pooledEffect:F2} [{p.ciLower:F2}, {p.ciUpper:F2}]</td>
+<td><span class='certainty certainty-{certaintyClass}'>{E(p.certainty)}</span></td></tr>
 </table>
 
 <h2>PRISMA Flow</h2>

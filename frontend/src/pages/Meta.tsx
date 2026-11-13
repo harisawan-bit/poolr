@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import type { Project, ExtendedMetaRequest, ExtendedMetaResponse } from "../lib/project";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { findLinkedCitation, type Project, type ExtendedMetaRequest, type ExtendedMetaResponse } from "../lib/project";
 import { Card, Select, Pill, EmptyState, Button } from "../components/ui";
 import ShimmerText from "../components/kokonut/ShimmerText";
 import ActivityState from "../components/kokonut/ActivityState";
@@ -61,6 +61,32 @@ export default function Meta({ project, onChange }: { project: Project; onChange
   });
   const [diagSvg, setDiagSvg] = useState<Record<string, string>>({});
   const [diagLoading, setDiagLoading] = useState(false);
+
+  const funnelPoints = useMemo(() => {
+    if (!resp?.studies?.length) return [] as { effect: number; se: number; study: string }[];
+    try {
+      const plotData = {
+        studies: resp.studies.map((s) => ({
+          study: s.study,
+          effect: s.effect,
+          ci_lower: s.ci_lower,
+          ci_upper: s.ci_upper,
+          weight: (s.weight || 0) <= 1 ? (s.weight || 0) * 100 : s.weight,
+          subgroup: s.subgroup || "",
+          se: Math.abs(s.ci_upper - s.ci_lower) / (2 * 1.959964),
+        })),
+        pooled: {
+          effect: resp.pooled.effect,
+          ci_lower: resp.pooled.ci_lower,
+          ci_upper: resp.pooled.ci_upper,
+          se: resp.pooled.se,
+        },
+      };
+      return generateFunnelPlotData(plotData as any).points;
+    } catch {
+      return [];
+    }
+  }, [resp]);
 
   const [tsaResult, setTsaResult] = useState<SequentialResult | null>(null);
   const [tsaLoading, setTsaLoading] = useState(false);
@@ -283,21 +309,24 @@ export default function Meta({ project, onChange }: { project: Project; onChange
     setTsaLoading(true);
     try {
       const isRatio = ["OR", "RR", "HR"].includes(settings.measure || "OR");
-      const nullVal = isRatio ? 1 : 0;
       const tsaStudies = resp.studies.map((s) => {
-        const se = (s as any).se || Math.abs(s.ci_upper - s.ci_lower) / 3.92;
-        const z = se > 0 ? (s.effect - nullVal) / se : 0;
+        const eff = isRatio ? Math.log(Math.max(1e-4, s.effect)) : s.effect;
+        const se = (s as any).se || (isRatio
+          ? (Math.log(Math.max(1e-4, s.ci_upper)) - Math.log(Math.max(1e-4, s.ci_lower))) / 3.92
+          : Math.abs(s.ci_upper - s.ci_lower) / 3.92);
+        const match = studies.find((st) => st.study === s.study);
+        const sampleN = Math.round(((match?.int_n ?? 0) + (match?.ctrl_n ?? 0)) || match?.n_total || (s.weight || 10) * 10);
         return {
           study: s.study,
-          zScore: z,
-          informationFraction: (s.weight || 1) / 100,
+          zScore: se > 0 ? eff / se : 0,
+          informationFraction: Math.max(10, sampleN),
         };
       });
       const res = await runTrialSequentialAnalysis({
         studies: tsaStudies,
         alpha: 0.05,
         beta: 0.20,
-        expectedEffect: resp.pooled.effect,
+        expectedEffect: isRatio ? Math.log(Math.max(1e-4, resp.pooled.effect)) : resp.pooled.effect,
       });
       setTsaResult(res);
     } catch (e) {
@@ -344,6 +373,7 @@ export default function Meta({ project, onChange }: { project: Project; onChange
         weight: s.weight,
         se: (s as any).se || Math.abs(s.ci_upper - s.ci_lower) / 3.92,
       })),
+      data: settings.data ?? [],
       pooled: resp.pooled,
       heterogeneity: resp.heterogeneity,
     };
@@ -488,7 +518,7 @@ export default function Meta({ project, onChange }: { project: Project; onChange
               )}
             </div>
             {interpretation && (
-              <div className="mt-3 rounded-[3px] border border-[var(--color-border)] bg-white/[0.04] p-3 text-[12px] text-[var(--color-text)]">
+              <div className="mt-3 rounded-[4px] border border-[var(--color-border)] bg-[var(--color-surface-subtle)] p-3 text-[12px] text-[var(--color-text)]">
                 <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">AI Interpretation</div>
                 {interpretation}
               </div>
@@ -512,39 +542,39 @@ export default function Meta({ project, onChange }: { project: Project; onChange
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex items-center gap-1 rounded-md border border-[var(--color-border)] bg-[var(--input-bg)] p-0.5 text-[11px]">
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${figTab === "forest" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${figTab === "forest" ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setFigTab("forest")}
                   >
                     Forest Plot
                   </button>
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${figTab === "funnel" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${figTab === "funnel" ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setFigTab("funnel")}
                   >
                     Funnel (Std)
                   </button>
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${figTab === "funnel_contour" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${figTab === "funnel_contour" ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setFigTab("funnel_contour")}
                   >
                     Contour Funnel
                   </button>
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${figTab === "galbraith" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${figTab === "galbraith" ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setFigTab("galbraith")}
                   >
                     Galbraith Radial
                   </button>
                   {["OR", "RR", "RD"].includes(settings.measure || "OR") && (
                     <button
-                      className={`rounded px-2 py-1 transition-colors ${figTab === "labbe" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                      className={`rounded px-2 py-1 transition-colors ${figTab === "labbe" ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                       onClick={() => setFigTab("labbe")}
                     >
                       L'Abbé Plot
                     </button>
                   )}
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${figTab === "baujat" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${figTab === "baujat" ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setFigTab("baujat")}
                   >
                     Baujat Influence
@@ -569,13 +599,22 @@ export default function Meta({ project, onChange }: { project: Project; onChange
           >
             {figTab === "forest" ? (
               forest ? (
-                <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: forest }} />
+                <div className="space-y-3">
+                  <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: forest }} />
+                  <ForestStudyMatrix resp={resp} project={project} fmtE={fmtE} />
+                </div>
               ) : (
                 <EmptyState>{busy ? "Rendering…" : "Run analysis to render forest plot."}</EmptyState>
               )
             ) : figTab === "funnel" ? (
-              funnel ? (
-                <div className="overflow-x-auto" dangerouslySetInnerHTML={{ __html: funnel }} />
+              funnelPoints.length > 0 ? (
+                <InteractiveFunnelPlot
+                  points={funnelPoints}
+                  pooled={resp.pooled}
+                  loo={resp.sensitivity?.leave_one_out}
+                  project={project}
+                  fmtE={fmtE}
+                />
               ) : (
                 <EmptyState>{busy ? "Rendering…" : "Run analysis to render funnel plot."}</EmptyState>
               )
@@ -692,25 +731,25 @@ export default function Meta({ project, onChange }: { project: Project; onChange
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1 rounded-md border border-[var(--color-border)] bg-[var(--input-bg)] p-0.5 text-[11px]">
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${replTab === "r" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${replTab === "r" ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setReplTab("r")}
                   >
                     R (metafor)
                   </button>
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${replTab === "stata" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${replTab === "stata" ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setReplTab("stata")}
                   >
                     Stata (meta)
                   </button>
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${replTab === "python" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${replTab === "python" ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setReplTab("python")}
                   >
                     Python
                   </button>
                   <button
-                    className={`rounded px-2 py-1 transition-colors ${replTab === "methods" ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
+                    className={`rounded px-2 py-1 transition-colors ${replTab === "methods" ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-medium shadow-sm" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}
                     onClick={() => setReplTab("methods")}
                   >
                     Cochrane Methods Text
@@ -809,33 +848,310 @@ function SubgroupsBlock({ resp, fmtE, fmtN }: { resp: any; fmtE: (v: unknown) =>
 }
 
 function SensitivityBlock({ resp, fmtE, fmtN }: { resp: any; fmtE: (v: unknown) => string; fmtN: (v: unknown, d: number) => string }) {
-  if (!resp.sensitivity?.leave_one_out?.length) return null;
+  const loo = resp.sensitivity?.leave_one_out ?? [];
+  if (!loo.length) return null;
+  const allVals = [
+    ...loo.flatMap((l: any) => [Number(l.ci_lower), Number(l.ci_upper), Number(l.effect)]),
+    Number(resp.pooled?.effect),
+  ].filter((n) => Number.isFinite(n));
+  const minV = Math.min(...allVals);
+  const maxV = Math.max(...allVals);
+  const span = maxV - minV || 1;
+  const px = (v: number) => 4 + ((v - minV) / span) * 112;
+  const pooledX = Number.isFinite(Number(resp.pooled?.effect)) ? px(Number(resp.pooled.effect)) : 60;
+
   return (
     <div className="mt-3">
-      <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Sensitivity (leave-one-out)</div>
-      <div className="max-h-40 overflow-y-auto rounded-[3px] border border-[var(--color-border)]">
+      <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Sensitivity (Leave-One-Out) — click jump to inspect study</div>
+      <div className="max-h-56 overflow-y-auto rounded-[4px] border border-[var(--color-border)]">
         <table className="w-full text-left text-[11.5px]">
-          <thead className="text-[10.5px] uppercase tracking-wide text-[var(--color-text-muted)]">
-            <tr><th className="px-2 py-1">Excluded</th><th className="px-2 py-1">Pooled</th><th className="px-2 py-1">95% CI</th><th className="px-2 py-1">I²</th></tr>
+          <thead className="sticky top-0 bg-[var(--color-surface-2)] text-[10.5px] uppercase tracking-wide text-[var(--color-text-muted)]">
+            <tr>
+              <th className="px-2 py-1.5">Excluded</th>
+              <th className="px-2 py-1.5">Pooled (Δ)</th>
+              <th className="px-2 py-1.5">95% CI</th>
+              <th className="px-2 py-1.5">LOO Strip</th>
+              <th className="px-2 py-1.5">I²</th>
+              <th className="px-2 py-1.5 text-right">Cross-Link</th>
+            </tr>
           </thead>
           <tbody>
-            {resp.sensitivity.leave_one_out.map((l: any, i: number) => (
-              <tr key={i} className={`border-t border-[var(--color-border)] ${l.excluded === resp.sensitivity?.most_influential ? "text-[var(--color-unsure)]" : ""}`}>
-                <td className="px-2 py-1">{l.excluded}</td>
-                <td className="px-2 py-1 font-mono">{fmtE(l.effect)}</td>
-                <td className="px-2 py-1 font-mono">{fmtE(l.ci_lower)}, {fmtE(l.ci_upper)}</td>
-                <td className="px-2 py-1">{fmtN(l.i2, 0)}%</td>
-              </tr>
-            ))}
+            {loo.map((l: any, i: number) => {
+              const delta = Number(l.effect) - Number(resp.pooled?.effect ?? l.effect);
+              const isMost = l.excluded === resp.sensitivity?.most_influential;
+              return (
+                <tr key={i} className={`border-t border-[var(--color-border)] ${isMost ? "bg-[var(--color-row-active)] font-medium" : "hover:bg-[var(--hover-surface)]"}`}>
+                  <td className="px-2 py-1 text-[var(--color-text)]">{l.excluded}</td>
+                  <td className="px-2 py-1 font-mono">
+                    {fmtE(l.effect)}{" "}
+                    <span className="text-[10px] text-[var(--color-text-muted)]">({delta >= 0 ? "+" : ""}{delta.toFixed(2)})</span>
+                  </td>
+                  <td className="px-2 py-1 font-mono">{fmtE(l.ci_lower)}, {fmtE(l.ci_upper)}</td>
+                  <td className="px-2 py-1">
+                    <svg width="120" height="16" viewBox="0 0 120 16" aria-hidden="true">
+                      <line x1={pooledX} y1="1" x2={pooledX} y2="15" stroke="var(--color-border-strong)" strokeWidth="1" strokeDasharray="2,2" />
+                      <line x1={px(Number(l.ci_lower))} y1="8" x2={px(Number(l.ci_upper))} y2="8" stroke={isMost ? "var(--workspace-accent)" : "var(--color-text)"} strokeWidth="1.5" />
+                      <circle cx={px(Number(l.effect))} cy="8" r="2.8" fill={isMost ? "var(--workspace-accent)" : "var(--color-accent)"} />
+                    </svg>
+                  </td>
+                  <td className="px-2 py-1">{fmtN(l.i2, 0)}%</td>
+                  <td className="px-2 py-1 text-right whitespace-nowrap">
+                    <button
+                      type="button"
+                      className="btn-ghost !px-1.5 !py-0.5 !text-[10.5px] mr-1"
+                      onClick={() => window.dispatchEvent(new CustomEvent("poolr:gopage", { detail: { page: "extraction", study: l.excluded } }))}
+                    >
+                      Extract
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost !px-1.5 !py-0.5 !text-[10.5px]"
+                      onClick={() => window.dispatchEvent(new CustomEvent("poolr:gopage", { detail: { page: "rob", study: l.excluded } }))}
+                    >
+                      RoB
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
       {resp.sensitivity.most_influential && (
         <div className="mt-1 text-[11px] text-[var(--color-text-muted)]">
-          Most influential: {resp.sensitivity.most_influential} (removing it moves the pooled estimate by {fmtN(resp.sensitivity.influence_max_change_pct, 1)}%)
+          Most influential: <strong className="text-[var(--color-text)]">{resp.sensitivity.most_influential}</strong> (removing it moves the pooled estimate by {fmtN(resp.sensitivity.influence_max_change_pct, 1)}%)
         </div>
       )}
     </div>
+  );
+}
+
+function InteractiveFunnelPlot({
+  points,
+  pooled,
+  loo,
+  project,
+  fmtE,
+}: {
+  points: { effect: number; se: number; study: string }[];
+  pooled: { effect: number; ci_lower: number; ci_upper: number };
+  loo?: { excluded: string; effect: number; ci_lower: number; ci_upper: number; i2: number }[];
+  project: Project;
+  fmtE: (v: unknown) => string;
+}) {
+  const [active, setActive] = useState<{ effect: number; se: number; study: string } | null>(points[0] ?? null);
+  const width = 420, height = 270, plotLeft = 48, plotRight = 396, plotTop = 18, plotBottom = 236;
+  const plotWidth = plotRight - plotLeft, plotHeight = plotBottom - plotTop;
+  const maxSE = Math.max(...points.map((p) => p.se), 0.1);
+  const effectMid = Number.isFinite(pooled.effect) ? pooled.effect : points.reduce((s, p) => s + p.effect, 0) / points.length;
+  const allX = [...points.map((p) => p.effect), effectMid - 1.96 * maxSE, effectMid + 1.96 * maxSE];
+  const minX = Math.min(...allX), maxX = Math.max(...allX);
+  const spanX = maxX - minX || 1;
+  const sx = (v: number) => plotLeft + ((v - minX) / spanX) * plotWidth;
+  const sy = (se: number) => plotTop + (se / maxSE) * plotHeight;
+
+  const activeLoo = active ? loo?.find((l) => l.excluded === active.study) : undefined;
+  const linked = active ? findLinkedCitation(project, { study: active.study }) : undefined;
+
+  return (
+    <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="overflow-x-auto rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)] p-2">
+        <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full max-w-[520px]" role="img" aria-label="Interactive funnel plot">
+          <polygon
+            points={`${sx(effectMid)},${plotTop} ${sx(effectMid - 1.96 * maxSE)},${plotBottom} ${sx(effectMid + 1.96 * maxSE)},${plotBottom}`}
+            fill="var(--hover-surface)"
+            stroke="var(--color-border-strong)"
+            strokeDasharray="3,3"
+          />
+          <line x1={sx(effectMid)} y1={plotTop} x2={sx(effectMid)} y2={plotBottom} stroke="var(--workspace-accent)" strokeWidth="1.5" />
+          <line x1={plotLeft} y1={plotBottom} x2={plotRight} y2={plotBottom} stroke="var(--color-border-strong)" />
+          <line x1={plotLeft} y1={plotTop} x2={plotLeft} y2={plotBottom} stroke="var(--color-border-strong)" />
+          {points.map((p) => {
+            const isActive = active?.study === p.study;
+            const cx = sx(p.effect);
+            const cy = sy(p.se);
+            return (
+              <g
+                key={p.study}
+                tabIndex={0}
+                role="button"
+                aria-label={`${p.study}, effect ${p.effect.toFixed(3)}, SE ${p.se.toFixed(3)}`}
+                className="cursor-pointer focus:outline-none"
+                onMouseEnter={() => setActive(p)}
+                onFocus={() => setActive(p)}
+                onClick={() => setActive(p)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActive(p); } }}
+              >
+                {isActive && (
+                  <circle cx={cx} cy={cy} r={8.5} fill="none" stroke="var(--workspace-accent)" strokeWidth="1.5" opacity="0.55" />
+                )}
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={isActive ? 5.5 : 4.2}
+                  fill={isActive ? "var(--workspace-accent)" : "var(--color-text)"}
+                  stroke="var(--color-surface)"
+                  strokeWidth="1.5"
+                />
+              </g>
+            );
+          })}
+          <text x={(plotLeft + plotRight) / 2} y={height - 8} fill="var(--color-text-muted)" fontSize="10" textAnchor="middle">Effect Size</text>
+          <text x="14" y={(plotTop + plotBottom) / 2} fill="var(--color-text-muted)" fontSize="10" textAnchor="middle" transform={`rotate(-90, 14, ${(plotTop + plotBottom) / 2})`}>Standard Error</text>
+        </svg>
+      </div>
+
+      <div className="rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)] p-3 text-[12px]">
+        <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+          Study Inspector (hover or tab point)
+        </div>
+        {active ? (
+          <div className="space-y-2">
+            <div className="font-semibold text-[var(--color-text)]">{active.study}</div>
+            {linked && (
+              <div className="text-[11px] text-[var(--color-text-muted)]">
+                {[linked.authors, linked.year, linked.journal].filter(Boolean).join(" · ")}
+              </div>
+            )}
+            <dl className="grid grid-cols-2 gap-1.5 rounded border border-[var(--color-border)] bg-[var(--color-surface)] p-2 text-[11px]">
+              <div><dt className="text-[var(--color-text-muted)]">Effect</dt><dd className="font-mono font-semibold">{fmtE(active.effect)}</dd></div>
+              <div><dt className="text-[var(--color-text-muted)]">Std Error</dt><dd className="font-mono font-semibold">{active.se.toFixed(3)}</dd></div>
+              {activeLoo && (
+                <>
+                  <div><dt className="text-[var(--color-text-muted)]">LOO Pooled</dt><dd className="font-mono">{fmtE(activeLoo.effect)}</dd></div>
+                  <div><dt className="text-[var(--color-text-muted)]">LOO I²</dt><dd className="font-mono">{activeLoo.i2.toFixed(0)}%</dd></div>
+                </>
+              )}
+            </dl>
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              <button
+                type="button"
+                className="btn-primary !text-[11px]"
+                onClick={() => window.dispatchEvent(new CustomEvent("poolr:gopage", { detail: { page: "extraction", study: active.study } }))}
+              >
+                Open in Extraction
+              </button>
+              <button
+                type="button"
+                className="btn-ghost !text-[11px]"
+                onClick={() => window.dispatchEvent(new CustomEvent("poolr:gopage", { detail: { page: "rob", study: active.study } }))}
+              >
+                Open in RoB
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="text-[var(--color-text-muted)]">Hover or select any study point to inspect SE, LOO impact, and open its dossier.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ForestStudyMatrix({
+  resp,
+  project,
+  fmtE,
+}: {
+  resp: any;
+  project: Project;
+  fmtE: (v: unknown) => string;
+}) {
+  const rows = resp.studies ?? [];
+  if (!rows.length) return null;
+  const dotBg = (judgment?: string) =>
+    judgment === "Low"
+      ? "bg-[var(--color-include)] text-white"
+      : judgment === "High" || judgment === "Critical" || judgment === "Serious"
+        ? "bg-[var(--color-exclude)] text-white"
+        : judgment === "Some concerns" || judgment === "Moderate"
+          ? "bg-[var(--color-unsure)] text-white"
+          : "bg-[var(--color-border-strong)] text-[var(--color-text)]";
+  const dotChar = (judgment?: string) =>
+    judgment === "Low" ? "+" : judgment === "High" || judgment === "Critical" || judgment === "Serious" ? "−" : judgment ? "?" : "·";
+
+  return (
+    <details className="rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)] p-2.5" open>
+      <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+        Included Studies · Characteristics &amp; Risk-of-Bias Traffic Lights ({rows.length})
+      </summary>
+      <div className="mt-2 overflow-x-auto">
+        <table className="w-full text-left text-[11.5px]">
+          <thead className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wide text-[var(--color-text-muted)]">
+            <tr>
+              <th className="py-1.5 pr-2">Study</th>
+              <th className="px-2 py-1.5">Design / N</th>
+              <th className="px-2 py-1.5">Effect [95% CI]</th>
+              <th className="px-2 py-1.5 text-right">Wt</th>
+              <th className="px-2 py-1.5">RoB (D1–D5 · Overall)</th>
+              <th className="py-1.5 pl-2 text-right">Inspect</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((s: any) => {
+              const ext = project.extraction.studies.find(
+                (e) => e.study.trim().toLowerCase() === String(s.study).trim().toLowerCase()
+              );
+              const rob = project.rob.assessments.find(
+                (a) =>
+                  (ext?.sourceId && a.sourceId === ext.sourceId) ||
+                  a.study.trim().toLowerCase() === String(s.study).trim().toLowerCase()
+              );
+              const domains = Object.entries(rob?.domains ?? {}).slice(0, 5);
+              const nTotal = ext?.n_total ?? ((ext?.int_n ?? 0) + (ext?.ctrl_n ?? 0) || null);
+              return (
+                <tr key={s.study} className="border-t border-[var(--color-border)] hover:bg-[var(--hover-surface)]">
+                  <td className="py-1.5 pr-2 font-medium text-[var(--color-text)]">{s.study}</td>
+                  <td className="px-2 py-1.5 text-[var(--color-text-muted)]">
+                    {[ext?.design || ext?.type, nTotal ? `n=${nTotal}` : ""].filter(Boolean).join(" · ") || "—"}
+                  </td>
+                  <td className="px-2 py-1.5 font-mono text-[var(--color-text)]">
+                    {fmtE(s.effect)} [{fmtE(s.ci_lower)}, {fmtE(s.ci_upper)}]
+                  </td>
+                  <td className="px-2 py-1.5 text-right font-mono text-[var(--color-text-muted)]">
+                    {Number(s.weight).toFixed(1)}%
+                  </td>
+                  <td className="px-2 py-1.5">
+                    {rob ? (
+                      <div className="flex flex-wrap items-center gap-1" title={`Overall RoB: ${rob.overall}`}>
+                        {domains.map(([d, j]) => (
+                          <span
+                            key={d}
+                            title={`${d}: ${j}`}
+                            className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold ${dotBg(j)}`}
+                          >
+                            {dotChar(j)}
+                          </span>
+                        ))}
+                        <span className="ml-1 text-[10.5px] font-medium text-[var(--color-text-muted)]">{rob.overall}</span>
+                      </div>
+                    ) : (
+                      <span className="text-[10.5px] text-[var(--color-text-muted)]">Not assessed</span>
+                    )}
+                  </td>
+                  <td className="py-1.5 pl-2 text-right whitespace-nowrap">
+                    <button
+                      type="button"
+                      className="btn-ghost !px-1.5 !py-0.5 !text-[10.5px] mr-1"
+                      onClick={() => window.dispatchEvent(new CustomEvent("poolr:gopage", { detail: { page: "extraction", study: s.study } }))}
+                    >
+                      Extract
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost !px-1.5 !py-0.5 !text-[10.5px]"
+                      onClick={() => window.dispatchEvent(new CustomEvent("poolr:gopage", { detail: { page: "rob", study: s.study } }))}
+                    >
+                      RoB
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </details>
   );
 }
 
@@ -958,11 +1274,16 @@ function PowerToolsBlock({ resp, studies }: { resp: any; studies: StudyInput[] }
   const [labbeData, setLabbeData] = useState<ReturnType<typeof labbePlotData> | null>(null);
   const [bubbleData, setBubbleData] = useState<ReturnType<typeof bubblePlotData> | null>(null);
 
-  const stdStudies: { study: string; effect: number; se: number }[] = resp?.studies?.map((s: any) => ({
-    study: s.study,
-    effect: s.effect,
-    se: s.se ?? Math.abs(s.ci_upper - s.ci_lower) / 3.92,
-  })) ?? [];
+  const stdStudies: { study: string; effect: number; se: number; n_total?: number }[] = resp?.studies?.map((s: any, i: number) => {
+    const src = studies[i]?.study === s.study ? studies[i] : studies.find((x) => (x.study || "Unknown") === s.study);
+    const n = src?.n_total ?? ((src?.int_n ?? 0) + (src?.ctrl_n ?? 0));
+    return {
+      study: s.study,
+      effect: s.effect,
+      se: s.se ?? Math.abs(s.ci_upper - s.ci_lower) / 3.92,
+      n_total: n > 0 ? n : undefined,
+    };
+  }) ?? [];
 
   const fmt = (v: unknown, d = 3) => (typeof v === "number" && Number.isFinite(v) ? v.toFixed(d) : "—");
 
@@ -995,8 +1316,8 @@ function PowerToolsBlock({ resp, studies }: { resp: any; studies: StudyInput[] }
         <div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setBeggResult(beggsTest(stdStudies))}>Run Begg's Test</Button>
-            <Button variant="outline" size="sm" onClick={() => setHarbordResult(harbordTest(stdStudies.map((s: any) => ({ ...s, n_total: 100 }))))}>Harbord Test</Button>
-            <Button variant="outline" size="sm" onClick={() => setPetersResult(petersTest(stdStudies.map((s: any) => ({ ...s, n_total: 100 }))))}>Peters' Test</Button>
+            <Button variant="outline" size="sm" onClick={() => setHarbordResult(harbordTest(stdStudies))}>Harbord Test</Button>
+            <Button variant="outline" size="sm" onClick={() => setPetersResult(petersTest(stdStudies))}>Peters' Test</Button>
           </div>
           {beggResult && (
             <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">

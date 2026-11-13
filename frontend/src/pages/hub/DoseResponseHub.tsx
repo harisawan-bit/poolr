@@ -11,8 +11,8 @@ interface Props {
   onProjectChange?: (p: Project) => void;
 }
 
-export function DoseResponseHub({ project: _ }: Props) {
-  const [subTab, setSubTab] = useState<"gls" | "rcs" | "multi" | "surface" | "spatio">("gls");
+export function DoseResponseHub({ project: _, initialPanel }: Props & { initialPanel?: string }) {
+  const [subTab, setSubTab] = useState<"gls" | "rcs" | "multi" | "surface" | "spatio">((["gls", "rcs", "multi", "surface", "spatio"] as readonly string[]).includes(initialPanel ?? "") ? initialPanel as "gls" | "rcs" | "multi" | "surface" | "spatio" : "gls");
 
   return (
     <div className="space-y-4">
@@ -21,7 +21,7 @@ export function DoseResponseHub({ project: _ }: Props) {
           onClick={() => setSubTab("gls")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "gls"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -32,7 +32,7 @@ export function DoseResponseHub({ project: _ }: Props) {
           onClick={() => setSubTab("rcs")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "rcs"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -43,7 +43,7 @@ export function DoseResponseHub({ project: _ }: Props) {
           onClick={() => setSubTab("multi")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "multi"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -54,7 +54,7 @@ export function DoseResponseHub({ project: _ }: Props) {
           onClick={() => setSubTab("surface")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "surface"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -65,7 +65,7 @@ export function DoseResponseHub({ project: _ }: Props) {
           onClick={() => setSubTab("spatio")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "spatio"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -240,8 +240,10 @@ function GlsDoseSection() {
                   </td>
                   <td className="p-1.5 text-center">
                     <button
+                      type="button"
                       onClick={() => setRows(prev => prev.filter((_, idx) => idx !== i))}
-                      className="text-red-400 hover:text-red-300 text-xs px-1"
+                      aria-label={`Remove ${r.study}`}
+                      className="text-[var(--color-exclude)] hover:opacity-75 text-xs px-1"
                     >
                       ✕
                     </button>

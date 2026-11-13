@@ -1,7 +1,7 @@
 name: Poolr checks and installers
 on:
   push:
-    branches: [main, develop, 'release/**', 'v0.6.5(fixes)', 'v0.6.5-fixes']
+    branches: [main, develop, 'release/**', 'v0.6.6-fixes']
   pull_request:
     branches: [main, develop]
   workflow_dispatch:
@@ -79,9 +79,9 @@ jobs:
           projectPath: .
           tauriScript: npm run tauri
           args: --target ${{ matrix.target }}
-          tagName: v0.6.5
-          releaseName: Poolr v0.6.5
-          releaseBody: 'Drive collaboration and workspace redesign. See docs/RELEASE_0.6.4.md for setup, signing-key migration and verification limits.'
+          tagName: v0.6.6
+          releaseName: Poolr v0.6.6
+          releaseBody: 'Unified PRISMA 2020 research workflow, Study Library & Citation Manager, RoB-integrated Forest plots, Interactive Contour Funnel Inspector, Studio visual system & WCAG contrast overhaul. See docs/RELEASE_0.6.6.md and CHANGELOG.md.'
           releaseDraft: true
           prerelease: true
       - name: Verify AppImage excludes the incompatible Wayland client library

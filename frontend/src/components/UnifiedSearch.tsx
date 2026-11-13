@@ -5,14 +5,6 @@ import { cn } from '../lib/utils';
 import type { ScreeningItem } from '../lib/project';
 import type { SearchResult, SearchResponse } from '../lib/api';
 import {
-  pubmedSearch,
-  clinicaltrialsSearch,
-  prosperoSearch,
-  scopusSearch,
-  wosSearch,
-  googleScholarSearch,
-  embaseSearch,
-  cochraneSearch,
   openalexSearch,
   crossrefSearch,
 } from '../lib/api';
@@ -21,6 +13,8 @@ import { DATABASES } from './DatabaseSelector';
 interface UnifiedSearchProps {
   onImport: (items: ScreeningItem[]) => void;
   className?: string;
+  initialQuery?: string;
+  initialDatabase?: "openalex" | "crossref";
 }
 
 type SearchStatus = 'idle' | 'searching' | 'complete' | 'error';
@@ -32,21 +26,13 @@ interface SearchState {
 }
 
 const SEARCH_FUNCTIONS: Record<string, (query: string, apiKey?: string) => Promise<SearchResponse>> = {
-  pubmed: pubmedSearch,
-  clinicaltrials: clinicaltrialsSearch,
-  prospero: prosperoSearch,
-  scopus: scopusSearch,
-  wos: wosSearch,
-  google_scholar: googleScholarSearch,
-  embase: embaseSearch,
-  cochrane: cochraneSearch,
   openalex: openalexSearch,
   crossref: crossrefSearch,
 };
 
-export default function UnifiedSearch({ onImport, className }: UnifiedSearchProps) {
-  const [query, setQuery] = useState('');
-  const [selectedDb, setSelectedDb] = useState<string>('pubmed');
+export default function UnifiedSearch({ onImport, className, initialQuery = "", initialDatabase = "openalex" }: UnifiedSearchProps) {
+  const [query, setQuery] = useState(initialQuery);
+  const [selectedDb, setSelectedDb] = useState<string>(initialDatabase);
   const [searchState, setSearchState] = useState<SearchState>({
     status: 'idle',
     response: null,
@@ -59,7 +45,7 @@ export default function UnifiedSearch({ onImport, className }: UnifiedSearchProp
   const currentDb = DATABASES.find((d) => d.id === selectedDb);
 
   const handleSearch = useCallback(async () => {
-    if (!query.trim()) return;
+    if (!query.trim() || searchState.status === 'searching') return;
 
     setSearchState({ status: 'searching', response: null, error: null });
 
@@ -82,7 +68,7 @@ export default function UnifiedSearch({ onImport, className }: UnifiedSearchProp
         error: err instanceof Error ? err.message : 'Search failed',
       });
     }
-  }, [query, selectedDb, searchHistory]);
+  }, [query, selectedDb, searchHistory, searchState.status]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -90,15 +76,30 @@ export default function UnifiedSearch({ onImport, className }: UnifiedSearchProp
     }
   };
 
-  const convertToScreeningItem = (result: SearchResult): ScreeningItem => ({
-    id: result.id,
-    title: result.title,
-    abstract: result.abstract,
-    decision: 'unset',
-    stage: 'title_abstract',
-    doi: result.doi,
-    pmid: result.pmid,
-  });
+  const convertToScreeningItem = (result: SearchResult): ScreeningItem => {
+    const authors = Array.isArray((result as any).authors)
+      ? (result as any).authors.join('; ')
+      : typeof (result as any).authors === 'string'
+        ? (result as any).authors
+        : undefined;
+    const year = (result as any).year != null ? String((result as any).year) : undefined;
+    const journal = typeof (result as any).journal === 'string' ? (result as any).journal : undefined;
+    const url = typeof (result as any).url === 'string' ? (result as any).url : undefined;
+    return {
+      id: result.id,
+      title: result.title,
+      abstract: result.abstract,
+      decision: 'unset',
+      stage: 'title_abstract',
+      doi: result.doi,
+      pmid: result.pmid,
+      ...(authors ? { authors } : {}),
+      ...(year ? { year } : {}),
+      ...(journal ? { journal } : {}),
+      ...(url ? { url } : {}),
+      source: selectedDb === 'openalex' ? 'OpenAlex' : 'Crossref',
+    };
+  };
 
   const handleImportSingle = (result: SearchResult) => {
     const item = convertToScreeningItem(result);
@@ -123,6 +124,8 @@ export default function UnifiedSearch({ onImport, className }: UnifiedSearchProp
           <div className="relative">
             <button
               onClick={() => setShowDbDropdown(!showDbDropdown)}
+              disabled={searchState.status === "searching"}
+              aria-expanded={showDbDropdown}
               className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--input-bg)] px-3 py-2 text-[12.5px] font-medium text-[var(--color-text)] hover:border-[var(--color-border-strong)]"
             >
               <span className="text-lg">{currentDb?.logo}</span>
@@ -143,11 +146,12 @@ export default function UnifiedSearch({ onImport, className }: UnifiedSearchProp
                     exit={{ opacity: 0, y: -10 }}
                     className="absolute left-0 top-full z-50 mt-1 w-72 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-2 shadow-xl"
                   >
-                    {DATABASES.map((db) => (
+                    {DATABASES.filter(db => db.id in SEARCH_FUNCTIONS).map((db) => (
                       <button
                         key={db.id}
                         onClick={() => {
                           setSelectedDb(db.id);
+                          setSearchState({ status: "idle", response: null, error: null });
                           setShowDbDropdown(false);
                         }}
                         className={cn(
@@ -180,6 +184,7 @@ export default function UnifiedSearch({ onImport, className }: UnifiedSearchProp
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
             <input
               type="text"
+              aria-label="Search terms"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -189,7 +194,7 @@ export default function UnifiedSearch({ onImport, className }: UnifiedSearchProp
             <button
               onClick={handleSearch}
               disabled={!query.trim() || searchState.status === 'searching'}
-              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 px-3 py-1.5 text-[11px] font-medium text-white transition-colors disabled:opacity-50"
+              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] text-[var(--btn-fg)] font-semibold transition-colors disabled:opacity-50"
             >
               {searchState.status === 'searching' ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -270,10 +275,11 @@ export default function UnifiedSearch({ onImport, className }: UnifiedSearchProp
               </div>
               <button
                 onClick={handleImportAll}
-                className="flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 px-3 py-1.5 text-[11px] font-medium text-white transition-colors"
+                disabled={!searchState.response.results.length}
+                className="flex items-center gap-1.5 rounded-lg bg-[var(--btn-bg)] hover:bg-[var(--btn-hover-bg)] text-[var(--btn-fg)] font-semibold transition-colors"
               >
                 <Download className="h-3.5 w-3.5" />
-                Import All ({searchState.response.results.length})
+                Import fetched ({searchState.response.results.length})
               </button>
             </div>
 

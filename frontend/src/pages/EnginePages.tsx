@@ -122,10 +122,10 @@ export function InfluencePage({ project }: Props) {
           <ResultCard title="Threshold (Cook's)" value={F(result.thresholdCooks, 3)} />
           <ResultCard title="Threshold (DFFITS)" value={F(result.thresholdDffits, 3)} />
         </div>
-        {result.flaggedStudies?.length > 0 && <div className="text-xs text-yellow-400 bg-yellow-900/20 border border-yellow-800 rounded p-2">{result.flaggedStudies.map((s: string, i: number) => <div key={i}>⚠ {s}</div>)}</div>}
+        {result.flaggedStudies?.length > 0 && <div className="text-xs text-[var(--color-unsure)] bg-[var(--color-unsure)]/10 border border-[var(--color-unsure)]/30 rounded p-2">{result.flaggedStudies.map((s: string, i: number) => <div key={i}>⚠ {s}</div>)}</div>}
         <Card title="Per-study diagnostics">
           <div className="overflow-x-auto"><table className="w-full text-xs"><thead><tr className="text-[var(--color-muted-foreground)] border-b border-[var(--color-border)]"><th className="text-left p-1">Study</th><th className="text-right p-1">Stud. resid.</th><th className="text-right p-1">Hat</th><th className="text-right p-1">Cook's D</th><th className="text-right p-1">DFFITS</th><th className="text-center p-1">Flag</th></tr></thead>
-          <tbody>{result.studies.map((s: any, i: number) => (<tr key={i} className={`border-b border-[var(--color-border)]/50 ${(s.isInfluential || s.isOutlier) ? "bg-yellow-900/10" : ""}`}><td className="p-1">{names[i] ?? `Study ${i}`}</td><td className="text-right p-1">{F(s.studentizedResidual, 2)}</td><td className="text-right p-1">{F(s.hatValue, 3)}</td><td className={`text-right p-1 ${s.cooksDistance > result.thresholdCooks ? "text-yellow-400 font-semibold" : ""}`}>{F(s.cooksDistance, 3)}</td><td className={`text-right p-1 ${Math.abs(s.dffits) > result.thresholdDffits ? "text-yellow-400 font-semibold" : ""}`}>{F(s.dffits, 2)}</td><td className="text-center p-1">{s.isInfluential ? <span className="text-yellow-400">●</span> : s.isOutlier ? <span className="text-orange-400">○</span> : <span className="text-green-400">✓</span>}</td></tr>))}</tbody>
+          <tbody>{result.studies.map((s: any, i: number) => (<tr key={i} className={`border-b border-[var(--color-border)]/50 ${(s.isInfluential || s.isOutlier) ? "bg-[var(--color-unsure)]/10" : ""}`}><td className="p-1">{names[i] ?? `Study ${i}`}</td><td className="text-right p-1">{F(s.studentizedResidual, 2)}</td><td className="text-right p-1">{F(s.hatValue, 3)}</td><td className={`text-right p-1 ${s.cooksDistance > result.thresholdCooks ? "text-[var(--color-unsure)] font-semibold" : ""}`}>{F(s.cooksDistance, 3)}</td><td className={`text-right p-1 ${Math.abs(s.dffits) > result.thresholdDffits ? "text-[var(--color-unsure)] font-semibold" : ""}`}>{F(s.dffits, 2)}</td><td className="text-center p-1">{s.isInfluential ? <span className="text-[var(--color-unsure)]">●</span> : s.isOutlier ? <span className="text-[var(--color-exclude)]">○</span> : <span className="text-[var(--color-include)]">✓</span>}</td></tr>))}</tbody>
           </table></div>
         </Card>
       </>)}
@@ -157,7 +157,7 @@ export function GoshPage({ project }: Props) {
           <ResultCard title="τ²" value={result.overallTau2} />
           <ResultCard title="Subsets generated" value={result.nSubsetsGenerated} />
         </div>
-        {result.clusterWarnings?.length > 0 && <div className="text-xs text-yellow-400 bg-yellow-900/20 border border-yellow-800 rounded p-2 mt-3">{result.clusterWarnings.map((w: string, i: number) => <div key={i}>⚠ {w}</div>)}</div>}
+        {result.clusterWarnings?.length > 0 && <div className="text-xs text-[var(--color-unsure)] bg-[var(--color-unsure)]/10 border border-[var(--color-unsure)]/30 rounded p-2 mt-3">{result.clusterWarnings.map((w: string, i: number) => <div key={i}>⚠ {w}</div>)}</div>}
       </Card>}
     </div>
   );

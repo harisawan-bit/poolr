@@ -358,8 +358,8 @@ export default function Settings() {
             </Button>
             {updateError && <p role="alert" className="text-xs">{updateError}</p>}
             {updateInfo?.available && (
-              <div className="rounded-lg bg-blue-900/30 border border-blue-500/30 p-3">
-                <p className="text-blue-400 text-[12px]">New version available: {updateInfo.version}</p><Button onClick={downloadUpdate} disabled={checking}>Download and install signed update</Button>
+              <div className="rounded-lg bg-blue-500/10 border border-blue-500/30 p-3">
+                <p className="text-blue-700 dark:text-blue-300 text-[12px] mb-2">New version available: {updateInfo.version}</p><Button onClick={downloadUpdate} disabled={checking}>Download and install signed update</Button>
               </div>
             )}
             {updateInfo && !updateInfo.available && (
