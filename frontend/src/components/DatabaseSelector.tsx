@@ -175,6 +175,7 @@ export default function DatabaseSelector({
           <input
             type="text"
             placeholder="Search databases..."
+            aria-label="Search databases"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--input-bg)] py-2 pl-9 pr-3 text-[12.5px] text-[var(--color-text)] placeholder:text-[var(--placeholder-fg)] focus-visible:border-[var(--color-border-strong)] focus-visible:outline-none"
@@ -185,6 +186,7 @@ export default function DatabaseSelector({
             <button
               key={f}
               onClick={() => setFilter(f)}
+              aria-pressed={filter === f}
               className={cn(
                 'rounded-lg border px-3 py-1.5 text-[11px] font-medium transition-colors',
                 filter === f
@@ -220,6 +222,8 @@ export default function DatabaseSelector({
         <span>{filteredDatabases.length} shown</span>
       </div>
 
+      {!filteredDatabases.length && <p role="status">No databases match these filters.</p>}
+
       {/* Database grid */}
       <div className="space-y-6">
         {groupedDatabases.map((group) => (
@@ -240,6 +244,7 @@ export default function DatabaseSelector({
                   <motion.button
                     key={db.id}
                     onClick={() => onToggle(db.id)}
+                    aria-pressed={isSelected}
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                     className={cn(
@@ -254,7 +259,7 @@ export default function DatabaseSelector({
                       className={cn(
                         'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors',
                         isSelected
-                          ? 'border-blue-600 bg-blue-600 dark:border-blue-500 dark:bg-blue-500 text-white'
+                          ? 'border-[var(--btn-border)] bg-[var(--btn-bg)] text-[var(--btn-fg)]'
                           : 'border-[var(--color-border)] bg-[var(--input-bg)]'
                       )}
                     >

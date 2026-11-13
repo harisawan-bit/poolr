@@ -90,7 +90,7 @@ export function StudySelector({
       >
         <FolderOpen size={14} />
         <span className="max-w-32 truncate">
-          {studies.find(s => s.id === activeStudyId)?.name || "Review library"}
+          {studies.find(s => s.id === activeStudyId)?.name || "Saved reviews"}
         </span>
         <span className="text-xs text-[var(--color-muted-foreground)]">({studies.length})</span>
       </button>
@@ -128,13 +128,13 @@ export function StudySelector({
 
 export function ErrorDisplay({ error, onRetry }: { error: string; onRetry?: () => void }) {
   return (
-    <div className="flex items-start gap-3 p-4 bg-red-900/20 border border-red-800 rounded-lg">
-      <AlertCircle size={18} className="text-red-400 flex-shrink-0 mt-0.5" />
+    <div className="flex items-start gap-3 rounded-lg border border-red-600/35 bg-red-500/12 p-4">
+      <AlertCircle size={18} className="mt-0.5 flex-shrink-0 text-[var(--color-exclude)]" />
       <div className="flex-1">
-        <div className="text-sm text-red-400 font-medium">Something went wrong</div>
-        <div className="text-xs text-red-300/70 mt-1">{error}</div>
+        <div className="text-sm font-semibold text-[var(--color-exclude)]">Something went wrong</div>
+        <div className="mt-1 text-xs text-[var(--color-text)]">{error}</div>
         {onRetry && (
-          <button onClick={onRetry} className="mt-2 text-xs text-red-400 underline hover:text-red-300">
+          <button onClick={onRetry} className="mt-2 cursor-pointer text-xs font-medium text-[var(--color-exclude)] underline">
             Try again
           </button>
         )}

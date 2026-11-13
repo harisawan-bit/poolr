@@ -10,10 +10,12 @@ public static class CollaborationCommand
         try
         {
             // Invoked only through the native stdio bridge, never an unauthenticated HTTP route.
-            var input = new char[2 * 1024 * 1024 + 1]; var count = 0; int n;
-            while (count < input.Length && (n = await Console.In.ReadAsync(input.AsMemory(count, input.Length - count))) > 0) count += n;
-            if (count == input.Length) throw new InvalidDataException("Request is too large.");
-            var request = JsonNode.Parse(new string(input, 0, count))?.AsObject() ?? throw new InvalidDataException();
+            var raw = await Console.In.ReadToEndAsync();
+            if (raw.Length > 64 * 1024 * 1024) throw new InvalidDataException("Request is too large.");
+            var request = JsonNode.Parse(raw)?.AsObject() ?? throw new InvalidDataException();
+            var action = request["action"]?.GetValue<string>() ?? "";
+            if (action is not ("project.save" or "project.load") && raw.Length > 2 * 1024 * 1024)
+                throw new InvalidDataException("Request is too large.");
             var root = Environment.GetEnvironmentVariable("POOLR_COLLAB_DATA") ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "poolr", "collaboration");
             Directory.CreateDirectory(root);
             if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(root, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);

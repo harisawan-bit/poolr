@@ -11,8 +11,8 @@ interface Props {
   onProjectChange?: (p: Project) => void;
 }
 
-export function ComplexDataHub({ project }: Props) {
-  const [subTab, setSubTab] = useState<"km" | "tsa" | "dca" | "competing" | "cumulative" | "prognostic" | "rve" | "multilevel">("km");
+export function ComplexDataHub({ project, initialPanel }: Props & { initialPanel?: string }) {
+  const [subTab, setSubTab] = useState<"km" | "tsa" | "dca" | "competing" | "cumulative" | "prognostic" | "rve" | "multilevel">((["km", "tsa", "dca", "competing", "cumulative", "prognostic", "rve", "multilevel"] as readonly string[]).includes(initialPanel ?? "") ? initialPanel as "km" | "tsa" | "dca" | "competing" | "cumulative" | "prognostic" | "rve" | "multilevel" : "km");
   const extracted = useMemo(() => getExtractedData(project), [project]);
 
   return (
@@ -22,7 +22,7 @@ export function ComplexDataHub({ project }: Props) {
           onClick={() => setSubTab("km")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "km"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -33,7 +33,7 @@ export function ComplexDataHub({ project }: Props) {
           onClick={() => setSubTab("tsa")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "tsa"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -44,7 +44,7 @@ export function ComplexDataHub({ project }: Props) {
           onClick={() => setSubTab("dca")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "dca"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -55,7 +55,7 @@ export function ComplexDataHub({ project }: Props) {
           onClick={() => setSubTab("competing")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "competing"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -66,7 +66,7 @@ export function ComplexDataHub({ project }: Props) {
           onClick={() => setSubTab("cumulative")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "cumulative"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -77,7 +77,7 @@ export function ComplexDataHub({ project }: Props) {
           onClick={() => setSubTab("prognostic")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "prognostic"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -88,7 +88,7 @@ export function ComplexDataHub({ project }: Props) {
           onClick={() => setSubTab("multilevel")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "multilevel"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -99,7 +99,7 @@ export function ComplexDataHub({ project }: Props) {
           onClick={() => setSubTab("rve")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "rve"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -257,10 +257,10 @@ function TrialSequentialSection() {
     try {
       const res = await postJson("/api/advanced/sequential", {
         studies: [
-          { study: "Trial 2012", effect: 0.45, variance: 0.04, sampleSize: 240 },
-          { study: "Trial 2015", effect: 0.38, variance: 0.03, sampleSize: 380 },
-          { study: "Trial 2018", effect: 0.32, variance: 0.025, sampleSize: 520 },
-          { study: "Trial 2021", effect: 0.30, variance: 0.02, sampleSize: 680 },
+          { study: "Trial 2012", zScore: 0.45 / Math.sqrt(0.04), informationFraction: 240 },
+          { study: "Trial 2015", zScore: 0.38 / Math.sqrt(0.03), informationFraction: 380 },
+          { study: "Trial 2018", zScore: 0.32 / Math.sqrt(0.025), informationFraction: 520 },
+          { study: "Trial 2021", zScore: 0.30 / Math.sqrt(0.02), informationFraction: 680 },
         ],
         alpha,
         beta,
@@ -511,7 +511,7 @@ function CumulativeForestSection() {
                   <tr key={i} className="border-b border-[var(--color-border)]/40">
                     <td className="p-2 font-medium">{entry.study}</td>
                     <td className="p-2 text-right font-mono">{entry.k}</td>
-                    <td className="p-2 text-right font-mono font-semibold text-emerald-400">{F(entry.pooledEffect, 2)}</td>
+                    <td className="p-2 text-right font-mono font-semibold text-[var(--color-include)]">{F(entry.pooledEffect, 2)}</td>
                     <td className="p-2 text-right text-[var(--color-muted-foreground)]">[{F(entry.ciLower, 2)}, {F(entry.ciUpper, 2)}]</td>
                     <td className="p-2 text-right font-mono">{F(entry.i2, 1)}%</td>
                   </tr>

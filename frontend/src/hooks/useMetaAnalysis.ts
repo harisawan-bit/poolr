@@ -48,14 +48,15 @@ export function useMetaAnalysis({ settings, studies, resp, mounted }: UseMetaAna
     setTsaLoading(true);
     try {
       const isRatio = ["OR", "RR", "HR"].includes(settings.measure || "OR");
-      const nullVal = isRatio ? 1 : 0;
       const tsaStudies = resp.studies.map((s) => {
-        const se = (s as any).se || Math.abs(s.ci_upper - s.ci_lower) / 3.92;
-        const z = se > 0 ? (s.effect - nullVal) / se : 0;
-        return { study: s.study, zScore: z, informationFraction: (s.weight || 1) / 100 };
+        const eff = isRatio ? Math.log(Math.max(1e-4, s.effect)) : s.effect;
+        const se = (s as any).se || (isRatio
+          ? (Math.log(Math.max(1e-4, s.ci_upper)) - Math.log(Math.max(1e-4, s.ci_lower))) / 3.92
+          : Math.abs(s.ci_upper - s.ci_lower) / 3.92);
+        return { study: s.study, zScore: se > 0 ? eff / se : 0, informationFraction: Math.max(10, Math.round((s.weight || 10) * 10)) };
       });
       const res = await runTrialSequentialAnalysis({
-        studies: tsaStudies, alpha: 0.05, beta: 0.20, expectedEffect: resp.pooled.effect,
+        studies: tsaStudies, alpha: 0.05, beta: 0.20, expectedEffect: isRatio ? Math.log(Math.max(1e-4, resp.pooled.effect)) : resp.pooled.effect,
       });
       setTsaResult(res);
     } catch (e) {

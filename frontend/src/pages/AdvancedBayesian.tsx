@@ -224,7 +224,7 @@ export default function AdvancedBayesian({ project }: { project: Project; onChan
         </EmptyState>
       )}
 
-      {err && <div className="text-sm text-red-400 bg-red-900/20 border border-red-800 rounded p-2">{err}</div>}
+      {err && <div className="text-sm text-[var(--color-exclude)] bg-[var(--color-exclude)]/10 border border-[var(--color-exclude)]/30 rounded p-2">{err}</div>}
 
       {/* ─── Bayesian ──────────────────────────────────────────────── */}
       {tab === "bayesian" && hasData && (
@@ -253,12 +253,12 @@ export default function AdvancedBayesian({ project }: { project: Project; onChan
                 <Card><div className="text-xs text-[var(--color-muted-foreground)]">Bayes Factor</div><div className="text-lg font-semibold">{bayes.bayesFactor != null ? F(bayes.bayesFactor, 2) : "—"}</div></Card>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                <Card><div className="text-xs text-[var(--color-muted-foreground)]">R-hat (μ)</div><div className={`text-lg font-semibold ${bayes.rhatMu > 1.1 ? "text-yellow-400" : "text-green-400"}`}>{F(bayes.rhatMu, 3)}</div></Card>
+                <Card><div className="text-xs text-[var(--color-muted-foreground)]">R-hat (μ)</div><div className={`text-lg font-semibold ${bayes.rhatMu > 1.1 ? "text-[var(--color-unsure)]" : "text-[var(--color-include)]"}`}>{F(bayes.rhatMu, 3)}</div></Card>
                 <Card><div className="text-xs text-[var(--color-muted-foreground)]">ESS (μ)</div><div className="text-lg font-semibold">{Math.round(bayes.essMu)}</div></Card>
                 {bayes.probInRope != null && <Card><div className="text-xs text-[var(--color-muted-foreground)]">P(in ROPE)</div><div className="text-lg font-semibold">{(bayes.probInRope * 100).toFixed(1)}%</div></Card>}
               </div>
               {bayes.warnings.length > 0 && (
-                <div className="text-xs text-yellow-400 bg-yellow-900/20 border border-yellow-800 rounded p-2">
+                <div className="text-xs text-[var(--color-unsure)] bg-[var(--color-unsure)]/10 border border-[var(--color-unsure)]/30 rounded p-2">
                   {bayes.warnings.map((w, i) => <div key={i}>⚠ {w}</div>)}
                 </div>
               )}
@@ -283,7 +283,7 @@ export default function AdvancedBayesian({ project }: { project: Project; onChan
                 <Card><div className="text-xs text-[var(--color-muted-foreground)]">Subsets generated</div><div className="text-lg font-semibold">{gosh.nSubsetsGenerated}</div></Card>
               </div>
               {gosh.clusterWarnings.length > 0 && (
-                <div className="text-xs text-yellow-400 bg-yellow-900/20 border border-yellow-800 rounded p-2">
+                <div className="text-xs text-[var(--color-unsure)] bg-[var(--color-unsure)]/10 border border-[var(--color-unsure)]/30 rounded p-2">
                   {gosh.clusterWarnings.map((w, i) => <div key={i}>⚠ {w}</div>)}
                 </div>
               )}
@@ -329,14 +329,14 @@ export default function AdvancedBayesian({ project }: { project: Project; onChan
           {influence && (
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Card><div className="text-xs text-[var(--color-muted-foreground)]">Influential</div><div className={`text-lg font-semibold ${influence.nInfluential > 0 ? "text-yellow-400" : "text-green-400"}`}>{influence.nInfluential}</div></Card>
-                <Card><div className="text-xs text-[var(--color-muted-foreground)]">Outliers</div><div className={`text-lg font-semibold ${influence.nOutliers > 0 ? "text-yellow-400" : "text-green-400"}`}>{influence.nOutliers}</div></Card>
+                <Card><div className="text-xs text-[var(--color-muted-foreground)]">Influential</div><div className={`text-lg font-semibold ${influence.nInfluential > 0 ? "text-[var(--color-unsure)]" : "text-[var(--color-include)]"}`}>{influence.nInfluential}</div></Card>
+                <Card><div className="text-xs text-[var(--color-muted-foreground)]">Outliers</div><div className={`text-lg font-semibold ${influence.nOutliers > 0 ? "text-[var(--color-unsure)]" : "text-[var(--color-include)]"}`}>{influence.nOutliers}</div></Card>
                 <Card><div className="text-xs text-[var(--color-muted-foreground)]">Threshold (Cook's)</div><div className="text-lg font-semibold">{F(influence.thresholdCooks, 3)}</div></Card>
                 <Card><div className="text-xs text-[var(--color-muted-foreground)]">Threshold (DFFITS)</div><div className="text-lg font-semibold">{F(influence.thresholdDffits, 3)}</div></Card>
               </div>
 
               {influence.flaggedStudies.length > 0 && (
-                <div className="text-xs text-yellow-400 bg-yellow-900/20 border border-yellow-800 rounded p-2">
+                <div className="text-xs text-[var(--color-unsure)] bg-[var(--color-unsure)]/10 border border-[var(--color-unsure)]/30 rounded p-2">
                   {influence.flaggedStudies.map((s, i) => <div key={i}>⚠ {s}</div>)}
                 </div>
               )}
@@ -351,16 +351,16 @@ export default function AdvancedBayesian({ project }: { project: Project; onChan
                     </tr></thead>
                     <tbody>
                       {influence.studies.map(s => (
-                        <tr key={s.index} className={`border-b border-[var(--color-border)]/50 ${(s.isInfluential || s.isOutlier) ? "bg-yellow-900/10" : ""}`}>
+                        <tr key={s.index} className={`border-b border-[var(--color-border)]/50 ${(s.isInfluential || s.isOutlier) ? "bg-[var(--color-unsure)]/10" : ""}`}>
                           <td className="p-1">{names[s.index] ?? `Study ${s.index}`}</td>
                           <td className="text-right p-1">{F(s.studentizedResidual, 2)}</td>
                           <td className="text-right p-1">{F(s.hatValue, 3)}</td>
-                          <td className={`text-right p-1 ${s.cooksDistance > influence.thresholdCooks ? "text-yellow-400 font-semibold" : ""}`}>{F(s.cooksDistance, 3)}</td>
-                          <td className={`text-right p-1 ${Math.abs(s.dffits) > influence.thresholdDffits ? "text-yellow-400 font-semibold" : ""}`}>{F(s.dffits, 2)}</td>
+                          <td className={`text-right p-1 ${s.cooksDistance > influence.thresholdCooks ? "text-[var(--color-unsure)] font-semibold" : ""}`}>{F(s.cooksDistance, 3)}</td>
+                          <td className={`text-right p-1 ${Math.abs(s.dffits) > influence.thresholdDffits ? "text-[var(--color-unsure)] font-semibold" : ""}`}>{F(s.dffits, 2)}</td>
                           <td className="text-center p-1">
-                            {s.isInfluential && <span className="text-yellow-400" title="Influential">●</span>}
-                            {s.isOutlier && !s.isInfluential && <span className="text-orange-400" title="Outlier">○</span>}
-                            {!s.isInfluential && !s.isOutlier && <span className="text-green-400">✓</span>}
+                            {s.isInfluential && <span className="text-[var(--color-unsure)]" title="Influential">●</span>}
+                            {s.isOutlier && !s.isInfluential && <span className="text-[var(--color-exclude)]" title="Outlier">○</span>}
+                            {!s.isInfluential && !s.isOutlier && <span className="text-[var(--color-include)]">✓</span>}
                           </td>
                         </tr>
                       ))}
@@ -391,7 +391,7 @@ export default function AdvancedBayesian({ project }: { project: Project; onChan
           {perm && (
             <div className="grid grid-cols-3 gap-3">
               <Card><div className="text-xs text-[var(--color-muted-foreground)]">Observed stat</div><div className="text-lg font-semibold">{F(perm.observedStatistic)}</div></Card>
-              <Card><div className="text-xs text-[var(--color-muted-foreground)]">Permutation p</div><div className={`text-lg font-semibold ${perm.pValue < 0.05 ? "text-green-400" : ""}`}>{F(perm.pValue, 4)}</div></Card>
+              <Card><div className="text-xs text-[var(--color-muted-foreground)]">Permutation p</div><div className={`text-lg font-semibold ${perm.pValue < 0.05 ? "text-[var(--color-include)]" : ""}`}>{F(perm.pValue, 4)}</div></Card>
               <Card><div className="text-xs text-[var(--color-muted-foreground)]">N permutations</div><div className="text-lg font-semibold">{perm.nPermutations}</div></Card>
             </div>
           )}
@@ -437,10 +437,10 @@ export default function AdvancedBayesian({ project }: { project: Project; onChan
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <Card><div className="text-xs text-[var(--color-muted-foreground)]">Observed sig.</div><div className="text-lg font-semibold">{tes.observedSignificant}</div></Card>
                 <Card><div className="text-xs text-[var(--color-muted-foreground)]">Expected sig.</div><div className="text-lg font-semibold">{F(tes.expectedSignificant, 1)}</div></Card>
-                <Card><div className="text-xs text-[var(--color-muted-foreground)]">Obs/Exp ratio</div><div className={`text-lg font-semibold ${tes.ratio > 1.5 ? "text-yellow-400" : ""}`}>{F(tes.ratio, 2)}</div></Card>
-                <Card><div className="text-xs text-[var(--color-muted-foreground)]">P-value</div><div className={`text-lg font-semibold ${tes.pValue < 0.05 ? "text-yellow-400" : ""}`}>{F(tes.pValue, 4)}</div></Card>
+                <Card><div className="text-xs text-[var(--color-muted-foreground)]">Obs/Exp ratio</div><div className={`text-lg font-semibold ${tes.ratio > 1.5 ? "text-[var(--color-unsure)]" : ""}`}>{F(tes.ratio, 2)}</div></Card>
+                <Card><div className="text-xs text-[var(--color-muted-foreground)]">P-value</div><div className={`text-lg font-semibold ${tes.pValue < 0.05 ? "text-[var(--color-unsure)]" : ""}`}>{F(tes.pValue, 4)}</div></Card>
               </div>
-              <div className={`text-xs rounded p-2 ${tes.excessSignificance ? "text-yellow-400 bg-yellow-900/20 border border-yellow-800" : "text-green-400 bg-green-900/20 border border-green-800"}`}>
+              <div className={`text-xs rounded p-2 border ${tes.excessSignificance ? "text-[var(--color-unsure)] bg-[var(--color-unsure)]/10 border-[var(--color-unsure)]/30" : "text-[var(--color-include)] bg-[var(--color-include)]/10 border-[var(--color-include)]/30"}`}>
                 {tes.interpretation}
               </div>
             </>

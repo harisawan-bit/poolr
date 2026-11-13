@@ -12,6 +12,13 @@ export function offlineMessage(what: string): string {
 // @ts-ignore - injected by Tauri at runtime
 const hasTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
+export async function openExternalUrl(url: string): Promise<boolean> {
+  if (hasTauri) {
+    try { await invoke("open_browser", { url }); return true; } catch { /* fallback below */ }
+  }
+  try { window.open(url, "_blank", "noopener"); return true; } catch { return false; }
+}
+
 export async function engineHealth(): Promise<boolean> {
   try {
     const r = await fetch(`${ENGINE_URL}/health`, { signal: AbortSignal.timeout(1500) });

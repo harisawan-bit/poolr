@@ -150,6 +150,7 @@ export default function CommandSearch({
               : undefined
           }
           aria-autocomplete="list"
+          aria-label={placeholder}
           aria-expanded={isFocused}
           autoComplete="off"
           className="h-9 rounded-lg py-1.5 pr-9 pl-3 text-sm focus-visible:ring-offset-0"
@@ -194,7 +195,7 @@ export default function CommandSearch({
           <motion.div
             animate="show"
             aria-label="Command results"
-            className="absolute z-40 mt-1 w-full overflow-hidden rounded-lg border border-[var(--card-border)] bg-[var(--drawer-bg)] shadow-xl"
+            className="command-results glass absolute z-40 mt-1 w-full overflow-hidden"
             exit="exit"
             initial="hidden"
             role="listbox"

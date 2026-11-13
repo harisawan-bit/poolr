@@ -63,7 +63,7 @@ export const PROVIDER_TEMPLATES: Record<string, {
   openrouter: { name: 'OpenRouter', provider: 'openrouter', baseUrl: 'https://openrouter.ai/api/v1', defaultModel: 'auto', oauthSupported: false, modelsEndpoint: '/models' },
   openai: { name: 'OpenAI', provider: 'openai', baseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-4o-mini', oauthSupported: false, modelsEndpoint: '/models' },
   anthropic: { name: 'Anthropic', provider: 'anthropic', baseUrl: 'https://api.anthropic.com/v1', defaultModel: 'claude-3-haiku-20240307', oauthSupported: false, modelsEndpoint: '/models' },
-  gemini: { name: 'Google Gemini', provider: 'gemini', baseUrl: 'https://generativelanguage.googleapis.com/v1beta', defaultModel: 'gemini-1.5-flash', oauthSupported: true, oauthUrl: 'https://accounts.google.com/o/oauth2/v2/auth', modelsEndpoint: '/models' },
+  gemini: { name: 'Google Gemini', provider: 'gemini', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', defaultModel: 'gemini-1.5-flash', oauthSupported: true, oauthUrl: 'https://accounts.google.com/o/oauth2/v2/auth', modelsEndpoint: '/models' },
   mistral: { name: 'Mistral', provider: 'mistral', baseUrl: 'https://api.mistral.ai/v1', defaultModel: 'mistral-7b-instruct', oauthSupported: false, modelsEndpoint: '/models' },
   deepseek: { name: 'DeepSeek', provider: 'deepseek', baseUrl: 'https://api.deepseek.com/v1', defaultModel: 'deepseek-chat', oauthSupported: false, modelsEndpoint: '/models' },
   xai: { name: 'xAI (Grok)', provider: 'xai', baseUrl: 'https://api.x.ai/v1', defaultModel: 'grok-beta', oauthSupported: false, modelsEndpoint: '/models' },
@@ -120,6 +120,29 @@ export async function callAI(provider: AIProvider, messages: AIMessage[]): Promi
   if (!provider.apiKey && provider.provider !== 'custom') {
     throw new Error(`API key required for ${provider.name}. Please configure your API key in Settings.`);
   }
+  if (provider.provider === 'anthropic') {
+    const system = messages.filter(m => m.role === 'system').map(m => m.content).join('\n\n');
+    const chat = messages.filter(m => m.role !== 'system').map(m => ({ role: m.role, content: m.content }));
+    const res = await fetch(`${provider.baseUrl}/messages`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': provider.apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({ model: provider.model, max_tokens: provider.maxTokens || 1024, temperature: provider.temperature, ...(system ? { system } : {}), messages: chat }),
+    });
+    if (!res.ok) throw new Error(`AI request failed (${res.status}): ${res.statusText}`);
+    const data = await res.json();
+    trackRequest(provider.id);
+    return {
+      providerId: provider.id,
+      providerName: provider.name,
+      model: provider.model,
+      content: data.content?.[0]?.text || '',
+    };
+  }
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
@@ -287,7 +310,7 @@ export async function suggestRoB(
   domain: string
 ): Promise<{ rating: string; reason: string }> {
   const providers = getActiveProviders();
-
+  if (!providers.length) throw new Error("Configure an AI provider in Settings first.");
 
   const messages: AIMessage[] = [
     {
@@ -299,12 +322,11 @@ export async function suggestRoB(
   ];
 
   const response = await callAI(providers[0], messages);
-  try {
-    const parsed = JSON.parse(response.content);
-    return { rating: parsed.rating || 'Low', reason: parsed.reason || '' };
-  } catch {
-    return { rating: 'Low', reason: '' };
+  const parsed = JSON.parse(response.content);
+  if (!parsed || !['Low', 'Some concerns', 'High'].includes(parsed.rating)) {
+    throw new Error("The AI provider did not return a valid risk-of-bias rating.");
   }
+  return { rating: parsed.rating, reason: typeof parsed.reason === 'string' ? parsed.reason : '' };
 }
 
 /** Interpret meta-analysis results in plain language. */

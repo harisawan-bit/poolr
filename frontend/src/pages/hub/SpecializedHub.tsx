@@ -11,8 +11,8 @@ interface Props {
   onProjectChange?: (p: Project) => void;
 }
 
-export function SpecializedHub({ project: _ }: Props) {
-  const [subTab, setSubTab] = useState<"umbrella" | "qualitative" | "bibliometric" | "niche" | "pvalue" | "specialized">("umbrella");
+export function SpecializedHub({ project: _, initialPanel, focusMethod }: Props & { initialPanel?: string; focusMethod?: string }) {
+  const [subTab, setSubTab] = useState<"umbrella" | "qualitative" | "bibliometric" | "niche" | "pvalue" | "specialized">((["umbrella", "qualitative", "bibliometric", "niche", "pvalue", "specialized"] as readonly string[]).includes(initialPanel ?? "") ? initialPanel as "umbrella" | "qualitative" | "bibliometric" | "niche" | "pvalue" | "specialized" : "umbrella");
 
   return (
     <div className="space-y-4">
@@ -21,7 +21,7 @@ export function SpecializedHub({ project: _ }: Props) {
           onClick={() => setSubTab("umbrella")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "umbrella"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -32,7 +32,7 @@ export function SpecializedHub({ project: _ }: Props) {
           onClick={() => setSubTab("qualitative")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "qualitative"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -43,7 +43,7 @@ export function SpecializedHub({ project: _ }: Props) {
           onClick={() => setSubTab("bibliometric")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "bibliometric"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -54,7 +54,7 @@ export function SpecializedHub({ project: _ }: Props) {
                   onClick={() => setSubTab("niche")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     subTab === "niche"
-                      ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+                      ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
                       : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
                   }`}
                 >
@@ -65,7 +65,7 @@ export function SpecializedHub({ project: _ }: Props) {
                   onClick={() => setSubTab("pvalue")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     subTab === "pvalue"
-                      ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+                      ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
                       : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
                   }`}
                 >
@@ -76,7 +76,7 @@ export function SpecializedHub({ project: _ }: Props) {
                   onClick={() => setSubTab("specialized")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     subTab === "specialized"
-                      ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+                      ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
                       : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
                   }`}
                 >
@@ -88,7 +88,7 @@ export function SpecializedHub({ project: _ }: Props) {
       {subTab === "umbrella" && <UmbrellaSection />}
             {subTab === "qualitative" && <QualitativeSection />}
             {subTab === "bibliometric" && <BibliometricSection />}
-            {subTab === "niche" && <NicheSection />}
+            {subTab === "niche" && <NicheSection focusMethod={focusMethod}  />}
             {subTab === "pvalue" && <PValueCombinationSection />}
             {subTab === "specialized" && <SpecializedMetaSection />}
           </div>
@@ -210,12 +210,12 @@ function UmbrellaSection() {
               {result.evidenceGrades.map((g: any, i: number) => {
                 const badgeColor =
                   g.classification === "Class I"
-                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                    ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-600/35 dark:border-emerald-400/40"
                     : g.classification === "Class II"
-                    ? "bg-blue-500/20 text-blue-300 border-blue-500/40"
+                    ? "bg-sky-500/15 text-sky-900 dark:text-sky-300 border-sky-600/35 dark:border-sky-400/40"
                     : g.classification === "Class III"
-                    ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                    : "bg-red-500/20 text-red-300 border-red-500/40";
+                    ? "bg-amber-500/15 text-amber-900 dark:text-amber-300 border-amber-600/35 dark:border-amber-400/40"
+                    : "bg-red-500/15 text-red-800 dark:text-red-300 border-red-600/35 dark:border-red-400/40";
                 return (
                   <div key={i} className="p-3 bg-[var(--hover-surface)] border border-[var(--color-border)] rounded-lg flex items-center justify-between">
                     <div>
@@ -342,8 +342,8 @@ function BibliometricSection() {
 }
 
 // ─── 4. Niche & Domain-Specific MA ──────────────────────────────────────────
-function NicheSection() {
-  const [nicheType, setNicheType] = useState<"correlation" | "variability" | "sced" | "poisson" | "agreement">("correlation");
+function NicheSection({ focusMethod }: { focusMethod?: string }) {
+  const [nicheType, setNicheType] = useState<"correlation" | "variability" | "sced" | "poisson" | "agreement">(focusMethod === "niche-var" ? "variability" : focusMethod === "niche-sced" ? "sced" : focusMethod === "niche-poisson" ? "poisson" : focusMethod === "niche-agreement" ? "agreement" : "correlation");
   const [busy, setBusy] = useState(false);
   const [err, _setErr] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);

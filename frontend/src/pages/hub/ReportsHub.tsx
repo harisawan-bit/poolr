@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import type { Project } from "../../lib/project";
 import { Card, Button, Input } from "../../components/ui";
 import { postJson } from "../../lib/api";
@@ -15,16 +15,31 @@ import {
   Download,
   Check,
 } from "lucide-react";
-import { downloadFile, getExtractedData } from "./hubUtils";
+import { downloadFile } from "./hubUtils";
 
 interface Props {
   project: Project;
   onProjectChange?: (p: Project) => void;
 }
 
-export function ReportsHub({ project }: Props) {
-  const [subTab, setSubTab] = useState<"r_code" | "methods" | "latex" | "html" | "scripts" | "citations">("r_code");
-  const extracted = useMemo(() => getExtractedData(project), [project]);
+function reportData(project: Project) {
+  const result = project.meta.results;
+  if (!result?.pooled || !result.heterogeneity) throw new Error("Run a meta-analysis before generating a report.");
+  const analyzed = new Set(result.studies.map(study => study.study));
+  const studies = (project.meta.settings.data ?? []).filter(study => study.study && analyzed.has(study.study));
+  return {
+    title: project.metadata.title || "Untitled review", objective: project.protocol.objective,
+    studies: result.k, participants: studies.reduce((sum, study) => sum + (study.int_n ?? 0) + (study.ctrl_n ?? 0), 0),
+    pooledEffect: result.pooled.effect, ciLower: result.pooled.ci_lower, ciUpper: result.pooled.ci_upper,
+    i2: result.heterogeneity.i2, p: result.pooled.p, measure: result.measure, model: result.model, method: result.method,
+    robSummary: project.rob.assessments.map(assessment => assessment.overall).join(", ") || "Not reported",
+    gradeCertainty: "Not reported",
+    references: studies.map(study => ({ study: study.study, year: study.year })),
+  };
+}
+
+export function ReportsHub({ project, initialPanel }: Props & { initialPanel?: string }) {
+  const [subTab, setSubTab] = useState<"r_code" | "methods" | "latex" | "html" | "scripts" | "citations">((["r_code", "methods", "latex", "html", "scripts", "citations"] as readonly string[]).includes(initialPanel ?? "") ? initialPanel as "r_code" | "methods" | "latex" | "html" | "scripts" | "citations" : "r_code");
 
   return (
     <div className="space-y-4">
@@ -34,7 +49,7 @@ export function ReportsHub({ project }: Props) {
           onClick={() => setSubTab("r_code")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "r_code"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-xs"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] shadow-xs"
               : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -45,7 +60,7 @@ export function ReportsHub({ project }: Props) {
           onClick={() => setSubTab("methods")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "methods"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-xs"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] shadow-xs"
               : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -56,7 +71,7 @@ export function ReportsHub({ project }: Props) {
           onClick={() => setSubTab("latex")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "latex"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-xs"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] shadow-xs"
               : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -67,7 +82,7 @@ export function ReportsHub({ project }: Props) {
           onClick={() => setSubTab("html")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "html"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-xs"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] shadow-xs"
               : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -78,7 +93,7 @@ export function ReportsHub({ project }: Props) {
           onClick={() => setSubTab("scripts")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "scripts"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-xs"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] shadow-xs"
               : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -89,7 +104,7 @@ export function ReportsHub({ project }: Props) {
           onClick={() => setSubTab("citations")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "citations"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-xs"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] shadow-xs"
               : "text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -98,11 +113,11 @@ export function ReportsHub({ project }: Props) {
         </button>
       </div>
 
-      {subTab === "r_code" && <RReplicationSection project={project} extracted={extracted} />}
+      {subTab === "r_code" && <RReplicationSection project={project} />}
       {subTab === "methods" && <MethodsParagraphSection project={project} />}
-      {subTab === "latex" && <LatexSection project={project} extracted={extracted} />}
-      {subTab === "html" && <HtmlReportSection project={project} extracted={extracted} />}
-      {subTab === "scripts" && <PythonStataSection project={project} extracted={extracted} />}
+      {subTab === "latex" && <LatexSection project={project} />}
+      {subTab === "html" && <HtmlReportSection project={project} />}
+      {subTab === "scripts" && <PythonStataSection project={project} />}
       {subTab === "citations" && <CitationsSection project={project} />}
     </div>
   );
@@ -111,12 +126,9 @@ export function ReportsHub({ project }: Props) {
 // ─── 1. R Replication Studio ────────────────────────────────────────────────
 function RReplicationSection({
   project,
-  extracted,
 }: {
   project: Project;
-  extracted: ReturnType<typeof getExtractedData>;
 }) {
-  const [packageType, setPackageType] = useState<"metafor" | "netmeta" | "dmetar">("metafor");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [code, setCode] = useState<string | null>(null);
@@ -126,27 +138,11 @@ function RReplicationSection({
     setBusy(true);
     setErr(null);
     try {
-      const payload = {
-        package: packageType,
-        measure: project.meta?.settings?.measure || "OR",
-        model: project.meta?.settings?.model || "random",
-        method: project.meta?.settings?.method || "DL",
-        studies: extracted.names.map((name, i) => ({
-          study: name,
-          effect: extracted.effects[i],
-          variance: extracted.variances[i],
-          se: Math.sqrt(Math.max(extracted.variances[i], 1e-8)),
-        })),
-        pooled: {
-          effect: 0.72,
-          ci_lower: 0.58,
-          ci_upper: 0.89,
-          i2: 34.2,
-          tau2: 0.04,
-        },
-      };
-
-      const res = await postJson("/api/export/r_code", payload);
+      if (!project.meta.results) throw new Error("Run a meta-analysis before exporting replication code.");
+      const res = await postJson("/api/export/r_code", {
+        response: project.meta.results,
+        data: project.meta.settings.data ?? [],
+      });
       const text = typeof res === "string" ? res : res?.code || JSON.stringify(res, null, 2);
       setCode(text);
     } catch (e: any) {
@@ -165,7 +161,7 @@ function RReplicationSection({
 
   const handleDownload = () => {
     if (code) {
-      downloadFile(code, `poolr_replication_${packageType}.R`, "text/plain");
+      downloadFile(code, "poolr_replication.R", "text/plain");
     }
   };
 
@@ -173,21 +169,9 @@ function RReplicationSection({
     <div className="space-y-4">
       <Card
         title="R Replication Code Studio"
-        subtitle="Generates fully reproducible, publication-grade R scripts using metafor, netmeta, and dmetar"
+        subtitle="Generates R code from the current meta-analysis"
       >
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-[var(--color-text-muted)]">Target R Library:</span>
-            <select
-              value={packageType}
-              onChange={(e: any) => setPackageType(e.target.value)}
-              className="rounded-md border border-[var(--color-border)] bg-[var(--input-bg)] px-2.5 py-1 text-xs text-[var(--color-text)]"
-            >
-              <option value="metafor">metafor (Viechtbauer)</option>
-              <option value="netmeta">netmeta (Rücker & Schwarzer)</option>
-              <option value="dmetar">dmetar (Harrer et al.)</option>
-            </select>
-          </div>
 
           <div className="flex items-center gap-2">
             <Button onClick={generate} disabled={busy}>
@@ -219,7 +203,7 @@ function RReplicationSection({
 }
 
 // ─── 2. Methods Paragraph Generator ─────────────────────────────────────────
-function MethodsParagraphSection({ project: _ }: Props) {
+function MethodsParagraphSection({ project }: Props) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [methodsText, setMethodsText] = useState<string | null>(null);
@@ -229,14 +213,8 @@ function MethodsParagraphSection({ project: _ }: Props) {
     setBusy(true);
     setErr(null);
     try {
-      const res = await postJson("/api/export/methods", {
-        model: "random",
-        measure: "OR",
-        method: "DL",
-        subgroup: "InterventionType",
-        knapp_hartung: true,
-        pub_bias: "egger_trimfill",
-      });
+      if (!project.meta.results) throw new Error("Run a meta-analysis before generating methods.");
+      const res = await postJson("/api/export/methods", project.meta.results);
       const text = typeof res === "string" ? res : res?.methods || res?.text || JSON.stringify(res, null, 2);
       setMethodsText(text);
     } catch (e: any) {
@@ -286,13 +264,11 @@ function MethodsParagraphSection({ project: _ }: Props) {
 // ─── 3. LaTeX Manuscript & Tables ───────────────────────────────────────────
 function LatexSection({
   project,
-  extracted,
 }: {
   project: Project;
-  extracted: ReturnType<typeof getExtractedData>;
 }) {
-  const [title, setTitle] = useState("Comparative Efficacy and Safety Synthesis");
-  const [authors, setAuthors] = useState("Research Consortium et al.");
+  const [title, setTitle] = useState(project.metadata.title || "");
+  const [authors, setAuthors] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [latex, setLatex] = useState<string | null>(null);
@@ -302,31 +278,7 @@ function LatexSection({
     setBusy(true);
     setErr(null);
     try {
-      const res = await postJson("/api/report/latex", {
-        title,
-        authors,
-        journal: "Systematic Reviews",
-        objective: project.pico?.outcomes || "To quantify pooled therapeutic effect and between-study heterogeneity",
-        studies: extracted.effects.length,
-        participants: extracted.sampleSizes.reduce((a, b) => a + b, 0) || 4500,
-        pooledEffect: 0.74,
-        ciLower: 0.62,
-        ciUpper: 0.88,
-        i2: 28.5,
-        p: 0.0008,
-        measure: "OR",
-        model: "random",
-        method: "DL",
-        robSummary: "Low overall risk of bias across primary domains",
-        gradeCertainty: "Moderate",
-        references: extracted.names.map((name, i) => ({
-          study: name,
-          year: 2020 + (i % 5),
-          journal: "Medical Journal",
-          doi: `10.1016/j.synth.${100 + i}`,
-        })),
-      });
-
+      const res = await postJson("/api/report/latex", { ...reportData(project), title, authors });
       const text = typeof res === "string" ? res : JSON.stringify(res, null, 2);
       setLatex(text);
     } catch (e: any) {
@@ -390,10 +342,8 @@ function LatexSection({
 // ─── 4. Standalone HTML Executive Report ─────────────────────────────────────
 function HtmlReportSection({
   project,
-  extracted,
 }: {
   project: Project;
-  extracted: ReturnType<typeof getExtractedData>;
 }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -403,34 +353,13 @@ function HtmlReportSection({
     setBusy(true);
     setErr(null);
     try {
+      const report = reportData(project);
       const res = await postJson("/api/report/html", {
-        project: {
-          title: "Evidence Synthesis Executive Summary",
-          objective: project.pico?.outcomes || "Evaluation of treatment efficacy across clinical trials",
-          screeningRecords: 1450,
-          includedStudies: extracted.effects.length,
-          participants: 3820,
-          pooledEffect: 0.68,
-          ciLower: 0.54,
-          ciUpper: 0.84,
-          i2: 24.1,
-          tau2: 0.03,
-          p: 0.0004,
-          measure: "RR",
-          model: "random",
-          method: "DL",
-          studies: extracted.names.map((name, i) => ({
-            study: name,
-            effect: extracted.effects[i],
-            ciLower: extracted.effects[i] - 1.96 * Math.sqrt(extracted.variances[i]),
-            ciUpper: extracted.effects[i] + 1.96 * Math.sqrt(extracted.variances[i]),
-            weight: 100 / extracted.effects.length,
-          })),
-        },
+        project: { ...report, screeningRecords: project.screening.title_abstract.length,
+          includedStudies: report.studies, certainty: report.gradeCertainty },
         embedFigures: true,
         includeMethods: true,
       });
-
       const text = typeof res === "string" ? res : JSON.stringify(res, null, 2);
       setHtmlDoc(text);
     } catch (e: any) {
@@ -478,11 +407,9 @@ function HtmlReportSection({
 
 // ─── 5. Python & Stata Scripts ──────────────────────────────────────────────
 function PythonStataSection({
-  project: _,
-  extracted,
+  project,
 }: {
   project: Project;
-  extracted: ReturnType<typeof getExtractedData>;
 }) {
   const [target, setTarget] = useState<"python" | "stata">("python");
   const [busy, setBusy] = useState(false);
@@ -495,25 +422,7 @@ function PythonStataSection({
     setErr(null);
     try {
       const endpoint = target === "python" ? "/api/report/python" : "/api/report/stata";
-      const res = await postJson(endpoint, {
-        title: "Pooled Meta-Analysis",
-        studies: extracted.effects.length,
-        pooledEffect: 0.75,
-        ciLower: 0.62,
-        ciUpper: 0.91,
-        i2: 32.0,
-        p: 0.003,
-        measure: "OR",
-        model: "random",
-        method: "DL",
-        references: extracted.names.map((name, i) => ({
-          study: name,
-          year: 2021,
-          journal: "Clinical Journal",
-          doi: `10.1001/synth.${i + 1}`,
-        })),
-      });
-
+      const res = await postJson(endpoint, reportData(project));
       const text = typeof res === "string" ? res : JSON.stringify(res, null, 2);
       setScript(text);
     } catch (e: any) {

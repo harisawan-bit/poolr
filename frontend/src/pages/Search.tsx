@@ -1,59 +1,66 @@
-import { useState } from 'react';
-import { Search as SearchIcon, Database, FileText, Download, ChevronRight, Info } from 'lucide-react';
+import { openExternalUrl } from "../lib/api";
+import ScholarSearch from "../components/search/ScholarSearch";
+import ReviewRegistry from "../components/search/ReviewRegistry";
+import { useEffect, useState } from 'react';
+import { Search as SearchIcon, Database, FileText, Download, ChevronRight, Info, BookOpen } from 'lucide-react';
 import type { Project, ScreeningItem } from '../lib/project';
-import { mergeScreeningItems, downloadText } from '../lib/project';
+import { dedupeRecords, mergeScreeningItems, downloadText } from '../lib/project';
 import { Card, Pill, EmptyState } from '../components/ui';
+import LiteratureSearch from '../components/search/LiteratureSearch';
 import UnifiedSearch from '../components/UnifiedSearch';
 import DatabaseSelector, { DATABASES } from '../components/DatabaseSelector';
 
-type Tab = 'unified' | 'strategy' | 'databases';
+import CitationManager from '../components/CitationManager';
 
-export default function Search({ project, onChange }: { project: Project; onChange: (p: Project) => void }) {
-  const [tab, setTab] = useState<Tab>('unified');
-  const [selectedDatabases, setSelectedDatabases] = useState<string[]>(
-    project.metadata.config?.databases ?? ['pubmed', 'cochrane']
-  );
+type Tab = 'literature' | 'library' | 'prospero' | 'scholar' | 'unified' | 'strategy' | 'databases';
+
+export default function Search({ project, onChange, initialTab = "literature" }: { project: Project; onChange: (p: Project) => void; initialTab?: Tab }) {
+  const [tab, setTab] = useState<Tab>(initialTab);
+  useEffect(() => { setTab(initialTab); }, [initialTab]);
+  const [draft, setDraft] = useState<{ query: string; source: 'pubmed' | 'clinicaltrials' }>({ query: '', source: 'pubmed' });
+  const [registryDraft, setRegistryDraft] = useState<string>();
+  const [scholarDraft, setScholarDraft] = useState<string>();
+  const [literatureKey, setLiteratureKey] = useState(0);
+  const [otherSource, setOtherSource] = useState<'openalex' | 'crossref'>('openalex');
+  const selectedDatabases = project.metadata.config?.databases ?? project.metadata.searchDatabases ?? ['pubmed', 'clinicaltrials'];
 
   const handleImport = (items: ScreeningItem[]) => {
-    const updated = mergeScreeningItems(project, 'title_abstract', items);
+    const existing = [...project.screening.title_abstract, ...project.screening.full_text];
+    const kept = dedupeRecords(items, existing).kept;
+    const updated = mergeScreeningItems(project, 'title_abstract', kept);
     onChange(updated);
   };
 
-  const toggleDatabase = (id: string) => {
-    const updated = selectedDatabases.includes(id)
-      ? selectedDatabases.filter(d => d !== id)
-      : [...selectedDatabases, id];
-    setSelectedDatabases(updated);
-    if (project.metadata.config) {
-      onChange({
-        ...project,
-        metadata: {
-          ...project.metadata,
-          config: { ...project.metadata.config, databases: updated }
-        }
-      });
-    }
-  };
-
-  const handleSelectAll = () => {
-    setSelectedDatabases(DATABASES.map(d => d.id));
-  };
-
-  const handleClearAll = () => {
-    setSelectedDatabases([]);
-  };
+  const selectDatabases = (databases: string[]) => onChange({
+    ...project,
+    metadata: {
+      ...project.metadata,
+      searchDatabases: databases,
+      ...(project.metadata.config ? { config: { ...project.metadata.config, databases } } : {}),
+    },
+  });
+  const toggleDatabase = (id: string) => selectDatabases(selectedDatabases.includes(id)
+    ? selectedDatabases.filter(database => database !== id) : [...selectedDatabases, id]);
+  const handleSelectAll = () => selectDatabases(DATABASES.map(database => database.id));
+  const handleClearAll = () => selectDatabases([]);
 
   const [strategies, setStrategies] = useState<Record<string, string>>(() => {
-    const initial: Record<string, string> = {};
+    const initial: Record<string, string> = { ...project.metadata.config?.searchStrategy, ...project.metadata.savedSearchStrategies };
     const { population, intervention, comparator, outcomes } = project.pico || {};
     const parts = [population, intervention, comparator].filter(Boolean).map(s => `("${s?.trim()}")`);
     const base = parts.join(' AND ');
-    const query = outcomes ? `${base} AND (${outcomes.trim()})` : base;
+    const query = [base, outcomes?.trim() && `(${outcomes.trim()})`].filter(Boolean).join(' AND ');
     DATABASES.forEach(db => {
-      initial[db.id] = query;
+      initial[db.id] ??= query;
     });
     return initial;
   });
+
+  const saveStrategy = (id: string, query: string) => {
+    const updated = { ...strategies, [id]: query };
+    setStrategies(updated);
+    onChange({ ...project, metadata: { ...project.metadata, savedSearchStrategies: updated } });
+  };
 
   const exportStrategy = () => {
     const lines = DATABASES
@@ -65,20 +72,21 @@ export default function Search({ project, onChange }: { project: Project; onChan
   return (
     <div className="space-y-4">
       {/* Tab Navigation */}
-      <div className="flex items-center gap-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-1">
+      <div className="workspace-segments glass" role="group" aria-label="Search tools">
         {[
-          { id: 'unified', label: 'Unified Search', icon: SearchIcon },
+          { id: 'literature', label: 'Literature search', icon: SearchIcon },
+          { id: 'unified', label: 'OpenAlex & Crossref', icon: Database },
+          { id: 'library', label: 'Citation Library', icon: BookOpen },
+          { id: 'prospero', label: 'PROSPERO', icon: FileText },
+          { id: 'scholar', label: 'Google Scholar', icon: SearchIcon },
           { id: 'databases', label: 'Database Selector', icon: Database },
           { id: 'strategy', label: 'Search Strategy', icon: FileText },
         ].map(t => (
           <button
             key={t.id}
+            aria-pressed={tab === t.id}
             onClick={() => setTab(t.id as Tab)}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-[12.5px] font-medium transition-colors ${
-              tab === t.id
-                ? 'bg-blue-600 dark:bg-blue-500 text-white'
-                : 'text-[var(--color-text-muted)] hover:bg-[var(--hover-surface)] hover:text-[var(--color-text)]'
-            }`}
+
           >
             <t.icon className="h-4 w-4" />
             {t.label}
@@ -86,9 +94,14 @@ export default function Search({ project, onChange }: { project: Project; onChan
         ))}
       </div>
 
+      <button type="button" className="btn-ghost" onClick={() => window.dispatchEvent(new CustomEvent("poolr:gopage", { detail: "search-dedup" }))}>Open deduplication tools</button>
       {/* Tab Content */}
+      <div hidden={tab !== "literature"}><LiteratureSearch key={literatureKey} project={project} onChange={onChange} initialQuery={draft.query} initialSource={draft.source} /></div>
+      {tab === 'library' && <CitationManager project={project} onChange={onChange} />}
+      {tab === 'prospero' && <ReviewRegistry initialQuery={registryDraft ?? project.metadata.savedSearchStrategies?.prospero ?? ''} onSaveStrategy={query => saveStrategy('prospero', query)} />}
+      {tab === 'scholar' && <ScholarSearch initialQuery={scholarDraft ?? ''} rawInitially={scholarDraft !== undefined} />}
       {tab === 'unified' && (
-        <UnifiedSearch onImport={handleImport} />
+        <UnifiedSearch onImport={handleImport} initialQuery={draft.query} initialDatabase={otherSource} />
       )}
 
       {tab === 'databases' && (
@@ -123,8 +136,7 @@ export default function Search({ project, onChange }: { project: Project; onChan
             <div className="flex items-start gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3">
               <Info className="h-5 w-5 shrink-0 text-[var(--color-accent)]" />
               <p className="text-[12px] text-[var(--color-text-muted)]">
-                The search strategy builder generates database-specific queries from your PICO definition.
-                Use the Unified Search tab to search databases directly and import results to your screening queue.
+                Edit and save a strategy for each database. Check its syntax before running it.
               </p>
             </div>
 
@@ -158,10 +170,35 @@ export default function Search({ project, onChange }: { project: Project; onChan
                     <textarea
                       className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1.5 font-mono text-[11.5px] text-[var(--color-text)] placeholder:text-[var(--placeholder-fg)] focus-visible:border-[var(--color-border-strong)] focus-visible:outline-none"
                       rows={3}
+                      aria-label={`${db.name} strategy`}
                       placeholder={`Enter ${db.name} search query...`}
                       value={strategies[db.id] ?? ""}
-                      onChange={(e) => setStrategies({ ...strategies, [db.id]: e.target.value })}
+                      onChange={event => saveStrategy(db.id, event.target.value)}
                     />
+                    {(db.id === 'pubmed' || db.id === 'clinicaltrials' || db.id === 'prospero') && (
+                      <button className="btn-primary mt-2" onClick={() => {
+                        const query = strategies[db.id] ?? '';
+                        if (db.id === 'prospero') {
+                          setRegistryDraft(query);
+                          setTab('prospero');
+                        } else {
+                          setDraft({ source: db.id === 'clinicaltrials' ? 'clinicaltrials' : 'pubmed', query });
+                          setLiteratureKey(value => value + 1);
+                          setTab('literature');
+                        }
+                      }}>{db.id === "prospero" ? "Open registry lookup" : "Open in literature search"}</button>
+                    )}
+                    {(db.id === 'openalex' || db.id === 'crossref') &&
+                      <button className="btn-primary mt-2" onClick={() => {
+                        setOtherSource(db.id === 'crossref' ? 'crossref' : 'openalex');
+                        setDraft({ source: 'pubmed', query: strategies[db.id] ?? '' });
+                        setTab('unified');
+                      }}>Open in database search</button>}
+                    {db.id === 'google_scholar' &&
+                      <button className="btn-primary mt-2" onClick={() => { setScholarDraft(strategies.google_scholar ?? ''); setTab('scholar'); }}>Open Scholar search</button>}
+                    {!['google_scholar', 'pubmed', 'clinicaltrials', 'prospero', 'openalex', 'crossref'].includes(db.id) &&
+                      <button className="btn-ghost mt-2" onClick={() => void openExternalUrl(db.url)}>Open {db.name} website</button>}
+
                   </div>
                 ))}
               </div>

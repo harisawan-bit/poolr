@@ -53,11 +53,13 @@ export function FilterBar({
           {options.map((opt) => (
             <button
               key={opt.value}
+              type="button"
+              aria-pressed={activeOption === opt.value}
               className={cn(
-                "rounded px-2 py-1 transition-colors",
+                "cursor-pointer rounded px-2.5 py-1 transition-colors",
                 activeOption === opt.value
-                  ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm"
-                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                  ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
+                  : "text-[var(--color-text-muted)] hover:bg-[var(--hover-surface)] hover:text-[var(--color-text)]"
               )}
               onClick={() => onOptionChange?.(opt.value)}
             >

@@ -16,8 +16,8 @@ interface Props {
   onProjectChange?: (p: Project) => void;
 }
 
-export function QualityHub({ project, onProjectChange: _ }: Props) {
-  const [subTab, setSubTab] = useState<"rob2" | "robins" | "quadas" | "amstar" | "nos" | "grade" | "sof">("rob2");
+export function QualityHub({ project, onProjectChange: _, initialPanel }: Props & { initialPanel?: string }) {
+  const [subTab, setSubTab] = useState<"rob2" | "robins" | "quadas" | "amstar" | "nos" | "grade" | "sof">((["rob2", "robins", "quadas", "amstar", "nos", "grade", "sof"] as readonly string[]).includes(initialPanel ?? "") ? initialPanel as "rob2" | "robins" | "quadas" | "amstar" | "nos" | "grade" | "sof" : "rob2");
 
   return (
     <div className="space-y-4">
@@ -26,7 +26,7 @@ export function QualityHub({ project, onProjectChange: _ }: Props) {
           onClick={() => setSubTab("rob2")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "rob2"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -37,7 +37,7 @@ export function QualityHub({ project, onProjectChange: _ }: Props) {
           onClick={() => setSubTab("robins")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "robins"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -48,7 +48,7 @@ export function QualityHub({ project, onProjectChange: _ }: Props) {
           onClick={() => setSubTab("quadas")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "quadas"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -59,7 +59,7 @@ export function QualityHub({ project, onProjectChange: _ }: Props) {
           onClick={() => setSubTab("amstar")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "amstar"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -70,7 +70,7 @@ export function QualityHub({ project, onProjectChange: _ }: Props) {
           onClick={() => setSubTab("nos")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
             subTab === "nos"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -81,7 +81,7 @@ export function QualityHub({ project, onProjectChange: _ }: Props) {
                   onClick={() => setSubTab("grade")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
                     subTab === "grade"
-                      ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+                      ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
                       : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
                   }`}
                 >
@@ -92,7 +92,7 @@ export function QualityHub({ project, onProjectChange: _ }: Props) {
                   onClick={() => setSubTab("sof")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
                     subTab === "sof"
-                      ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+                      ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
                       : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
                   }`}
                 >

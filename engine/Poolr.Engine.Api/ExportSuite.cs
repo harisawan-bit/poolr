@@ -52,12 +52,15 @@ public static class ExportSuite
 
         sb.AppendLine("library(metafor)");
         sb.AppendLine();
-        if (isGen)
+        if (isGen || (data.Count == 0 && r.studies.Count > 0))
         {
+            var rows = data.Count > 0
+                ? data.Select(s => (name: s.study, yi: s.effect_size ?? 0, vi: Math.Pow(s.effect_se ?? 1e-9, 2)))
+                : r.studies.Select(s => (name: s.study, yi: s.effect, vi: Math.Pow(Math.Max(Math.Abs(s.ci_upper - s.ci_lower) / 3.919928, 1e-9), 2)));
             sb.AppendLine("dat <- data.frame(");
-            sb.AppendLine("  study = c(" + string.Join(", ", data.Select(s => Q(s.study))) + "),");
-            sb.AppendLine("  yi = c(" + string.Join(", ", data.Select(s => F(s.effect_size ?? 0))) + "),");
-            sb.AppendLine("  vi = c(" + string.Join(", ", data.Select(s => F(Math.Pow(s.effect_se ?? 1e-9, 2)))) + "))");
+            sb.AppendLine("  study = c(" + string.Join(", ", rows.Select(x => Q(x.name))) + "),");
+            sb.AppendLine("  yi = c(" + string.Join(", ", rows.Select(x => F(x.yi))) + "),");
+            sb.AppendLine("  vi = c(" + string.Join(", ", rows.Select(x => F(x.vi))) + "))");
             sb.AppendLine("res <- rma(yi, vi, data=dat, method=\"" + RMethod(r) + "\", test=\"" + (r.knapp_hartung ? "knha" : "z") + "\")");
             sb.AppendLine("summary(res)");
         }
@@ -114,7 +117,7 @@ public static class ExportSuite
         sb.AppendLine("# Figures");
         sb.AppendLine("forest(res); funnel(res); radial(res); labbe(res); baujat(res)");
         sb.AppendLine("regtest(res); ranktest(res)");
-        if (r.heterogeneity.i2 > 25)
+        if ((r.heterogeneity?.i2 ?? 0) > 25)
             sb.AppendLine("trimfill(res); trimfill(res)$k0   # asymmetry indicated by Egger/p-curve checks");
         return sb.ToString();
     }

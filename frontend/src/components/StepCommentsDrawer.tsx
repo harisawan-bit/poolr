@@ -25,7 +25,7 @@ export function StepCommentsButton({ step, targetId, stepTitle }: StepCommentsPr
         <MessageSquare className="h-3.5 w-3.5" />
         <span>Comments</span>
         {unresolved > 0 && (
-          <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--color-accent)] px-1 text-[10px] font-bold text-white">
+          <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--btn-bg)] px-1 text-[10px] font-bold text-[var(--btn-fg)]">
             {unresolved}
           </span>
         )}

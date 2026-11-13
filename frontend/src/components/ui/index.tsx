@@ -17,16 +17,16 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     <button
       ref={ref}
       className={cn(
-        "inline-flex items-center justify-center gap-1.5 rounded-lg text-[12.5px] font-medium transition-all",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]/40 disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-[var(--radius-btn)] text-[12.5px] font-semibold transition-colors",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--workspace-accent)] focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-45",
         {
-          default: "bg-[var(--btn-bg)] text-[var(--btn-fg)] hover:bg-[var(--btn-hover-bg)] border border-[var(--btn-border)] shadow-sm active:scale-[0.99]",
-          primary: "bg-[var(--color-accent)] text-white hover:opacity-90 border border-transparent shadow-sm active:scale-[0.99]",
-          outline: "border border-[var(--color-border)] bg-transparent text-[var(--color-text)] hover:border-[var(--color-border-strong)] hover:bg-[var(--hover-surface)]",
-          ghost: "text-[var(--color-text-muted)] hover:bg-[var(--hover-surface)] hover:text-[var(--color-text)]",
-          secondary: "bg-[var(--hover-surface)] text-[var(--color-text)] hover:bg-[var(--color-border)]",
+          default: "bg-[var(--btn-bg)] text-[var(--btn-fg)] hover:bg-[var(--btn-hover-bg)] border border-[var(--btn-border)] shadow-sm active:translate-y-[0.5px]",
+          primary: "bg-[var(--btn-bg)] text-[var(--btn-fg)] hover:bg-[var(--btn-hover-bg)] border border-[var(--btn-border)] shadow-sm active:translate-y-[0.5px]",
+          outline: "border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text)] hover:border-[var(--workspace-accent)] hover:bg-[var(--hover-surface)]",
+          ghost: "border border-transparent text-[var(--color-text)] hover:border-[var(--color-border)] hover:bg-[var(--hover-surface)]",
+          secondary: "border border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text)] hover:border-[var(--color-border-strong)] hover:bg-[var(--hover-surface)]",
         }[variant],
-        size === "sm" ? "h-8 px-3" : size === "lg" ? "h-11 px-5" : "h-10 px-4",
+        size === "sm" ? "h-8 px-3 text-[12px]" : size === "lg" ? "h-11 px-5 text-[13.5px]" : "h-9 px-3.5",
         className
       )}
       {...props}
@@ -38,7 +38,7 @@ Button.displayName = "Button";
 /* ── Input / Textarea / Select (token-driven) ──────────────────────── */
 
 const fieldCls =
-  "flex w-full rounded-lg border border-[var(--color-border)] bg-[var(--input-bg)] px-3 py-2 text-[12.5px] text-[var(--color-text)] placeholder:text-[var(--placeholder-fg)] focus-visible:border-[var(--color-border-strong)] focus-visible:outline-none transition-colors disabled:cursor-not-allowed disabled:opacity-50";
+  "flex w-full rounded-[var(--radius-btn)] border border-[var(--color-border)] bg-[var(--input-bg)] px-3 py-2 text-[12.5px] text-[var(--color-text)] placeholder:text-[var(--placeholder-fg)] focus-visible:border-[var(--color-border-strong)] focus-visible:outline-none transition-colors disabled:cursor-not-allowed disabled:opacity-50";
 
 export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   ({ className, ...props }, ref) => <input ref={ref} className={cn(fieldCls, "h-10", className)} {...props} />
@@ -65,10 +65,10 @@ export function Card({ title, subtitle, right, children, className, ...rest }: C
   return (
     <div className={cn("card p-4", className)} {...rest}>
       {title && (
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="text-[14px] font-semibold">{title}</h2>
-            {subtitle && <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">{subtitle}</p>}
+            {subtitle && <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">{subtitle}</p>}
           </div>
           {right}
         </div>
@@ -119,17 +119,17 @@ export function EmptyState({ children, icon, title }: { children: React.ReactNod
 
 export function Pill({ tone = "neutral", children }: { tone?: "include" | "exclude" | "unsure" | "neutral" | "accent" | "success" | "warning" | "info"; children: React.ReactNode }) {
   const map: Record<string, string> = {
-    include: "bg-[var(--color-include)]/15 text-[var(--color-include)] border-[var(--color-include)]/30",
-    exclude: "bg-[var(--color-exclude)]/15 text-[var(--color-exclude)] border-[var(--color-exclude)]/30",
-    unsure: "bg-[var(--color-unsure)]/15 text-[var(--color-unsure)] border-[var(--color-unsure)]/30",
-    neutral: "bg-white/[0.05] text-[var(--color-text-muted)] border-[var(--color-border)]",
-    accent: "bg-white/[0.08] text-[var(--color-text)] border-[var(--color-border-strong)]",
-    success: "bg-green-500/15 text-green-400 border-green-500/30",
-    warning: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
-    info: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+    include: "bg-emerald-500/12 text-[var(--color-include)] border-[var(--color-include)]/35",
+    exclude: "bg-red-500/12 text-[var(--color-exclude)] border-[var(--color-exclude)]/35",
+    unsure: "bg-amber-500/15 text-[var(--color-unsure)] border-[var(--color-unsure)]/35",
+    neutral: "bg-[var(--color-surface-2)] text-[var(--color-text-muted)] border-[var(--color-border-strong)]",
+    accent: "bg-[var(--workspace-selection)] text-[var(--workspace-accent)] border-[var(--workspace-accent)]/35",
+    success: "bg-emerald-500/12 text-emerald-800 dark:text-emerald-300 border-emerald-600/30 dark:border-emerald-400/35",
+    warning: "bg-amber-500/15 text-amber-900 dark:text-amber-300 border-amber-600/30 dark:border-amber-400/35",
+    info: "bg-sky-500/12 text-sky-800 dark:text-sky-300 border-sky-600/30 dark:border-sky-400/35",
   };
   return (
-    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10.5px] font-medium ${map[tone]}`}>
+    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${map[tone]}`}>
       {children}
     </span>
   );

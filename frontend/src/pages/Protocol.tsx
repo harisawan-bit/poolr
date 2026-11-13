@@ -1,8 +1,9 @@
-import type { Project } from "../lib/project";
+import { downloadText, type Project } from "../lib/project";
+import { generateProsperoMarkdown } from "../lib/prospero";
 import ResearchDiscovery from "../components/ResearchDiscovery";
-import { Card, Input, Textarea, SectionLabel, Button } from "../components/ui";
+import { Card, Input, Textarea, Button } from "../components/ui";
 import { suggestPICO } from "../lib/ai";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Download } from "lucide-react";
 import { useState } from "react";
 import { StepCommentsButton } from "../components/StepCommentsDrawer";
 
@@ -53,51 +54,108 @@ export default function Protocol({ project, onChange }: { project: Project; onCh
       >
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div>
-            <SectionLabel>Population</SectionLabel>
-            <Textarea rows={3} value={project.pico.population}
+            <label className="block text-xs font-medium" htmlFor="protocol-population">Population</label>
+            <Textarea id="protocol-population" rows={3} value={project.pico.population}
               onChange={(e) => set({ pico: { ...project.pico, population: e.target.value } })}
               placeholder="Participants / patients" />
           </div>
           <div>
-            <SectionLabel>Intervention</SectionLabel>
-            <Textarea rows={3} value={project.pico.intervention}
+            <label className="block text-xs font-medium" htmlFor="protocol-intervention">Intervention</label>
+            <Textarea id="protocol-intervention" rows={3} value={project.pico.intervention}
               onChange={(e) => set({ pico: { ...project.pico, intervention: e.target.value } })}
               placeholder="Experimental exposure / treatment" />
           </div>
           <div>
-            <SectionLabel>Comparator</SectionLabel>
-            <Textarea rows={3} value={project.pico.comparator}
+            <label className="block text-xs font-medium" htmlFor="protocol-comparator">Comparator</label>
+            <Textarea id="protocol-comparator" rows={3} value={project.pico.comparator}
               onChange={(e) => set({ pico: { ...project.pico, comparator: e.target.value } })}
               placeholder="Control / standard of care" />
           </div>
           <div>
-            <SectionLabel>Outcomes</SectionLabel>
-            <Textarea rows={3} value={project.pico.outcomes}
+            <label className="block text-xs font-medium" htmlFor="protocol-outcomes">Outcomes</label>
+            <Textarea id="protocol-outcomes" rows={3} value={project.pico.outcomes}
               onChange={(e) => set({ pico: { ...project.pico, outcomes: e.target.value } })}
               placeholder="Primary & secondary outcomes" />
           </div>
         </div>
       </Card>
 
-      <Card title="Protocol details">
+      <Card
+        title="Protocol details"
+        right={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const md = generateProsperoMarkdown({
+                  reviewTitle: project.metadata.title || "Untitled Systematic Review",
+                  reviewQuestion: project.protocol.objective || `${project.pico.intervention} vs ${project.pico.comparator} in ${project.pico.population}`,
+                  population: project.pico.population || "Not specified",
+                  intervention: project.pico.intervention || "Not specified",
+                  comparator: project.pico.comparator || "Not specified",
+                  outcome: project.pico.outcomes || "Not specified",
+                  studyDesign: (project.protocol.studyDesigns || "Randomized controlled trials").split(/[;,]/).map((s) => s.trim()).filter(Boolean),
+                  searchSources: project.protocol.databases.split(/[;,]/).map((s) => s.trim()).filter(Boolean),
+                  searchDate: new Date().toISOString().slice(0, 10),
+                  languageRestrictions: "None",
+                  contactName: "Lead Reviewer",
+                  contactEmail: "",
+                  affiliation: "",
+                  reviewTeam: "Review team",
+                  anticipatedStartDate: project.metadata.created.slice(0, 10),
+                  anticipatedCompletionDate: "",
+                  status: "ongoing",
+                });
+                downloadText("prospero_protocol_draft.md", md, "text/markdown");
+              }}
+            >
+              <Download className="h-3.5 w-3.5" /> Export PROSPERO (.md)
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => window.dispatchEvent(new CustomEvent("poolr:gopage", { detail: "search" }))}>
+              Registry &amp; Search →
+            </Button>
+          </div>
+        }
+      >
         <div className="space-y-3">
           <div>
-            <SectionLabel>Objective</SectionLabel>
-            <Textarea rows={2} value={project.protocol.objective}
+            <label className="block text-xs font-medium" htmlFor="protocol-objective">Objective</label>
+            <Textarea id="protocol-objective" rows={2} value={project.protocol.objective}
               onChange={(e) => set({ protocol: { ...project.protocol, objective: e.target.value } })}
               placeholder="State the primary research question." />
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div>
-              <SectionLabel>Databases</SectionLabel>
-              <Input value={project.protocol.databases}
+              <label className="block text-xs font-medium" htmlFor="protocol-inclusion">Inclusion criteria (synced to AI Screening &amp; Manuscript)</label>
+              <Textarea id="protocol-inclusion" rows={2} value={project.protocol.inclusionCriteria ?? ""}
+                onChange={(e) => set({ protocol: { ...project.protocol, inclusionCriteria: e.target.value } })}
+                placeholder="e.g. Adult patients (≥18y), randomized trials, primary clinical outcomes reported" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium" htmlFor="protocol-exclusion">Exclusion criteria (synced to AI Screening &amp; Manuscript)</label>
+              <Textarea id="protocol-exclusion" rows={2} value={project.protocol.exclusionCriteria ?? ""}
+                onChange={(e) => set({ protocol: { ...project.protocol, exclusionCriteria: e.target.value } })}
+                placeholder="e.g. Animal/in-vitro studies, case reports, editorials, reviews without primary data" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <div>
+              <label className="block text-xs font-medium" htmlFor="protocol-databases">Databases</label>
+              <Input id="protocol-databases" value={project.protocol.databases}
                 onChange={(e) => set({ protocol: { ...project.protocol, databases: e.target.value } })} />
             </div>
             <div>
-              <SectionLabel>Registration</SectionLabel>
-              <Input value={project.protocol.registration}
+              <label className="block text-xs font-medium" htmlFor="protocol-designs">Eligible study designs</label>
+              <Input id="protocol-designs" value={project.protocol.studyDesigns ?? ""}
+                placeholder="e.g. RCT, Cohort"
+                onChange={(e) => set({ protocol: { ...project.protocol, studyDesigns: e.target.value } })} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium" htmlFor="protocol-registration">Registration (PROSPERO / OSF)</label>
+              <Input id="protocol-registration" value={project.protocol.registration}
                 onChange={(e) => set({ protocol: { ...project.protocol, registration: e.target.value } })}
-                placeholder="PROSPERO ID or 'Not registered'" />
+                placeholder="PROSPERO CRD... or 'Not registered'" />
             </div>
           </div>
         </div>

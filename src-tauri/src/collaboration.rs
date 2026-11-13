@@ -20,9 +20,23 @@ pub async fn collaboration_command(
         .ok_or("The bundled collaboration engine is unavailable.")?;
     let executable = runtime.executable.clone();
     let gate = runtime.gate.clone();
+    let is_project_io = matches!(
+        request["action"].as_str(),
+        Some("project.save" | "project.load")
+    );
+    let max_in = if is_project_io {
+        64 * 1024 * 1024
+    } else {
+        2 * 1024 * 1024
+    };
+    let max_out = if is_project_io {
+        64 * 1024 * 1024
+    } else {
+        8 * 1024 * 1024
+    };
     let input = serde_json::to_vec(&request).map_err(|_| "Invalid request")?;
-    if input.len() > 2 * 1024 * 1024 {
-        return Err("Request exceeds the collaboration size limit.".into());
+    if input.len() > max_in {
+        return Err("Request exceeds the size limit.".into());
     }
     tauri::async_runtime::spawn_blocking(move || {
         let _guard = gate
@@ -46,7 +60,7 @@ pub async fn collaboration_command(
         let reader = std::thread::spawn(move || {
             let mut bytes = Vec::new();
             stdout
-                .take(8 * 1024 * 1024 + 1)
+                .take((max_out + 1) as u64)
                 .read_to_end(&mut bytes)
                 .map(|_| bytes)
         });
@@ -80,7 +94,7 @@ pub async fn collaboration_command(
             .join()
             .map_err(|_| "Response reader failed")?
             .map_err(|_| "Could not read collaboration response")?;
-        if output.len() > 8 * 1024 * 1024 {
+        if output.len() > max_out {
             return Err("Workspace response exceeds the safety limit.".into());
         }
         let response: serde_json::Value =

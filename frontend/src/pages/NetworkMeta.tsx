@@ -208,7 +208,7 @@ export default function NetworkMeta({
               <label className="text-[10.5px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Treatments</label>
               <div className="flex flex-wrap gap-1.5 mt-1">
                 {treatments.map((t) => (
-                  <span key={t} className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-white/[0.05] px-2.5 py-0.5 text-[11px]">
+                  <span key={t} className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-2.5 py-0.5 text-[11px]">
                     {t}
                     <button className="text-[var(--color-text-muted)] hover:text-[var(--color-exclude)]" onClick={() => removeTreatment(t)}>x</button>
                   </span>

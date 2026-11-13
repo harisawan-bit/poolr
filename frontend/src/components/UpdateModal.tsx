@@ -69,8 +69,8 @@ export default function UpdateModal({ info, open, onClose, onUpdate }: Props) {
           )}
 
           {error && (
-            <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-4">
-              <p className="text-red-400 text-sm">{error}</p>
+            <div className="bg-[var(--color-exclude)]/10 border border-[var(--color-exclude)]/30 rounded-lg p-3 mb-4">
+              <p className="text-[var(--color-exclude)] text-sm">{error}</p>
             </div>
           )}
 

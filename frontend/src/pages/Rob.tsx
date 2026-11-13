@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Project, RobAssessment } from "../lib/project";
+import { findLinkedCitation, type Project, type RobAssessment } from "../lib/project";
 import { Card, Select, Pill, EmptyState, Button, Input } from "../components/ui";
 import { RadarChart } from "../components/charts/radar-chart";
 import { RadarGrid } from "../components/charts/radar-grid";
@@ -7,10 +7,11 @@ import { RadarAxis } from "../components/charts/radar-axis";
 import { RadarLabels } from "../components/charts/radar-labels";
 import { RadarArea } from "../components/charts/radar-area";
 import { suggestRoB } from "../lib/ai";
-import { fetchRobFigure } from "../lib/api";
+import { fetchRobFigure, openExternalUrl } from "../lib/api";
 import { downloadText } from "../lib/project";
-import { Sparkles, Loader2, Download } from "lucide-react";
+import { Sparkles, Loader2, Download, RefreshCw, ExternalLink, Highlighter } from "lucide-react";
 import { StepCommentsButton } from "../components/StepCommentsDrawer";
+import StudySourceViewer from "../components/StudySourceViewer";
 
 const TOOLS = ["RoB2", "NOS", "PROBAST", "ROBINS-I", "QUADAS-2", "AMSTAR-2"] as const;
 const OVERALL = ["Low", "Some concerns", "High", "Critical", "—"] as const;
@@ -24,24 +25,41 @@ const DOMAINS: Record<(typeof TOOLS)[number], string[]> = {
   "AMSTAR-2": ["Protocol a priori", "Comprehensive literature search", "Study selection in duplicate", "Data extraction in duplicate", "Excluded studies listed", "Risk of bias assessed", "Publication bias assessed", "Certainty of evidence reported"],
 };
 
-function blank(study: string, tool: (typeof TOOLS)[number]): RobAssessment {
+function blank(study: string, tool: (typeof TOOLS)[number], sourceId?: string): RobAssessment {
   const domains: Record<string, string> = {};
   for (const d of DOMAINS[tool]) domains[d] = "Low";
-  return { id: `r${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, study, tool, overall: "—", domains };
+  return {
+    id: `r${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    study,
+    ...(sourceId ? { sourceId } : {}),
+    tool,
+    overall: "—",
+    domains,
+  };
 }
 
-export default function Rob({ project, onChange }: { project: Project; onChange: (p: Project) => void }) {
+export default function Rob({ project, onChange, focusStudy }: { project: Project; onChange: (p: Project) => void; focusStudy?: string }) {
   const list = project.rob.assessments;
   const studyNames = Array.from(new Set([
     ...project.extraction.studies.map((s) => s.study),
     ...list.map((a) => a.study),
   ])).filter(Boolean);
   const [tool, setTool] = useState<(typeof TOOLS)[number]>("RoB2");
+  const [notice, setNotice] = useState("");
   const [busyDomain, setBusyDomain] = useState<string | null>(null);
   const [abstracts, setAbstracts] = useState<Record<string, string>>({});
+  const [openSourceId, setOpenSourceId] = useState<string | null>(null);
   const [vizTab, setVizTab] = useState<"traffic" | "summary" | "radar">("traffic");
   const [robSvg, setRobSvg] = useState<string | null>(null);
   const [svgLoading, setSvgLoading] = useState(false);
+
+  useEffect(() => {
+    if (!focusStudy) return;
+    const hit = project.rob.assessments.find(
+      (a) => a.study.trim().toLowerCase() === focusStudy.trim().toLowerCase()
+    );
+    if (hit) setOpenSourceId(hit.id);
+  }, [focusStudy, project.rob.assessments]);
 
   useEffect(() => {
     if (vizTab === "radar" || list.length === 0) return;
@@ -64,8 +82,31 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
   }, [vizTab, list, tool]);
 
   const add = () => {
-    const name = studyNames[0] ?? "New study";
-    onChange({ ...project, rob: { assessments: [...list, blank(name, tool)] } });
+    const first = project.extraction.studies[0];
+    const name = first?.study || studyNames[0] || "New study";
+    onChange({ ...project, rob: { assessments: [...list, blank(name, tool, first?.sourceId)] } });
+  };
+
+  const syncFromExtraction = () => {
+    const existingByStudy = new Set(list.map((a) => a.study.trim().toLowerCase()));
+    const existingSourceIds = new Set(list.map((a) => a.sourceId).filter(Boolean) as string[]);
+    const missing = project.extraction.studies.filter((s) => {
+      if (s.sourceId && existingSourceIds.has(s.sourceId)) return false;
+      return !existingByStudy.has(s.study.trim().toLowerCase());
+    });
+    if (missing.length === 0) {
+      setNotice("All extracted studies already have risk-of-bias entries.");
+      return;
+    }
+    const created = missing.map((s) => blank(s.study, tool, s.sourceId));
+    onChange({ ...project, rob: { assessments: [...list, ...created] } });
+    setNotice(`Synced ${created.length} extracted stud${created.length === 1 ? "y" : "ies"} into Risk of Bias.`);
+  };
+
+  const resolvedAbstract = (a: RobAssessment): string => {
+    if (abstracts[a.id] !== undefined) return abstracts[a.id];
+    const linked = findLinkedCitation(project, { sourceId: a.sourceId, study: a.study });
+    return linked?.abstract ?? "";
   };
 
   const update = (id: string, patch: Partial<RobAssessment>) => {
@@ -73,19 +114,23 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
   };
 
   const remove = (id: string) => {
+    if (!window.confirm("Remove this risk-of-bias assessment?")) return;
     onChange({ ...project, rob: { assessments: list.filter((a) => a.id !== id) } });
   };
 
   const handleSuggestRating = async (assessmentId: string, domain: string) => {
-    const abstract = abstracts[assessmentId] || "";
+    const assessment = list.find((a) => a.id === assessmentId);
+    const abstract = assessment ? resolvedAbstract(assessment) : "";
     if (!abstract.trim()) return;
-    setBusyDomain(domain);
+    setNotice("");
+    setBusyDomain(`${assessmentId}:${domain}`);
     try {
       const { rating } = await suggestRoB(abstract, domain);
-      const assessment = list.find(a => a.id === assessmentId);
       if (assessment) {
         update(assessmentId, { domains: { ...assessment.domains, [domain]: rating } });
       }
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "AI risk-of-bias suggestion failed.");
     } finally {
       setBusyDomain(null);
     }
@@ -95,34 +140,70 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
 
   return (
     <div className="space-y-3">
+      {notice && <p role="status" className="rounded-[4px] border border-[var(--color-border)] bg-[var(--color-surface-subtle)] px-3 py-1.5 text-[12px]">{notice}</p>}
       <Card title="Risk of bias" right={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Select className="w-auto" value={tool} onChange={(e) => setTool(e.target.value as (typeof TOOLS)[number])}>
             {TOOLS.map((t) => <option key={t} value={t}>{t}</option>)}
           </Select>
+          {project.extraction.studies.length > 0 && (
+            <Button variant="outline" size="sm" onClick={syncFromExtraction} title="Create RoB forms for all extracted studies">
+              <RefreshCw className="h-3.5 w-3.5" /> Sync All Extracted ({project.extraction.studies.length})
+            </Button>
+          )}
           <button className="btn-primary" onClick={add}>+ Add</button>
           <StepCommentsButton step="rob" stepTitle="Risk of Bias" />
         </div>
       }>
         <p className="mb-3 text-[12.5px] text-[var(--color-text-muted)]">
-          Rate each study with the {tool} tool. Overall rating feeds the GRADE certainty on the PRISMA page.
+          Rate each study with the {tool} tool. Linked citation abstracts are loaded automatically for AI domain checks; overall ratings feed GRADE and Manuscript.
         </p>
 
         {list.length === 0 ? (
-          <EmptyState>No assessments. Add a study to begin — studies from Extraction are pre-listed.</EmptyState>
+          <EmptyState>
+            No assessments yet. Click <strong className="text-[var(--color-text)]">Sync All Extracted</strong> to import all included studies automatically, or click <strong className="text-[var(--color-text)]">+ Add</strong>.
+          </EmptyState>
         ) : (
           <div className="space-y-3">
-            {list.map((a) => (
+            {list.map((a) => {
+              const linked = findLinkedCitation(project, { sourceId: a.sourceId, study: a.study });
+              const effAbstract = resolvedAbstract(a);
+              return (
               <div key={a.id} className="rounded-[5px] border border-[var(--color-border)] bg-[var(--input-bg)] p-3">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <Select className="max-w-[220px]" value={a.study} onChange={(e) => update(a.id, { study: e.target.value })}>
+                  <Select className="max-w-[240px]" value={a.study} onChange={(e) => {
+                    const matched = project.extraction.studies.find((s) => s.study === e.target.value);
+                    update(a.id, { study: e.target.value, ...(matched?.sourceId ? { sourceId: matched.sourceId } : {}) });
+                  }}>
                     {studyNames.map((n) => <option key={n} value={n}>{n}</option>)}
                     <option value="New study">New study</option>
                   </Select>
                   <Select className="w-auto" value={a.tool} onChange={(e) => { const t = e.target.value as (typeof TOOLS)[number]; update(a.id, { tool: t, domains: Object.fromEntries(DOMAINS[t].map((d) => [d, "Low"])) }); }}>
                     {TOOLS.map((t) => <option key={t} value={t}>{t}</option>)}
                   </Select>
+                  {linked && (
+                    <Pill tone="accent">
+                      Linked citation{linked.year ? ` (${linked.year})` : ""}
+                    </Pill>
+                  )}
+                  {(linked?.pdfUrl || linked?.url || linked?.doi) && (
+                    <button
+                      type="button"
+                      className="btn-ghost text-[11px]"
+                      onClick={() => void openExternalUrl(linked.pdfUrl || linked.url || `https://doi.org/${linked.doi}`)}
+                    >
+                      <ExternalLink className="mr-1 inline h-3 w-3" /> Open source
+                    </button>
+                  )}
                   <div className="ml-auto flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="btn-ghost"
+                      aria-pressed={openSourceId === a.id}
+                      onClick={() => setOpenSourceId(openSourceId === a.id ? null : a.id)}
+                    >
+                      <Highlighter className="h-3.5 w-3.5" /> Source &amp; Quotes
+                    </button>
                     <span className="text-[10.5px] text-[var(--color-text-muted)]">Overall</span>
                     <Select className="w-auto" value={a.overall} onChange={(e) => update(a.id, { overall: e.target.value as RobAssessment["overall"] })}>
                       {OVERALL.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -131,35 +212,60 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
                   </div>
                 </div>
                 <div className="mb-3 flex flex-wrap items-center gap-2">
-                                  <span className="text-[11px] text-[var(--color-text-muted)]">Paste abstract for AI RoB suggestions:</span>
-                                  <Input
-                                    className="w-80"
-                                    placeholder="Study abstract…"
-                                    value={abstracts[a.id] ?? ""}
-                                    onChange={(e) => setAbstracts({ ...abstracts, [a.id]: e.target.value })}
-                                  />
-                                </div>
-                                <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                                  {DOMAINS[a.tool].map((d) => (
-                                    <div key={d} className="flex items-center gap-2">
-                                      <span className="flex-1 text-[12px] text-[var(--color-text-muted)]">{d}</span>
-                                      <Select className="w-auto" value={a.domains[d] ?? "Low"} onChange={(e) => update(a.id, { domains: { ...a.domains, [d]: e.target.value } })}>
-                                        <option>Low</option><option>Some concerns</option><option>High</option>
-                                      </Select>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleSuggestRating(a.id, d)}
-                                        disabled={busyDomain === d || !(abstracts[a.id] ?? "").trim()}
-                                      >
-                                        {busyDomain === d ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-                                        Suggest
-                                      </Button>
-                                    </div>
-                                  ))}
-                                </div>
+                  <span className="text-[11px] text-[var(--color-text-muted)]">
+                    {linked?.abstract && abstracts[a.id] === undefined ? "Linked citation abstract (auto-loaded):" : "Abstract for AI RoB suggestions:"}
+                  </span>
+                  <Input
+                    className="min-w-[260px] flex-1"
+                    placeholder="No linked abstract found — paste abstract to enable AI suggestions…"
+                    value={effAbstract}
+                    onChange={(e) => setAbstracts({ ...abstracts, [a.id]: e.target.value })}
+                  />
+                </div>
+                {openSourceId === a.id && (
+                  <div className="mb-3">
+                    <StudySourceViewer
+                      citation={linked}
+                      text={effAbstract}
+                      onTextChange={(next) => setAbstracts({ ...abstracts, [a.id]: next })}
+                      provenance={a.provenance}
+                      onClearProvenance={(key) => {
+                        const nextProv = { ...(a.provenance ?? {}) };
+                        delete nextProv[key];
+                        update(a.id, { provenance: nextProv });
+                      }}
+                      targets={DOMAINS[a.tool].map((dom) => ({
+                        key: dom,
+                        label: dom.split(" ")[0],
+                        onAssign: (quote) => update(a.id, { provenance: { ...(a.provenance ?? {}), [dom]: quote } }),
+                      }))}
+                      placeholder="Attach study PDF or paste methods/results text, then highlight text to save domain support quotes…"
+                    />
+                  </div>
+                )}
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                  {DOMAINS[a.tool].map((d) => {
+                    const isBusy = busyDomain === `${a.id}:${d}`;
+                    return (
+                    <div key={d} className="flex items-center gap-2">
+                      <span className="flex-1 text-[12px] text-[var(--color-text-muted)]">{d}</span>
+                      <Select className="w-auto" value={a.domains[d] ?? "Low"} onChange={(e) => update(a.id, { domains: { ...a.domains, [d]: e.target.value } })}>
+                        <option>Low</option><option>Some concerns</option><option>High</option>
+                      </Select>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSuggestRating(a.id, d)}
+                        disabled={isBusy || !effAbstract.trim()}
+                      >
+                        {isBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                        Suggest
+                      </Button>
+                    </div>
+                  );})}
+                </div>
               </div>
-            ))}
+            );})}
           </div>
         )}
 
@@ -182,7 +288,7 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
                 <button
                   className={`rounded px-2.5 py-1 transition-colors ${
                     vizTab === "traffic"
-                      ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm"
+                      ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-medium shadow-sm"
                       : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                   }`}
                   onClick={() => setVizTab("traffic")}
@@ -192,7 +298,7 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
                 <button
                   className={`rounded px-2.5 py-1 transition-colors ${
                     vizTab === "summary"
-                      ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm"
+                      ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-medium shadow-sm"
                       : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                   }`}
                   onClick={() => setVizTab("summary")}
@@ -202,7 +308,7 @@ export default function Rob({ project, onChange }: { project: Project; onChange:
                 <button
                   className={`rounded px-2.5 py-1 transition-colors ${
                     vizTab === "radar"
-                      ? "bg-blue-600 dark:bg-blue-500 text-white font-medium shadow-sm"
+                      ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-medium shadow-sm"
                       : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                   }`}
                   onClick={() => setVizTab("radar")}

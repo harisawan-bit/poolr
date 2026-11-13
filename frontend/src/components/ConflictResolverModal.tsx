@@ -54,7 +54,7 @@ export function ConflictResolverModal() {
             <div className="flex flex-col justify-between rounded-lg border border-blue-500/30 bg-blue-500/5 p-3.5">
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11.5px] font-semibold text-blue-400">Your Local Version</span>
+                  <span className="text-[11.5px] font-semibold text-blue-700 dark:text-blue-400">Your Local Version</span>
                   <Pill tone="info">Uncommitted</Pill>
                 </div>
                 <div className="mt-2.5 max-h-40 overflow-y-auto rounded bg-[var(--color-surface)] p-2.5 text-[12px] border border-[var(--color-border)]">

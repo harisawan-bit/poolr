@@ -1,17 +1,38 @@
-# 0.6.4 — release candidate
-
-Workspace redesign, native rclone collaboration, signed membership, project-backed manuscripts, safer persistence and updater trust reconfiguration. See [release notes](docs/RELEASE_0.6.4.md) for limitations and validation.
-
-Branding follows the active appearance: OS preference on first launch, then the user's saved choice. Expanded navigation uses a theme-appropriate wordmark; collapsed navigation and generated installer icons use the pin mark.
-
-The desktop app icon uses a larger, centered pin on a fully opaque light tile so its mark stays visible at small launcher sizes and against dark desktop themes.
-
 # Changelog
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.6.6] - 2026-11-13
+
+### Added
+- **Unified Research Pipeline & Navigation Stepper**: Sticky 8-stage top pipeline bar linking `Protocol` → `Search & Citations` → `Screening` → `Extraction` → `Risk of Bias` → `Synthesis` → `PRISMA 2020` → `Manuscript` with live study counts and completion state.
+- **Reference & Citation Manager (`CitationManager.tsx`)**: Central searchable bibliographic library supporting PubMed Summary/Abstract, PMID lists, MEDLINE/NBIB, RIS, EndNote, Rayyan CSV, Covidence CSV, BibTeX, and manual references with editable dossiers, PDF URL attachment, and 1-click handoff to Extraction.
+- **Source Provenance Viewer (`StudySourceViewer.tsx`)**: Highlight-to-field provenance viewer in Extraction and Risk of Bias linking abstracts, attached study text/PDF excerpts, and quotes directly to extracted values and RoB domain rationales.
+- **Risk-of-Bias Integrated Forest Matrix & Interactive Funnel**: `ForestStudyMatrix` displays RoB 2 traffic-light domain ratings alongside study weights inside Meta-Analysis; Interactive Funnel plots support clicking any point to inspect study details and jump directly to Extraction/RoB.
+- **PRISMA 2020 Structured Box Flow Diagram**: Official Page et al. box-style PRISMA 2020 SVG diagram alongside Sankey mode, driven by live exclusion reason tags and Search/Screening counts.
+- **Unified Analysis Hub (`AnalysisHub.tsx`)**: Combined classical pairwise, Bayesian MCMC, Network Meta-Analysis, DTA, Survival/IPD, Dose-Response, Qualitative Synthesis, and Figure/Reporting views into a single searchable workspace with `MetaWorkbench`.
+- **Visual System & WCAG Contrast Overhaul**: Redesigned editorial light/dark theme tokens, readable button states, accessible label wrapping, and refreshed v0.6.6 screenshots.
+
+### Fixed
+- **Trial Sequential Analysis (TSA) Engine Payload**: Fixed `Meta.tsx`, `useMetaAnalysis.ts`, and `ComplexDataHub.tsx` sending floating-point `informationFraction` or mismatched field names to `/api/advanced/sequential` (`Int32` validation failure -> HTTP 400).
+- **Version Alignment & Profile Defaults**: Unified version `0.6.6` across root, frontend (`APP_VERSION`, `project.ts`, `Legal.tsx`), Tauri (`tauri.conf.json`, `Cargo.toml`), and C# engine (`Poolr.Engine.Api.csproj`, `Program.cs`).
+
+## [0.6.5] - 2026-11-04
+
+### Added
+- **Signed Updater Trust Root & Multi-OS Releases**: Established persistent Tauri updater signing key (`C1C149B7917EDEF0`) with signed installers across Windows (`x64`, `x86`, `arm64`), macOS (`aarch64`, `x64`), and Linux (`.AppImage`, `.deb`, `.rpm`). See [UPDATER_SIGNING.md](docs/UPDATER_SIGNING.md).
+- **Multi-Format PubMed Importer, Reactive Screening & Continuous Extraction**: Added multi-format PubMed/PMID parsers, reactive dual-screening badges, continuous study `Int. n` / `Ctrl n` fields, AI statistical interpretation routing, and mode preservation across reopen/save cycles.
+
+## [0.6.4] - 2026-11-03
+
+### Added
+- **Workspace Redesign & Native Drive BYOS Collaboration**: Replaced hosted sync prototype with native `rclone` transport, encrypted P-256 ECDSA identity vault, owner-signed membership epoch chains, append-only revisions, conflict resolution UI, and project-backed manuscript checkpoints. See [RELEASE_0.6.4.md](docs/RELEASE_0.6.4.md).
+
+### Fixed
+- **Linux Wayland/Mesa AppImage Packaging**: Excluded incompatible bundled host display libraries via Tauri CLI >= 2.12.1 and enforced CI AppImage checks (`scripts/check-appimage.py`).
 
 ## [0.6.3] - 2026-09-18
 

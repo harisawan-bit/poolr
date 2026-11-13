@@ -11,8 +11,8 @@ interface Props {
   onProjectChange?: (p: Project) => void;
 }
 
-export function DiagnosticHub({ project: _ }: Props) {
-  const [subTab, setSubTab] = useState<"bivariate" | "hsroc" | "dor" | "prisma">("bivariate");
+export function DiagnosticHub({ project: _, initialPanel }: Props & { initialPanel?: string }) {
+  const [subTab, setSubTab] = useState<"bivariate" | "hsroc" | "dor" | "prisma">((["bivariate", "hsroc", "dor", "prisma"] as readonly string[]).includes(initialPanel ?? "") ? initialPanel as "bivariate" | "hsroc" | "dor" | "prisma" : "bivariate");
 
   return (
     <div className="space-y-4">
@@ -21,7 +21,7 @@ export function DiagnosticHub({ project: _ }: Props) {
           onClick={() => setSubTab("bivariate")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "bivariate"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -32,7 +32,7 @@ export function DiagnosticHub({ project: _ }: Props) {
           onClick={() => setSubTab("hsroc")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "hsroc"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -43,7 +43,7 @@ export function DiagnosticHub({ project: _ }: Props) {
           onClick={() => setSubTab("dor")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "dor"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -54,7 +54,7 @@ export function DiagnosticHub({ project: _ }: Props) {
           onClick={() => setSubTab("prisma")}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
             subTab === "prisma"
-              ? "bg-blue-600 dark:bg-blue-500 text-white shadow-sm"
+              ? "bg-[var(--btn-bg)] text-[var(--btn-fg)] font-semibold shadow-sm"
               : "text-[var(--color-muted-foreground)] hover:text-[var(--color-text)] hover:bg-[var(--hover-surface)]"
           }`}
         >
@@ -206,16 +206,18 @@ function BivariateDtaSection() {
                         className="w-16 text-right bg-transparent border-b border-transparent focus:border-[var(--color-accent)] outline-none px-1"
                       />
                     </td>
-                    <td className="p-1.5 text-right font-mono text-blue-400">
+                    <td className="p-1.5 text-right font-mono text-sky-700 dark:text-sky-300">
                       {(sens * 100).toFixed(1)}%
                     </td>
-                    <td className="p-1.5 text-right font-mono text-emerald-400">
+                    <td className="p-1.5 text-right font-mono text-[var(--color-include)]">
                       {(spec * 100).toFixed(1)}%
                     </td>
                     <td className="p-1.5 text-center">
                       <button
+                        type="button"
                         onClick={() => setStudies(prev => prev.filter((_, idx) => idx !== i))}
-                        className="text-red-400 hover:text-red-300 text-xs px-1"
+                        aria-label={`Remove ${s.study}`}
+                        className="text-[var(--color-exclude)] hover:opacity-75 text-xs px-1"
                       >
                         ✕
                       </button>
@@ -497,7 +499,7 @@ function PrismaDtaSection() {
               type="number"
               value={studiesIncluded}
               onChange={e => setStudiesIncluded(+e.target.value)}
-              className="mt-1 flex w-full rounded-lg border border-[var(--color-border)] bg-[var(--input-bg)] px-3 py-1.5 text-xs font-semibold text-green-400"
+              className="mt-1 flex w-full rounded-lg border border-[var(--color-border)] bg-[var(--input-bg)] px-3 py-1.5 text-xs font-semibold text-[var(--color-include)]"
             />
           </label>
         </div>
@@ -525,9 +527,9 @@ function PrismaDtaSection() {
             </div>
           </div>
           <div className="w-0.5 h-4 bg-[var(--color-border)] mx-auto" />
-          <div className="p-3 bg-emerald-950/20 border border-emerald-800/60 rounded-lg text-center">
-            <div className="text-xs font-semibold text-emerald-400">Included in DTA Synthesis</div>
-            <div className="text-xs text-emerald-200">
+          <div className="p-3 bg-[var(--color-include)]/10 border border-[var(--color-include)]/35 rounded-lg text-center">
+            <div className="text-xs font-semibold text-[var(--color-include)]">Included in DTA Synthesis</div>
+            <div className="text-xs text-[var(--color-text)]">
               {studiesIncluded} studies included in Bivariate & HSROC meta-analysis
             </div>
           </div>

@@ -1,92 +1,6 @@
 @import "tailwindcss";
 
-/* Stable navigation and opaque surfaces keep the review workspace quiet. */
-.review-heading { padding: 8px 0 28px; }
-.review-heading > p, .review-next small { font-size: 10px; letter-spacing: 1.5px; color: var(--color-text-muted); }
-.review-heading h2 { font-size: 29px; font-weight: 550; letter-spacing: -1px; margin: 10px 0; }
-.review-heading > span, .review-next p { font-size: 13px; color: var(--color-text-muted); line-height: 1.7; }
-.review-next { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 24px 26px; border: 1px solid var(--color-border); border-left: 3px solid #648c7a; background: var(--color-surface); border-radius: 6px; }
-.review-next h3 { font-size: 19px; margin: 7px 0; font-weight: 500; }
-.review-next button { display: flex; align-items: center; gap: 12px; padding: 10px 16px; }
-.review-metrics { display: grid; grid-template-columns: repeat(4,1fr); margin: 24px 0; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); }
-.review-metrics button { padding: 22px; text-align: left; border-right: 1px solid var(--color-border); cursor: pointer; }
-.review-metrics button:last-child { border: 0; }
-.review-metrics span { color: var(--color-text-muted); font-size: 11px; }
-.review-metrics strong { display: block; font-size: 32px; font-weight: 450; margin: 12px 0; font-variant-numeric: tabular-nums; }
-.review-metrics small, .review-workflow-row small { display: block; color: var(--color-text-muted); font-size: 11px; line-height: 1.6; }
-.review-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-.review-panel { border: 1px solid var(--color-border); border-radius: 6px; padding: 22px; background: var(--color-surface); }
-.review-panel h3 { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 18px; }
-.review-panel h3 button { font-size: 11px; font-weight: 400; cursor: pointer; }
-.review-panel dl > div { display: grid; grid-template-columns: 100px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--color-border); font-size: 12px; }
-.review-panel dt { text-transform: capitalize; color: var(--color-text-muted); }
-.review-workflow-row { display: flex; width: 100%; align-items: center; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid var(--color-border); text-align: left; cursor: pointer; }
-.review-workflow-row strong { display: block; font-size: 12px; font-weight: 500; margin-bottom: 5px; }
-.review-footnote { color: var(--color-text-muted); font-size: 10px; margin: 22px 0; }
-@media (max-width: 1050px) { .review-metrics { grid-template-columns: repeat(2,1fr); } .review-columns { grid-template-columns: 1fr; } }
-.workspace-shell { padding-left: 224px; background: var(--color-bg); }
-.sidebar-toggle { align-self: flex-end; cursor: pointer; padding: 2px 8px; color: var(--color-text-muted); }
-.workspace-shell.sidebar-collapsed { padding-left: 60px; }
-.sidebar-collapsed .workspace-sidebar { width: 60px; padding: 12px 5px; }
-.sidebar-collapsed .workspace-brand { padding: 10px 10px 20px; }
-.sidebar-collapsed .workspace-brand strong, .sidebar-collapsed .workspace-nav-label, .sidebar-collapsed .workspace-search, .sidebar-collapsed .workspace-sidebar-footer, .sidebar-collapsed .workspace-sidebar nav span, .sidebar-collapsed .workspace-sidebar > .mb-4 { display: none; }
-.sidebar-collapsed .workspace-sidebar nav button { justify-content: center; padding: 12px 0; }
-.workspace-sidebar { position: absolute; inset: 0 auto 0 0; width: 224px; display: flex; flex-direction: column; padding: 28px 14px 16px; background: var(--color-chrome); border-right: 1px solid var(--color-border); }
-.workspace-brand { display: flex; align-items: center; gap: 12px; padding: 0 12px 26px; }
-.workspace-brand img { display: block; object-fit: contain; }
-.workspace-brand .brand-full { width: 155px; height: 59px; }
-.workspace-brand .brand-mark { display: none; width: 24px; height: 40px; }
-.workspace-brand .brand-full.brand-dark { display: none; }
-.workspace-brand .brand-mark.brand-dark { display: none; }
-html.dark .workspace-brand .brand-full.brand-light { display: none; }
-html.dark .workspace-brand .brand-full.brand-dark { display: block; }
-.sidebar-collapsed .workspace-brand { justify-content: center; padding: 0 0 20px; }
-.sidebar-collapsed .workspace-brand .brand-full { display: none; }
-.sidebar-collapsed .workspace-brand .brand-mark.brand-light { display: block; }
-.sidebar-collapsed .workspace-brand .brand-mark.brand-dark { display: none; }
-html.dark .sidebar-collapsed .workspace-brand .brand-mark.brand-light { display: none; }
-html.dark .sidebar-collapsed .workspace-brand .brand-mark.brand-dark { display: block; }
-html.dark .sidebar-collapsed .workspace-brand .brand-full { display: none; }
-.workspace-brand strong span { display: block; font-size: 10px; font-weight: 400; letter-spacing: .3px; color: var(--color-text-muted); margin-top: 2px; }
-.workspace-search { display: flex; align-items: center; gap: 7px; padding: 10px 8px; border: 1px solid var(--color-border); border-radius: 6px; font-size: 10px; color: var(--color-text-muted); cursor: pointer; }
-.workspace-search kbd { margin-left: auto; font-size: 9px; }
-.workspace-nav-label { font-size: 9px; letter-spacing: 1.5px; color: var(--color-text-muted); margin: 27px 12px 10px; }
-.workspace-sidebar nav { overflow-y: auto; flex: 1; }
-.workspace-sidebar nav button { display: flex; align-items: center; gap: 11px; width: 100%; padding: 9px 12px; margin-bottom: 2px; text-align: left; font-size: 12px; color: var(--color-text-muted); border-radius: 5px; cursor: pointer; }
-.workspace-sidebar nav button:hover { background: var(--hover-surface); color: var(--color-text); }
-.workspace-sidebar nav button[aria-current=page] { background: var(--color-surface-2); color: var(--color-text); font-weight: 600; box-shadow: inset 2px 0 #648c7a; }
-.workspace-sidebar-footer { border-top: 1px solid var(--color-border); padding: 14px 12px 0; font-size: 10px; line-height: 1.9; color: var(--color-text-muted); }
-.status-online { color: #648c7a; }
-.workspace-header { min-height: 72px; background: var(--color-chrome); gap: 12px; flex-wrap: wrap; }
-.workspace-header > div:last-child { flex-wrap: wrap; }
-.workspace-header .btn-ghost, .workspace-header .btn-primary { font-size: 11px; }
-.workspace-main { padding: 30px 32px 48px; }
-.workspace-main > * { max-width: 1440px; margin-left: auto; margin-right: auto; }
-.workspace-shell .card { box-shadow: none; backdrop-filter: none; background: var(--color-surface); border-radius: 7px; }
-.workspace-shell button:focus-visible { outline: 2px solid #648c7a; outline-offset: 3px; }
-@media (max-width: 1100px) {
-  .workspace-shell { padding-left: 186px; }
-  .workspace-sidebar { width: 186px; padding-inline: 10px; }
-  .workspace-main { padding: 22px 20px; }
-  .workspace-search kbd { display: none; }
-}
-@media (max-width: 700px) {
-  .workspace-shell { padding-left: 56px; }
-  .workspace-sidebar { width: 56px; padding: 18px 5px; }
-  .workspace-brand { padding: 0 8px 20px; }
-  .workspace-brand strong, .workspace-nav-label, .workspace-search, .workspace-sidebar-footer, .workspace-sidebar nav span { display: none; }
-  .workspace-sidebar nav button { justify-content: center; padding: 12px 0; }
-  .workspace-main { padding: 16px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
-}
-
-/* ── poolr design tokens ──────────────────────────────────────────────
-   v0.5.4: full light + dark theming. Every surface reads a CSS variable;
-   `html.dark` flips the set. Dark palette is byte-identical to v0.5.2's
-   premium monochrome dark, so the default look is unchanged.
-   Tailwind v4: class-based dark variants keyed off `.dark` on <html>. */
+/* Poolr surfaces and controls use the active light or dark theme. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
@@ -96,44 +10,48 @@ html.dark .sidebar-collapsed .workspace-brand .brand-full { display: none; }
     Arial, sans-serif;
   --font-mono: "Roboto Mono", "Helvetica Mono", ui-monospace, Consolas, monospace;
 
-  --radius-btn: 3px;
-  --radius-card: 5px;
+  --radius-btn: 4px;
+  --radius-card: 6px;
 }
 
 /* Light theme (default when html lacks .dark) */
 :root {
-  --color-bg: #f4f4f6;
-  --color-chrome: #fbfbfc;
+  --color-bg: #e6e6e5;
+  --color-chrome: #f0f0ee;
   --color-surface: #ffffff;
-  --color-surface-2: #eef0f3;
+  --color-surface-2: #ececea;
   --color-border: rgba(15, 17, 21, 0.09);
   --color-border-strong: rgba(15, 17, 21, 0.18);
-  --color-text: #1a1c20;
-  --color-text-muted: #6a6d76;
+  --color-text: #242423;
+  --color-text-muted: #555552;
+  --color-foreground: var(--color-text);
+  --color-muted-foreground: var(--color-text-muted);
 
   --color-accent: #23262c;
   --color-accent-hover: #000000;
   --color-accent-deep: #4a4d55;
-  --color-include: #1f9d55;
-  --color-exclude: #d64545;
-  --color-unsure: #b97f18;
+  --color-include: #157347;
+  --color-exclude: #b91c1c;
+  --color-unsure: #9a5b00;
   --color-linefield: rgba(15, 17, 21, 0.03);
 
   /* component-level tokens (shadcn-flavored, poolr palette) */
-  --btn-bg: #2563eb;
+  --btn-bg: #ad3e00;
   --btn-fg: #ffffff;
-  --btn-hover-bg: #1d4ed8;
-  --btn-border: #2563eb;
+  --btn-hover-bg: #8e3100;
+  --btn-border: #ad3e00;
   --input-bg: #ffffff;
-  --placeholder-fg: #9aa0aa;
+  --placeholder-fg: #656461;
   --card-bg: #ffffff;
   --card-border: rgba(15, 17, 21, 0.08);
   --drawer-bg: #ffffff;
-  --hover-surface: rgba(15, 17, 21, 0.05);
+  --hover-surface: rgba(15, 17, 21, 0.055);
+  --color-surface-subtle: rgba(15, 17, 21, 0.035);
+  --color-row-active: rgba(173, 62, 0, 0.1);
 
   /* chart tokens */
   --chart-background: transparent;
-  --chart-foreground: #1a1c20;
+  --chart-foreground: #242423;
   --chart-foreground-muted: #6a6d76;
   --chart-label: #6a6d76;
   --chart-grid: rgba(15, 17, 21, 0.09);
@@ -145,44 +63,46 @@ html.dark .sidebar-collapsed .workspace-brand .brand-full { display: none; }
   --chart-5: #1f9d55;
 }
 
-/* Dark theme — identical to the v0.5.2 palette */
+/* Dark theme */
 html.dark {
   color-scheme: dark;
-  --color-bg: #0c0d11;
-  --color-chrome: #07080b;
-  --color-surface: #141519;
-  --color-surface-2: #1b1d23;
+  --color-bg: #191919;
+  --color-chrome: #202020;
+  --color-surface: #242424;
+  --color-surface-2: #2e2e2d;
   --color-border: rgba(255, 255, 255, 0.07);
   --color-border-strong: rgba(255, 255, 255, 0.13);
-  --color-text: #e6e7ea;
-  --color-text-muted: #8b8d96;
+  --color-text: #efeeec;
+  --color-text-muted: #b8b6b2;
 
-  --color-accent: #e6e7ea;
+  --color-accent: #efeeec;
   --color-accent-hover: #ffffff;
   --color-accent-deep: #b9bbc2;
-  --color-include: #3fb950;
-  --color-exclude: #f05252;
-  --color-unsure: #f2b84b;
+  --color-include: #4ade80;
+  --color-exclude: #f87171;
+  --color-unsure: #fbbf24;
   --color-linefield: rgba(255, 255, 255, 0.022);
 
-  --btn-bg: #3b82f6;
-    --btn-fg: #ffffff;
-    --btn-hover-bg: #2563eb;
-    --btn-border: #3b82f6;
-  --input-bg: #0c0d11;
-  --placeholder-fg: #5a5c63;
-  --card-bg: #141519;
+  --btn-bg: #f49a55;
+  --btn-fg: #1c1008;
+  --btn-hover-bg: #ffb47d;
+  --btn-border: #f49a55;
+  --input-bg: #1b1b1b;
+  --placeholder-fg: #a7a39e;
+  --card-bg: #242424;
   --card-border: rgba(255, 255, 255, 0.07);
-  --drawer-bg: #101116;
-  --hover-surface: rgba(255, 255, 255, 0.04);
+  --drawer-bg: #222222;
+  --hover-surface: rgba(255, 255, 255, 0.06);
+  --color-surface-subtle: rgba(255, 255, 255, 0.04);
+  --color-row-active: rgba(244, 154, 85, 0.14);
 
   --chart-background: transparent;
-  --chart-foreground: #e6e7ea;
+  --chart-foreground: #efeeec;
   --chart-foreground-muted: #8b8d96;
   --chart-label: #8b8d96;
   --chart-grid: rgba(255, 255, 255, 0.07);
   --border: rgba(255, 255, 255, 0.07);
-  --chart-1: #e6e7ea;
+  --chart-1: #efeeec;
   --chart-2: #b9bbc2;
   --chart-3: #8b8d96;
   --chart-4: #5c5e66;
@@ -235,10 +155,11 @@ html.dark {
     display: block;
   }
 
-  /* Chrome (dock / header / status bar) — solid slab darker than viewport */
+  /* Shared navigation material. */
   .glass {
-    background: var(--color-chrome);
-    border: 1px solid var(--color-border);
+    background: var(--glass-fill, var(--color-chrome));
+    backdrop-filter: blur(22px) saturate(1.3);
+    border: 1px solid var(--glass-edge, var(--color-border));
     box-shadow: 0 1px 0 0 var(--hairline-inset),
       0 8px 24px -12px var(--chrome-shadow);
   }
@@ -252,6 +173,12 @@ html.dark {
   }
 
   .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    line-height: 1.25;
+    white-space: nowrap;
     background: var(--btn-bg);
     color: var(--btn-fg);
     border-radius: var(--radius-btn);
@@ -260,33 +187,58 @@ html.dark {
     font-size: 12px;
     padding: 5px 12px;
     border: 1px solid var(--btn-border);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     cursor: pointer;
-    transition: background 0.12s ease, border-color 0.12s ease;
+    transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
   }
-  .btn-primary:hover {
+  .btn-primary:hover:not(:disabled) {
     background: var(--btn-hover-bg);
     border-color: var(--btn-hover-bg);
   }
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0.5px);
+  }
+  .btn-primary:disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
 
   .btn-ghost {
-      background: transparent;
-      color: var(--color-text-muted);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-btn);
-      font-size: 12px;
-      padding: 5px 12px;
-      cursor: pointer;
-      transition: all 0.12s ease;
-    }
-    .btn-ghost:hover {
-      color: var(--color-text);
-      border-color: var(--color-border-strong);
-      background: var(--hover-surface);
-    }
-    .btn-ghost:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    line-height: 1.25;
+    white-space: nowrap;
+    background: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-btn);
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 12px;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+  }
+  .btn-ghost:hover:not(:disabled) {
+    color: var(--color-text);
+    border-color: var(--workspace-accent);
+    background: var(--hover-surface);
+  }
+  .btn-ghost[aria-pressed="true"],
+  .btn-ghost.is-active {
+    background: var(--workspace-selection);
+    color: var(--workspace-accent);
+    border-color: var(--workspace-accent);
+    font-weight: 600;
+  }
+  .btn-ghost:disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
 
       /* Density modes */
       body.density-compact .card {
@@ -330,5 +282,43 @@ html.dark {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Native top-layer modal dialogs: prevent background scroll chaining */
+dialog:modal {
+  overscroll-behavior: contain;
+}
+dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+/* Isolate heavy split-pane / table reflows per modern-web-guidance */
+.contain-pane {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 360px auto 480px;
+}
+@supports not (content-visibility: auto) {
+  .contain-pane {
+    contain: layout style paint;
+  }
+}
+
+@media (forced-colors: active) {
+  .btn-primary,
+  .btn-ghost,
+  button[aria-pressed] {
+    border: 1px solid ButtonBorder;
+    color: ButtonText;
+    background: ButtonFace;
+  }
+  .btn-primary,
+  button[aria-pressed="true"] {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
   }
 }

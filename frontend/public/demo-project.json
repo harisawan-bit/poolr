@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "version": "0.6.3",
+    "version": "0.6.6",
     "created": "2026-09-03T12:00:00Z",
     "title": "BCG vaccine for tuberculosis (demo)"
   },
@@ -26,7 +26,7 @@
         "reviewerDecisions": [
           {
             "reviewerId": "rev-1",
-            "reviewerName": "Dr. Haris (Lead)",
+            "reviewerName": "Dr Zheng (Lead)",
             "decision": "include",
             "note": "Meets all PICO criteria; prospective randomized design.",
             "timestamp": "2026-11-04T09:30:00Z"
@@ -49,7 +49,7 @@
         "reviewerDecisions": [
           {
             "reviewerId": "rev-1",
-            "reviewerName": "Dr. Haris (Lead)",
+            "reviewerName": "Dr Zheng (Lead)",
             "decision": "include",
             "note": "Pediatric RCT, full 12-year morbidity tracking.",
             "timestamp": "2026-11-04T10:00:00Z"
@@ -72,7 +72,7 @@
         "reviewerDecisions": [
           {
             "reviewerId": "rev-1",
-            "reviewerName": "Dr. Haris (Lead)",
+            "reviewerName": "Dr Zheng (Lead)",
             "decision": "include",
             "note": "Eligible study population, BCG vs placebo.",
             "timestamp": "2026-11-04T10:30:00Z"
@@ -95,7 +95,7 @@
         "reviewerDecisions": [
           {
             "reviewerId": "rev-1",
-            "reviewerName": "Dr. Haris (Lead)",
+            "reviewerName": "Dr Zheng (Lead)",
             "decision": "include",
             "note": "Contains comparative summary statistics across historical cohorts.",
             "timestamp": "2026-11-04T11:00:00Z"
@@ -119,7 +119,7 @@
         "reviewerDecisions": [
           {
             "reviewerId": "rev-1",
-            "reviewerName": "Dr. Haris (Lead)",
+            "reviewerName": "Dr Zheng (Lead)",
             "decision": "exclude",
             "exclusion_reason": "Wrong study design (uncontrolled cohort)",
             "note": "No concurrent comparator arm.",

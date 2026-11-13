@@ -5,6 +5,7 @@ export {
   ENGINE_URL,
   offlineMessage,
   engineHealth,
+  openExternalUrl,
   postJson,
   getProject,
   saveProject,
@@ -48,13 +49,6 @@ export {
   pubmedSearch,
   openalexSearch,
   crossrefSearch,
-  clinicaltrialsSearch,
-  scopusSearch,
-  wosSearch,
-  embaseSearch,
-  cochraneSearch,
-  prosperoSearch,
-  googleScholarSearch,
   runPriorityScreening,
 } from "./search";
 
